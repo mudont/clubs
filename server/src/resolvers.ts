@@ -1,5 +1,5 @@
 import { PrismaClient, User, RSVPStatus } from '@prisma/client';
-import { AuthenticationError, ForbiddenError, UserInputError } from 'apollo-server-express';
+import { GraphQLError } from 'graphql';
 import { pubsub, EVENTS, publishMessageAdded, publishEventCreated, publishRSVPUpdated, publishMemberJoined } from './pubsub';
 import { withFilter } from 'graphql-subscriptions';
 
@@ -13,7 +13,7 @@ interface Context {
 // Helper function to check if user is authenticated
 function requireAuth(context: Context): User {
     if (!context.user) {
-        throw new AuthenticationError('You must be logged in');
+        throw new GraphQLError('You must be logged in', { extensions: { code: 'UNAUTHENTICATED' } });
     }
     return context.user;
 }
@@ -26,7 +26,7 @@ async function requireClubAdmin(context: Context, clubId: string): Promise<void>
     });
 
     if (!membership || !membership.isAdmin) {
-        throw new ForbiddenError('You must be an admin of this club');
+        throw new GraphQLError('You must be an admin of this club', { extensions: { code: 'FORBIDDEN' } });
     }
 }
 
@@ -38,7 +38,7 @@ async function requireClubMember(context: Context, clubId: string): Promise<void
     });
 
     if (!membership) {
-        throw new ForbiddenError('You must be a member of this club');
+        throw new GraphQLError('You must be a member of this club', { extensions: { code: 'FORBIDDEN' } });
     }
 }
 
@@ -145,7 +145,7 @@ export const resolvers = {
             });
 
             if (existing) {
-                throw new UserInputError('You are already a member of this club');
+                throw new GraphQLError('You are already a member of this club', { extensions: { code: 'BAD_USER_INPUT' } });
             }
 
             // Get next member ID
@@ -180,7 +180,7 @@ export const resolvers = {
             });
 
             if (!membership) {
-                throw new UserInputError('You are not a member of this club');
+                throw new GraphQLError('You are not a member of this club', { extensions: { code: 'BAD_USER_INPUT' } });
             }
 
             if (membership.isAdmin) {
@@ -190,7 +190,7 @@ export const resolvers = {
                 });
 
                 if (adminCount <= 1) {
-                    throw new ForbiddenError('Cannot leave club as the last admin');
+                    throw new GraphQLError('Cannot leave club as the last admin', { extensions: { code: 'FORBIDDEN' } });
                 }
             }
 
@@ -236,11 +236,11 @@ export const resolvers = {
             });
 
             if (!membership) {
-                throw new UserInputError('User is not a member of this club');
+                throw new GraphQLError('User is not a member of this club', { extensions: { code: 'BAD_USER_INPUT' } });
             }
 
             if (membership.isAdmin) {
-                throw new ForbiddenError('Cannot remove admin members');
+                throw new GraphQLError('Cannot remove admin members', { extensions: { code: 'FORBIDDEN' } });
             }
 
             await context.prisma.membership.delete({
@@ -268,7 +268,7 @@ export const resolvers = {
             });
 
             if (!membership?.isAdmin) {
-                throw new UserInputError('User is not an admin of this club');
+                throw new GraphQLError('User is not an admin of this club', { extensions: { code: 'BAD_USER_INPUT' } });
             }
 
             // Check if this is the last admin
@@ -277,7 +277,7 @@ export const resolvers = {
             });
 
             if (adminCount <= 1) {
-                throw new ForbiddenError('Cannot remove the last admin');
+                throw new GraphQLError('Cannot remove the last admin', { extensions: { code: 'FORBIDDEN' } });
             }
 
             return await context.prisma.membership.update({
@@ -317,7 +317,7 @@ export const resolvers = {
             });
 
             if (!event) {
-                throw new UserInputError('Event not found');
+                throw new GraphQLError('Event not found', { extensions: { code: 'BAD_USER_INPUT' } });
             }
 
             // Only creator or club admin can update
@@ -344,7 +344,7 @@ export const resolvers = {
             });
 
             if (!event) {
-                throw new UserInputError('Event not found');
+                throw new GraphQLError('Event not found', { extensions: { code: 'BAD_USER_INPUT' } });
             }
 
             // Only creator or club admin can delete
@@ -365,7 +365,7 @@ export const resolvers = {
             });
 
             if (!event) {
-                throw new UserInputError('Event not found');
+                throw new GraphQLError('Event not found', { extensions: { code: 'BAD_USER_INPUT' } });
             }
 
             await requireClubMember(context, event.clubId);
@@ -376,7 +376,7 @@ export const resolvers = {
             });
 
             if (existing) {
-                throw new UserInputError('You have already RSVPed to this event');
+                throw new GraphQLError('You have already RSVPed to this event', { extensions: { code: 'BAD_USER_INPUT' } });
             }
 
             const rsvp = await context.prisma.rSVP.create({
@@ -404,11 +404,11 @@ export const resolvers = {
             });
 
             if (!rsvp) {
-                throw new UserInputError('RSVP not found');
+                throw new GraphQLError('RSVP not found', { extensions: { code: 'BAD_USER_INPUT' } });
             }
 
             if (rsvp.userId !== user.id) {
-                throw new ForbiddenError('You can only update your own RSVP');
+                throw new GraphQLError('You can only update your own RSVP', { extensions: { code: 'FORBIDDEN' } });
             }
 
             const updatedRSVP = await context.prisma.rSVP.update({
@@ -431,11 +431,11 @@ export const resolvers = {
             });
 
             if (!rsvp) {
-                throw new UserInputError('RSVP not found');
+                throw new GraphQLError('RSVP not found', { extensions: { code: 'BAD_USER_INPUT' } });
             }
 
             if (rsvp.userId !== user.id) {
-                throw new ForbiddenError('You can only delete your own RSVP');
+                throw new GraphQLError('You can only delete your own RSVP', { extensions: { code: 'FORBIDDEN' } });
             }
 
             await context.prisma.rSVP.delete({ where: { id } });
@@ -475,7 +475,7 @@ export const resolvers = {
         addMemberByUsername: async (_: any, { clubId, username }: { clubId: string; username: string }, context: Context) => {
             await requireClubAdmin(context, clubId);
             const user = await context.prisma.user.findUnique({ where: { username } });
-            if (!user) throw new UserInputError('User not found');
+            if (!user) throw new GraphQLError('User not found', { extensions: { code: 'BAD_USER_INPUT' } });
             // Reuse addMember logic
             // Get next member ID
             const lastMember = await context.prisma.membership.findFirst({
@@ -498,7 +498,7 @@ export const resolvers = {
         addMemberByEmail: async (_: any, { clubId, email }: { clubId: string; email: string }, context: Context) => {
             await requireClubAdmin(context, clubId);
             const user = await context.prisma.user.findUnique({ where: { email } });
-            if (!user) throw new UserInputError('User not found');
+            if (!user) throw new GraphQLError('User not found', { extensions: { code: 'BAD_USER_INPUT' } });
             // Reuse addMember logic
             // Get next member ID
             const lastMember = await context.prisma.membership.findFirst({
