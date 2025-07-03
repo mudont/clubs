@@ -1,5 +1,6 @@
-import { Strategy as GitHubStrategy } from 'passport-github2';
+import { Strategy as GitHubStrategy, Profile as GitHubProfile } from 'passport-github2';
 import { PrismaClient } from '@prisma/client';
+import type { VerifyCallback } from 'passport-oauth2';
 
 const prisma = new PrismaClient();
 
@@ -9,7 +10,12 @@ export const githubStrategy = new GitHubStrategy(
         clientSecret: process.env.GITHUB_CLIENT_SECRET || '',
         callbackURL: `${process.env.BACKEND_URL || 'http://localhost:4010'}/auth/github/callback`,
     },
-    async (accessToken, refreshToken, profile, done) => {
+    async (
+        accessToken: string,
+        refreshToken: string,
+        profile: GitHubProfile,
+        done: VerifyCallback
+    ) => {
         try {
             const { id, emails, username, photos } = profile;
             const email = emails?.[0]?.value;

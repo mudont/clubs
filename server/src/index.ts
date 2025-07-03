@@ -18,6 +18,7 @@ import { WebSocketServer } from 'ws';
 import { useServer } from 'graphql-ws/lib/use/ws';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import type { Request, Response, NextFunction } from 'express';
+import path from 'path';
 
 const prisma = new PrismaClient();
 
@@ -33,7 +34,7 @@ async function startServer() {
         allowedHeaders: ['Content-Type', 'Authorization']
     }));
     app.use(express.json());
-    app.use(session({ secret: process.env.SESSION_SECRET || 'b7f8e2c9-4a1d-4e2a-8c3e-2f7b8e2c9a1d-4e2a-8c3e-2f7b8e2c9a1d', resave: false, saveUninitialized: false }));
+    app.use(session({ secret: process.env.SESSION_SECRET || 'b7f8e2c9-4a1d-4e2a-8c3e-2f7b8e2c9a1d-4e2a-8c3e-2f7b8e2c9a1d', resave: false, saveUninitialized: false }) as unknown as import('express').RequestHandler);
     app.use(passport.initialize());
     app.use(passport.session());
 
@@ -89,7 +90,7 @@ async function startServer() {
                 return res.redirect(`${FRONTEND_URL}/login`);
             }
             const token = generateToken(req.user as any);
-            res.redirect(`${FRONTEND_URL}/auth-success?token=${token}`);
+            res.redirect(`/auth-success?token=${token}`);
         }
     );
 
@@ -103,7 +104,7 @@ async function startServer() {
                 return res.redirect(`${FRONTEND_URL}/login`);
             }
             const token = generateToken(req.user as any);
-            res.redirect(`${FRONTEND_URL}/auth-success?token=${token}`);
+            res.redirect(`/auth-success?token=${token}`);
         }
     );
 
@@ -117,19 +118,20 @@ async function startServer() {
                 return res.redirect(`${FRONTEND_URL}/login`);
             }
             const token = generateToken(req.user as any);
-            res.redirect(`${FRONTEND_URL}/auth-success?token=${token}`);
+            res.redirect(`/auth-success?token=${token}`);
         }
     );
 
     // Auth success page (for OAuth redirects)
-    app.get('/auth-success', (req: Request, res: Response) => {
-        const { token } = req.query;
-        res.json({
-            message: 'Authentication successful',
-            token,
-            redirectUrl: '/dashboard' // Frontend can redirect here
-        });
-    });
+    // app.get('/auth-success', (req: Request, res: Response) => {
+    //     const { token } = req.query;
+    //     console.log(`Auth success handled on servertoken: ${token}`);
+    //     res.json({
+    //         message: 'Authentication successful',
+    //         token,
+    //         redirectUrl: '/dashboard' // Frontend can redirect here
+    //     });
+    // });
 
     // Apollo Server
     const server = new ApolloServer({
@@ -179,6 +181,14 @@ async function startServer() {
         wsServer
     );
 
+    // Serve static files from the React app
+    app.use(express.static(path.join(__dirname, '../../client/build')));
+
+    // Catch-all route to serve index.html for SPA routing
+    app.get('/*splat', (req, res) => {
+        res.sendFile(path.join(__dirname, '../../client/build', 'index.html'));
+    });
+
     const PORT = 4010;
     httpServer.listen(PORT, () => {
         console.log(`🚀 Server ready at http://localhost:${PORT}/graphql`);
@@ -189,4 +199,4 @@ async function startServer() {
 
 startServer().catch((err) => {
     console.error('Server failed to start', err);
-}); 
+});
