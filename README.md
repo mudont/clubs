@@ -1,3 +1,3 @@
 # clubs
 
-Social and sports club
+Social and Sports clubs
