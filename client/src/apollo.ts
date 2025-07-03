@@ -4,9 +4,14 @@ import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { createClient } from 'graphql-ws';
 
+// Get the server URL from the current origin (same server serving the client)
+const SERVER_URL = window.location.origin;
+const GRAPHQL_ENDPOINT = `${SERVER_URL}/graphql`;
+const WS_ENDPOINT = SERVER_URL.replace(/^http/, 'ws') + '/graphql';
+
 // HTTP link for queries and mutations
 const httpLink = createHttpLink({
-    uri: 'http://localhost:4010/graphql',
+    uri: GRAPHQL_ENDPOINT,
     credentials: 'include',
 });
 
@@ -24,7 +29,7 @@ const authLink = setContext((_, { headers }) => {
 // WebSocket link for subscriptions
 const wsLink = new GraphQLWsLink(
     createClient({
-        url: 'ws://localhost:4010/graphql',
+        url: WS_ENDPOINT,
         connectionParams: () => ({
             authorization: `Bearer ${localStorage.getItem('token')}`,
         }),
@@ -69,7 +74,7 @@ export const updateAuthToken = (token: string | null) => {
     // Recreate the wsLink with new token
     const newWsLink = new GraphQLWsLink(
         createClient({
-            url: 'ws://localhost:4010/graphql',
+            url: WS_ENDPOINT,
             connectionParams: () => ({
                 authorization: token ? `Bearer ${token}` : '',
             }),

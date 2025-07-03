@@ -20,7 +20,7 @@ const Login: React.FC = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:4010/login', {
+      const response = await fetch('/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -45,7 +45,7 @@ const Login: React.FC = () => {
   };
 
   const handleOAuth = (provider: string) => {
-    window.location.href = `http://localhost:4010/auth/${provider}`;
+    window.location.href = `/auth/${provider}`;
   };
 
   return (

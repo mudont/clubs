@@ -30,7 +30,7 @@ const Signup: React.FC = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:4010/signup', {
+      const response = await fetch('/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -57,7 +57,7 @@ const Signup: React.FC = () => {
   };
 
   const handleOAuth = (provider: string) => {
-    window.location.href = `http://localhost:4010/auth/${provider}`;
+    window.location.href = `auth/${provider}`;
   };
 
   return (
