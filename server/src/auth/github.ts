@@ -17,20 +17,33 @@ export const githubStrategy = new GitHubStrategy(
         done: VerifyCallback
     ) => {
         try {
-            const { id, emails, username, photos } = profile;
+            console.log('GitHub OAuth callback received:', {
+                id: profile.id,
+                username: profile.username,
+                emails: profile.emails?.map(e => e.value)
+            });
+
+            const { id, emails, username, photos, displayName } = profile;
             const email = emails?.[0]?.value;
 
             if (!email) {
+                console.error('GitHub OAuth: No email provided');
                 return done(null, false, { message: 'Email not provided by GitHub.' });
             }
 
             // Check if user exists with this GitHub account
             let authAccount = await prisma.authAccount.findUnique({
-                where: { provider_providerUserId: { provider: 'github', providerUserId: id.toString() } },
+                where: {
+                    provider_providerUserId: {
+                        provider: 'github',
+                        providerUserId: id.toString()
+                    }
+                },
                 include: { user: true },
             });
 
             if (authAccount) {
+                console.log('GitHub OAuth: Found existing user via GitHub account:', authAccount.user.id);
                 return done(null, authAccount.user);
             }
 
@@ -38,6 +51,7 @@ export const githubStrategy = new GitHubStrategy(
             let user = await prisma.user.findUnique({ where: { email } });
 
             if (user) {
+                console.log('GitHub OAuth: Found existing user via email, linking GitHub account:', user.id);
                 // Link existing user to GitHub account
                 await prisma.authAccount.create({
                     data: {
@@ -50,12 +64,15 @@ export const githubStrategy = new GitHubStrategy(
             }
 
             // Create new user
+            console.log('GitHub OAuth: Creating new user with email:', email);
             user = await prisma.user.create({
                 data: {
                     email,
                     username: username || email.split('@')[0],
                     emailVerified: true, // GitHub emails are pre-verified
                     photoUrl: photos?.[0]?.value,
+                    firstName: displayName?.split(' ')[0] || null,
+                    lastName: displayName?.split(' ').slice(1).join(' ') || null,
                     accounts: {
                         create: {
                             provider: 'github',
@@ -65,8 +82,10 @@ export const githubStrategy = new GitHubStrategy(
                 },
             });
 
+            console.log('GitHub OAuth: Successfully created new user:', user.id);
             return done(null, user);
         } catch (err) {
+            console.error('GitHub OAuth error:', err);
             return done(err);
         }
     }
