@@ -137,7 +137,7 @@ const Signup: React.FC = () => {
           >
             Continue with Google
           </button>
-          
+          {/*
           <button
             type="button"
             className="btn-oauth btn-github"
@@ -145,7 +145,7 @@ const Signup: React.FC = () => {
           >
             Continue with GitHub
           </button>
-          
+          */}
           <button
             type="button"
             className="btn-oauth btn-facebook"
