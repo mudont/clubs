@@ -1,11 +1,12 @@
+import { useQuery , gql } from '@apollo/client';
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@apollo/client';
-import { gql } from '@apollo/client';
 import { useSelector } from 'react-redux';
+import { useParams, Link } from 'react-router-dom';
+
 import { RootState } from '../../store';
-import EventList from '../events/EventList';
 import ChatRoom from '../chat/ChatRoom';
+import EventList from '../events/EventList';
+
 import ClubManagement from './ClubManagement';
 import './ClubDetail.css';
 
@@ -65,8 +66,7 @@ const ClubDetail: React.FC = () => {
     );
   }
 
-  const isMember = club.memberships?.some((membership: any) => membership.user.id === user?.id);
-  const isAdmin = club.memberships?.some((membership: any) => 
+  const isAdmin = club.memberships?.some((membership: { user: { id: string }; isAdmin: boolean }) => 
     membership.user.id === user?.id && membership.isAdmin
   );
 
@@ -132,7 +132,7 @@ const ClubDetail: React.FC = () => {
               <div className="members-card">
                 <h3>Members</h3>
                 <div className="members-list">
-                  {club.memberships?.map((membership: any) => (
+                  {club.memberships?.map((membership: { id: string; user: { username: string }; memberId: string; isAdmin: boolean }) => (
                     <div key={membership.id} className="member-item">
                       <div className="member-info">
                         <span className="member-name">{membership.user.username}</span>

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { setAuth } from '../../store/authSlice';
+import { useNavigate, Link } from 'react-router-dom';
+
 import { updateAuthToken } from '../../apollo';
+import { setAuth } from '../../store/authSlice';
 import './Auth.css';
 
 const Login: React.FC = () => {

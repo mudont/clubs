@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { setAuth } from '../../store/authSlice';
-import { updateAuthToken } from '../../apollo';
 import { useQuery } from '@apollo/client';
 import gql from 'graphql-tag';
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { useNavigate, useLocation } from 'react-router-dom';
+
+import { updateAuthToken } from '../../apollo';
+import { setAuth } from '../../store/authSlice';
 
 const ME_QUERY = gql`
   query Me {

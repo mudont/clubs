@@ -31,12 +31,22 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "test:coverage": "react-scripts test --coverage --watchAll=false",
-    "eject": "react-scripts eject"
+    "test:a11y": "react-scripts test --testNamePattern='accessibility'",
+    "eject": "react-scripts eject",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "format": "prettier --write src/**/*.{ts,tsx,css,md}",
+    "format:check": "prettier --check src/**/*.{ts,tsx,css,md}",
+    "type-check": "tsc --noEmit",
+    "prepare": "cd .. && husky install client/.husky"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
+  "lint-staged": {
+    "src/**/*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "src/**/*.{css,md}": [
+      "prettier --write"
     ]
   },
   "browserslist": {
@@ -52,6 +62,13 @@
     ]
   },
   "devDependencies": {
-    "@playwright/test": "^1.40.0"
+    "@axe-core/react": "^4.8.2",
+    "@playwright/test": "^1.40.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-jsx-a11y": "^6.8.0",
+    "husky": "^8.0.3",
+    "jest-axe": "^8.0.0",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.1.1"
   }
 }

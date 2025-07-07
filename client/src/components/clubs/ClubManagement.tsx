@@ -1,7 +1,7 @@
+import { useQuery, useMutation, useLazyQuery , gql } from '@apollo/client';
 import React, { useState } from 'react';
-import { useQuery, useMutation, useLazyQuery } from '@apollo/client';
-import { gql } from '@apollo/client';
 import { useSelector } from 'react-redux';
+
 import { RootState } from '../../store';
 import './ClubManagement.css';
 
@@ -133,6 +133,7 @@ const ClubManagement: React.FC<ClubManagementProps> = ({ clubId }) => {
 
   const [userSearch, { data: userSearchData }] = useLazyQuery(USER_SEARCH);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [confirmRemoval, setConfirmRemoval] = useState<{ userId: string; username: string; memberId: string } | null>(null);
 
   // Initialize club form when data loads
   React.useEffect(() => {
@@ -173,10 +174,12 @@ const ClubManagement: React.FC<ClubManagementProps> = ({ clubId }) => {
     }
   };
 
-  const handleRemoveMember = async (memberId: string, username: string, userId: string) => {
-    if (!window.confirm(`Are you sure you want to remove ${username} from the club?`)) {
-      return;
-    }
+  const handleRemoveMember = (memberId: string, username: string, userId: string) => {
+    setConfirmRemoval({ userId, username, memberId });
+  };
+
+  const confirmRemoveMember = async () => {
+    if (!confirmRemoval) return;
 
     setLoading(true);
     setError('');
@@ -186,16 +189,17 @@ const ClubManagement: React.FC<ClubManagementProps> = ({ clubId }) => {
       await removeMember({
         variables: {
           clubId,
-          userId,
+          userId: confirmRemoval.userId,
         },
       });
 
       setSuccess('Member removed successfully!');
       refetch();
-    } catch (err: any) {
-      setError(err.message || 'Failed to remove member');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to remove member');
     } finally {
       setLoading(false);
+      setConfirmRemoval(null);
     }
   };
 
@@ -523,6 +527,32 @@ const ClubManagement: React.FC<ClubManagementProps> = ({ clubId }) => {
               </div>
             </form>
           )}
+        </div>
+      )}
+
+      {/* Confirmation Dialog for Member Removal */}
+      {confirmRemoval && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Confirm Member Removal</h3>
+            <p>Are you sure you want to remove <strong>{confirmRemoval.username}</strong> from the club?</p>
+            <div className="modal-actions">
+              <button 
+                onClick={confirmRemoveMember} 
+                className="btn-danger"
+                disabled={loading}
+              >
+                {loading ? 'Removing...' : 'Remove Member'}
+              </button>
+              <button 
+                onClick={() => setConfirmRemoval(null)} 
+                className="btn-cancel"
+                disabled={loading}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

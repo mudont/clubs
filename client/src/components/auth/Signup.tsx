@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { setAuth } from '../../store/authSlice';
-import { updateAuthToken } from '../../apollo';
+
 import './Auth.css';
 
 const Signup: React.FC = () => {
@@ -15,7 +13,6 @@ const Signup: React.FC = () => {
   const [success, setSuccess] = useState('');
   
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

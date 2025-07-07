@@ -1,7 +1,7 @@
+import { useQuery, useMutation , gql } from '@apollo/client';
 import React, { useState } from 'react';
-import { useQuery, useMutation } from '@apollo/client';
-import { gql } from '@apollo/client';
 import { useSelector } from 'react-redux';
+
 import { RootState } from '../../store';
 import './EventList.css';
 

@@ -1,5 +1,6 @@
-import { ApolloClient, InMemoryCache, createHttpLink, split } from '@apollo/client';
+import { ApolloClient, InMemoryCache, createHttpLink, split, from } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
+import { onError } from '@apollo/client/link/error';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { createClient } from 'graphql-ws';
@@ -36,6 +37,48 @@ const wsLink = new GraphQLWsLink(
     })
 );
 
+// Error handling link
+const errorLink = onError(({ graphQLErrors, networkError, operation, forward: _forward }) => {
+    if (graphQLErrors) {
+        graphQLErrors.forEach(({ message, locations, path, extensions }) => {
+            console.error('GraphQL error occurred:', {
+                message,
+                locations,
+                path,
+                extensions,
+                operationName: operation.operationName,
+            });
+
+            // Handle specific error types
+            if (extensions?.code === 'UNAUTHENTICATED') {
+                // Clear invalid token and redirect to login
+                localStorage.removeItem('token');
+                window.location.href = '/login';
+            } else if (extensions?.code === 'FORBIDDEN') {
+                console.warn('Access denied:', message);
+            }
+        });
+    }
+
+    if (networkError) {
+        console.error('Network error:', networkError);
+        
+        // Handle different types of network errors
+        if (networkError.name === 'ServerError') {
+            console.error('Server error:', networkError);
+        } else if (networkError.name === 'NetworkError') {
+            console.error('Connection failed:', networkError);
+            // Could show toast notification here
+        }
+
+        // For 401 errors, clear token and redirect
+        if ('statusCode' in networkError && networkError.statusCode === 401) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        }
+    }
+});
+
 // Split links based on operation type
 const splitLink = split(
     ({ query }) => {
@@ -49,18 +92,45 @@ const splitLink = split(
     authLink.concat(httpLink)
 );
 
+// Combine all links with error handling
+const link = from([
+    errorLink,
+    splitLink,
+]);
+
 // Create Apollo Client
 export const client = new ApolloClient({
-    link: splitLink,
-    cache: new InMemoryCache(),
+    link,
+    cache: new InMemoryCache({
+        typePolicies: {
+            // Add cache policies for better performance
+            Query: {
+                fields: {
+                    myClubs: {
+                        merge: false, // Replace instead of merging
+                    },
+                    messages: {
+                        merge: false,
+                    },
+                },
+            },
+        },
+    }),
     defaultOptions: {
         watchQuery: {
             errorPolicy: 'all',
+            notifyOnNetworkStatusChange: true,
         },
         query: {
             errorPolicy: 'all',
+            fetchPolicy: 'cache-first',
+        },
+        mutate: {
+            errorPolicy: 'all',
         },
     },
+    // Enable development tools in development
+    connectToDevTools: process.env.NODE_ENV === 'development',
 });
 
 // Function to update auth token

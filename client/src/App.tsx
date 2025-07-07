@@ -1,21 +1,38 @@
-import React from 'react';
+import { useQuery, ApolloProvider, gql } from '@apollo/client';
+import React, { Suspense } from 'react';
+import { Provider, useDispatch, useSelector } from 'react-redux';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import { store } from './store';
-import Login from './components/auth/Login';
-import Signup from './components/auth/Signup';
-import Dashboard from './components/Dashboard';
-import ClubDetail from './components/clubs/ClubDetail';
-import UserProfile from './components/profile/UserProfile';
-import ProtectedRoute from './components/auth/ProtectedRoute';
-import './App.css';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from './store';
-import { setAuth } from './store/authSlice';
-import { useQuery, ApolloProvider } from '@apollo/client';
+
 import { client } from './apollo';
-import { gql } from '@apollo/client';
 import AuthSuccess from './components/auth/AuthSuccess';
+import Login from './components/auth/Login';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import Signup from './components/auth/Signup';
+import ErrorBoundary from './components/common/ErrorBoundary';
+import LoadingSpinner from './components/common/LoadingSpinner';
+import { store, RootState } from './store';
+import { setAuth } from './store/authSlice';
+
+import './App.css';
+
+
+// Lazy load main components for better performance
+const Dashboard = React.lazy(() => import('./components/Dashboard'));
+const ClubDetail = React.lazy(() => import('./components/clubs/ClubDetail'));
+const UserProfile = React.lazy(() => import('./components/profile/UserProfile'));
+
+interface UserData {
+  me: {
+    id: string;
+    username: string;
+    email: string;
+    emailVerified: boolean;
+    phone?: string;
+    photoUrl?: string;
+    firstName?: string;
+    lastName?: string;
+  };
+}
 
 const ME_QUERY = gql`
   query Me {
@@ -34,8 +51,8 @@ const ME_QUERY = gql`
 
 function AuthLoader({ children }: { children: React.ReactNode }) {
   const dispatch = useDispatch();
-  const { isAuthenticated, user, token } = useSelector((state: RootState) => state.auth);
-  const { data, loading } = useQuery<any>(ME_QUERY, { skip: !isAuthenticated || !!user });
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  const { data, loading } = useQuery<UserData>(ME_QUERY, { skip: !isAuthenticated || !!user });
 
   React.useEffect(() => {
     if (isAuthenticated && !user && data?.me) {
@@ -54,46 +71,62 @@ function AuthLoader({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <ApolloProvider client={client}>
-      <Provider store={store}>
-        <AuthLoader>
-          <Router>
-            <div className="App">
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route
-                  path="/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/club/:id"
-                  element={
-                    <ProtectedRoute>
-                      <ClubDetail />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/profile"
-                  element={
-                    <ProtectedRoute>
-                      <UserProfile />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="/auth-success" element={<AuthSuccess />} />
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              </Routes>
-            </div>
-          </Router>
-        </AuthLoader>
-      </Provider>
-    </ApolloProvider>
+    <ErrorBoundary>
+      <ApolloProvider client={client}>
+        <Provider store={store}>
+          <AuthLoader>
+            <Router>
+              <div className="App">
+                <ErrorBoundary>
+                  <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<Signup />} />
+                    <Route
+                      path="/dashboard"
+                      element={
+                        <ProtectedRoute>
+                          <ErrorBoundary>
+                            <Suspense fallback={<LoadingSpinner message="Loading dashboard..." />}>
+                              <Dashboard />
+                            </Suspense>
+                          </ErrorBoundary>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/club/:id"
+                      element={
+                        <ProtectedRoute>
+                          <ErrorBoundary>
+                            <Suspense fallback={<LoadingSpinner message="Loading club details..." />}>
+                              <ClubDetail />
+                            </Suspense>
+                          </ErrorBoundary>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/profile"
+                      element={
+                        <ProtectedRoute>
+                          <ErrorBoundary>
+                            <Suspense fallback={<LoadingSpinner message="Loading profile..." />}>
+                              <UserProfile />
+                            </Suspense>
+                          </ErrorBoundary>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route path="/auth-success" element={<AuthSuccess />} />
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                  </Routes>
+                </ErrorBoundary>
+              </div>
+            </Router>
+          </AuthLoader>
+        </Provider>
+      </ApolloProvider>
+    </ErrorBoundary>
   );
 }
 
