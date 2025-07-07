@@ -1,5 +1,3 @@
-import dotenv from 'dotenv';
-dotenv.config();
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@as-integrations/express5';
 import { PrismaClient } from '@prisma/client';
@@ -19,6 +17,18 @@ import { useServer } from 'graphql-ws/lib/use/ws';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import type { Request, Response, NextFunction } from 'express';
 import path from 'path';
+import { config, corsConfig, securityConfig } from './config';
+import { logger, logError, logInfo, logRequest } from './utils/logger';
+import { 
+  rateLimiter, 
+  authRateLimiter, 
+  securityHeaders, 
+  validateInput, 
+  validationSchemas, 
+  sanitizeInput, 
+  errorHandler, 
+  requestSizeLimit 
+} from './middleware/security';
 
 const prisma = new PrismaClient();
 
@@ -26,21 +36,53 @@ async function startServer() {
     // Set up Express
     const app = express();
 
+    // Security middleware
+    app.use(securityHeaders);
+    app.use(requestSizeLimit);
+    app.use(sanitizeInput);
+    app.use(rateLimiter);
+
     // CORS configuration
-    app.use(cors({
-        origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3010'],
-        credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization']
-    }));
-    app.use(express.json());
-    app.use(session({ secret: process.env.SESSION_SECRET || 'b7f8e2c9-4a1d-4e2a-8c3e-2f7b8e2c9a1d-4e2a-8c3e-2f7b8e2c9a1d', resave: false, saveUninitialized: false }) as unknown as import('express').RequestHandler);
+    app.use(cors(corsConfig));
+    app.use(express.json({ limit: '10mb' }));
+    app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+    
+    // Session configuration
+    app.use(session({ 
+        secret: securityConfig.sessionSecret, 
+        resave: false, 
+        saveUninitialized: false,
+        cookie: {
+            secure: config.NODE_ENV === 'production',
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        }
+    }) as unknown as import('express').RequestHandler);
+    
     app.use(passport.initialize());
     app.use(passport.session());
 
-    // Signup endpoint
-    app.post('/signup', (req: Request, res: Response) => {
+    // Request logging middleware
+    app.use((req: Request, res: Response, next: NextFunction) => {
+        logRequest(req, res, (req as any).user?.id);
+        next();
+    });
+
+    // Health check endpoint
+    app.get('/health', (req: Request, res: Response) => {
+        res.json({
+            status: 'healthy',
+            timestamp: new Date().toISOString(),
+            uptime: process.uptime(),
+            environment: config.NODE_ENV,
+            version: '1.0.0'
+        });
+    });
+
+    // Signup endpoint with validation and rate limiting
+    app.post('/signup', authRateLimiter, validateInput(validationSchemas.signup), (req: Request, res: Response) => {
         signup(req, res).catch((err: any) => {
+            logError('Signup failed', err, { email: req.body.email });
             res.status(500).json({ error: err.message || 'Signup failed' });
         });
     });
@@ -63,22 +105,29 @@ async function startServer() {
         });
     });
 
-    // Login endpoint
-    app.post('/login', (req: Request, res: Response, next: NextFunction) => {
+    // Login endpoint with validation and rate limiting
+    app.post('/login', authRateLimiter, validateInput(validationSchemas.login), (req: Request, res: Response, next: NextFunction) => {
         passport.authenticate('local', { session: false }, (err: any, user: any, info: any) => {
-            if (err) return next(err);
-            if (!user) return res.status(400).json({ error: info?.message || 'Login failed' });
+            if (err) {
+                logError('Login error', err, { email: req.body.email });
+                return next(err);
+            }
+            if (!user) {
+                logInfo('Login failed', { email: req.body.email, reason: info?.message });
+                return res.status(400).json({ error: info?.message || 'Login failed' });
+            }
             const token = generateToken(user);
+            logInfo('Login successful', { userId: user.id, email: user.email });
             return res.json({
                 message: 'Login successful',
                 token,
-                user: { id: user.id, email: user.email, username: user.username }
+                user: { id: user.id, email: user.email, username: user.username, emailVerified: user.emailVerified }
             });
         })(req, res, next);
     });
 
-    // Get frontend URL from env or default
-    const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3010';
+    // Get frontend URL from config
+    const FRONTEND_URL = config.FRONTEND_URL || 'http://localhost:3010';
 
     // Google OAuth routes
     app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
@@ -189,14 +238,19 @@ async function startServer() {
         res.sendFile(path.join(__dirname, '../../client/build', 'index.html'));
     });
 
-    const PORT = 4010;
+    // Error handling middleware (must be last)
+    app.use(errorHandler);
+
+    const PORT = config.PORT;
     httpServer.listen(PORT, () => {
-        console.log(`🚀 Server ready at http://localhost:${PORT}/graphql`);
-        console.log(`🔌 WebSocket server ready at ws://localhost:${PORT}/graphql`);
-        console.log(`REST endpoints available at http://localhost:${PORT}/signup and /login`);
+        logInfo(`🚀 Server ready at http://localhost:${PORT}/graphql`);
+        logInfo(`🔌 WebSocket server ready at ws://localhost:${PORT}/graphql`);
+        logInfo(`REST endpoints available at http://localhost:${PORT}/signup and /login`);
+        logInfo(`Environment: ${config.NODE_ENV}`);
     });
 }
 
 startServer().catch((err) => {
-    console.error('Server failed to start', err);
+    logError('Server failed to start', err);
+    process.exit(1);
 });
