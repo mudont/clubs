@@ -81,6 +81,57 @@ async function startServer() {
         });
     });
 
+    // SMTP test endpoint (for debugging)
+    app.post('/test-smtp', async (req: Request, res: Response) => {
+        try {
+            const nodemailer = require('nodemailer');
+
+            // Create transporter
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: process.env.EMAIL_USER,
+                    pass: process.env.EMAIL_PASS,
+                },
+            });
+
+            // Test connection
+            await transporter.verify();
+
+            // Send test email
+            const testEmail = {
+                from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+                to: process.env.EMAIL_USER, // Send to yourself
+                subject: 'SMTP Test - Clubs App',
+                html: `
+                    <h2>SMTP Test Successful!</h2>
+                    <p>This is a test email from your Clubs app server.</p>
+                    <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
+                    <p><strong>Server:</strong> ${config.NODE_ENV}</p>
+                `,
+            };
+
+            const info = await transporter.sendMail(testEmail);
+
+            res.json({
+                success: true,
+                message: 'SMTP test successful',
+                messageId: info.messageId,
+                timestamp: new Date().toISOString()
+            });
+
+        } catch (error: any) {
+            console.error('SMTP test failed:', error);
+            res.status(500).json({
+                success: false,
+                error: error.message,
+                code: error.code,
+                command: error.command,
+                timestamp: new Date().toISOString()
+            });
+        }
+    });
+
     // Signup endpoint with validation and rate limiting
     app.post('/signup', authRateLimiter, validateInput(validationSchemas.signup), (req: Request, res: Response) => {
         signup(req, res).catch((err: any) => {
