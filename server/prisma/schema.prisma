@@ -14,24 +14,26 @@ datasource db {
 }
 
 model User {
-    id            String        @id @default(uuid())
-    createdAt     DateTime      @default(now())
-    updatedAt     DateTime      @updatedAt
-    username      String        @unique
-    email         String        @unique
-    emailVerified Boolean       @default(false)
-    passwordHash  String? // nullable for OAuth-only users
-    phone         String?
-    photoUrl      String?
-    firstName     String?
-    lastName      String?
-    bio           String?
-    avatar        String?
-    memberships   Membership[]
-    accounts      AuthAccount[]
-    messages      Message[]
-    Event         Event[]
-    RSVP          RSVP[]
+    id                        String        @id @default(uuid())
+    createdAt                 DateTime      @default(now())
+    updatedAt                 DateTime      @updatedAt
+    username                  String        @unique
+    email                     String        @unique
+    emailVerified             Boolean       @default(false)
+    passwordHash              String? // nullable for OAuth-only users
+    phone                     String?
+    photoUrl                  String?
+    firstName                 String?
+    lastName                  String?
+    bio                       String?
+    avatar                    String?
+    memberships               Membership[]
+    accounts                  AuthAccount[]
+    messages                  Message[]
+    Event                     Event[]
+    RSVP                      RSVP[]
+    resetPasswordToken        String? // for password reset
+    resetPasswordTokenExpires DateTime? // for password reset expiry
 }
 
 model AuthAccount {

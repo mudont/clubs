@@ -87,6 +87,10 @@ const Login: React.FC = () => {
           </button>
         </form>
 
+        <div style={{ textAlign: 'right', marginBottom: 16 }}>
+          <a href="/forgot-password">Forgot password?</a>
+        </div>
+
         <div className="divider">
           <span>or</span>
         </div>

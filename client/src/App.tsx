@@ -5,8 +5,10 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 
 import { client } from './apollo';
 import AuthSuccess from './components/auth/AuthSuccess';
+import ForgotPassword from './components/auth/ForgotPassword';
 import Login from './components/auth/Login';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import ResetPassword from './components/auth/ResetPassword';
 import Signup from './components/auth/Signup';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import LoadingSpinner from './components/common/LoadingSpinner';
@@ -118,6 +120,8 @@ function App() {
                       }
                     />
                     <Route path="/auth-success" element={<AuthSuccess />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   </Routes>
                 </ErrorBoundary>

@@ -8,7 +8,7 @@ import { signup } from './auth/local';
 import session from 'express-session';
 import { generateToken } from './auth/jwt';
 import { getUserFromToken } from './auth/jwt';
-import { handleEmailVerification } from './auth/email';
+import { handleEmailVerification, generatePasswordResetToken, sendPasswordResetEmail } from './auth/email';
 import { typeDefs } from './schema';
 import { resolvers } from './resolvers';
 import { createServer } from 'http';
@@ -19,16 +19,18 @@ import type { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import { config, corsConfig, securityConfig } from './config';
 import { logger, logError, logInfo, logRequest } from './utils/logger';
-import { 
-  rateLimiter, 
-  authRateLimiter, 
-  securityHeaders, 
-  validateInput, 
-  validationSchemas, 
-  sanitizeInput, 
-  errorHandler, 
-  requestSizeLimit 
+import {
+    rateLimiter,
+    authRateLimiter,
+    securityHeaders,
+    validateInput,
+    validationSchemas,
+    sanitizeInput,
+    errorHandler,
+    requestSizeLimit,
+    passwordResetRateLimiter
 } from './middleware/security';
+import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
@@ -46,11 +48,11 @@ async function startServer() {
     app.use(cors(corsConfig));
     app.use(express.json({ limit: '10mb' }));
     app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-    
+
     // Session configuration
-    app.use(session({ 
-        secret: securityConfig.sessionSecret, 
-        resave: false, 
+    app.use(session({
+        secret: securityConfig.sessionSecret,
+        resave: false,
         saveUninitialized: false,
         cookie: {
             secure: config.NODE_ENV === 'production',
@@ -58,7 +60,7 @@ async function startServer() {
             maxAge: 24 * 60 * 60 * 1000 // 24 hours
         }
     }) as unknown as import('express').RequestHandler);
-    
+
     app.use(passport.initialize());
     app.use(passport.session());
 
@@ -124,6 +126,59 @@ async function startServer() {
                 user: { id: user.id, email: user.email, username: user.username, emailVerified: user.emailVerified }
             });
         })(req, res, next);
+    });
+
+    // Forgot password endpoint
+    app.post('/forgot-password', passwordResetRateLimiter, async (req: Request, res: Response) => {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required.' });
+        }
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (user) {
+            const token = generatePasswordResetToken(email);
+            const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+            await prisma.user.update({
+                where: { email },
+                data: {
+                    resetPasswordToken: token,
+                    resetPasswordTokenExpires: expires,
+                },
+            });
+            await sendPasswordResetEmail(email, token);
+        } else {
+            console.log(`[ForgotPassword] No user found for email: ${email}`);
+        }
+        // Always respond with success to prevent email enumeration
+        res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
+    });
+
+    // Reset password endpoint
+    app.post('/reset-password', passwordResetRateLimiter, async (req: Request, res: Response) => {
+        const { token, password } = req.body;
+        if (!token || !password) {
+            return res.status(400).json({ error: 'Token and new password are required.' });
+        }
+        let payload: any;
+        try {
+            payload = require('jsonwebtoken').verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        } catch (err) {
+            return res.status(400).json({ error: 'Invalid or expired token.' });
+        }
+        const user = await prisma.user.findUnique({ where: { email: payload.email } });
+        if (!user || user.resetPasswordToken !== token || !user.resetPasswordTokenExpires || user.resetPasswordTokenExpires < new Date()) {
+            return res.status(400).json({ error: 'Invalid or expired token.' });
+        }
+        const passwordHash = await bcrypt.hash(password, 10);
+        await prisma.user.update({
+            where: { email: payload.email },
+            data: {
+                passwordHash,
+                resetPasswordToken: null,
+                resetPasswordTokenExpires: null,
+            },
+        });
+        res.json({ message: 'Password has been reset. You can now log in.' });
     });
 
     // Get frontend URL from config

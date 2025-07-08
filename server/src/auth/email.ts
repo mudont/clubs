@@ -64,4 +64,33 @@ export async function handleEmailVerification(token: string): Promise<{ success:
     } catch (err) {
         return { success: false, message: 'Failed to verify email. Please try again.' };
     }
+}
+
+export function generatePasswordResetToken(email: string): string {
+    return jwt.sign({ email }, JWT_SECRET, { expiresIn: '1h' });
+}
+
+export async function sendPasswordResetEmail(email: string, token: string): Promise<void> {
+    const resetUrl = `${process.env.BACKEND_URL || 'http://localhost:4010'}/reset-password?token=${token}`;
+
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Reset your password',
+        html: `
+      <h1>Password Reset Request</h1>
+      <p>If you requested a password reset, click the link below to set a new password:</p>
+      <a href="${resetUrl}">${resetUrl}</a>
+      <p>If you did not request this, you can ignore this email.</p>
+      <p>This link will expire in 1 hour.</p>
+    `,
+    };
+
+    console.log('[PasswordResetEmail] Attempting to send email:', {
+        from: mailOptions.from,
+        to: mailOptions.to,
+        subject: mailOptions.subject
+    });
+
+    await transporter.sendMail(mailOptions);
 } 
