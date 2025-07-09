@@ -1,7 +1,7 @@
-import { useQuery, ApolloProvider, gql } from '@apollo/client';
+import { ApolloProvider, gql, useQuery } from '@apollo/client';
 import React, { Suspense } from 'react';
 import { Provider, useDispatch, useSelector } from 'react-redux';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 
 import { client } from './apollo';
 import AuthSuccess from './components/auth/AuthSuccess';
@@ -12,10 +12,8 @@ import ResetPassword from './components/auth/ResetPassword';
 import Signup from './components/auth/Signup';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import LoadingSpinner from './components/common/LoadingSpinner';
-import { store, RootState } from './store';
+import { RootState, store } from './store';
 import { setAuth } from './store/authSlice';
-
-import './App.css';
 
 
 // Lazy load main components for better performance

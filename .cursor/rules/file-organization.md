@@ -3,12 +3,13 @@
 ## Frontend Structure
 ```
 client/src/
-├── components/     # Reusable UI components
+├── components/     # Reusable UI components (use CSS Modules for styles)
 ├── pages/         # Page components
 ├── hooks/         # Custom React hooks
 ├── store/         # Redux store and slices
 ├── utils/         # Utility functions
 ├── types/         # TypeScript type definitions
+├── styles/        # Tailwind CSS, global styles (e.g., tailwind.css, globals.css)
 └── __tests__/     # Test files
 ```
 
