@@ -143,11 +143,11 @@ cp env.example .env
 # Database Configuration
 DATABASE_URL=postgresql://postgres:password@localhost:5432/clubs_db
 
-# Security (Generate secure keys for production)
+# Security (Generate secure keys using npm run generate:secrets)
 JWT_SECRET=your-super-secret-jwt-key-at-least-32-characters-long
 SESSION_SECRET=your-super-secret-session-key-at-least-32-characters-long
 
-# Email Configuration (for email verification)
+# Email Configuration (for email verification and password reset)
 EMAIL_USER=your-email@gmail.com
 EMAIL_PASS=your-app-password
 EMAIL_FROM=noreply@clubs-app.com
@@ -155,6 +155,11 @@ EMAIL_FROM=noreply@clubs-app.com
 # OAuth Configuration (optional)
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
+```
+
+**💡 Pro Tip**: Generate secure secrets automatically:
+```bash
+cd server && npm run generate:secrets
 ```
 
 ### **Development Workflow**
@@ -224,6 +229,13 @@ npm run pre-commit    # Lint-staged validation
 # Database management
 cd server && npx prisma migrate reset  # Reset database (development only)
 cd server && npx prisma studio         # Database GUI
+
+# Testing and utilities
+cd server && npm run test:smtp         # Test SMTP connectivity
+cd server && npm run generate:secrets  # Generate secure JWT/session secrets
+
+# Cursor rules management
+npx ts-node scripts/merge-cursor-rules.ts  # Merge modular rules into .cursorrules
 ```
 
 ### **Code Quality Status**
@@ -233,6 +245,54 @@ cd server && npx prisma studio         # Database GUI
 - ✅ **Accessibility**: Full test coverage with Testing Library best practices
 - ✅ **Error Handling**: Consistent patterns with proper type checking
 - ✅ **Modern React**: Error boundaries, custom dialogs, optimized renders
+
+### **Cursor AI Configuration**
+
+This project uses **modular Cursor rules** for AI-assisted development:
+
+#### **Modular Rules Structure**
+```
+.cursor/rules/
+├── project.md              # Project overview & architecture
+├── typescript.md           # TypeScript standards
+├── react.md               # React patterns & best practices
+├── graphql.md             # GraphQL & Apollo standards
+├── express-backend.md     # Express & backend patterns
+├── testing.md             # Testing standards & patterns
+├── security.md            # Security best practices
+├── uiux.md                # UI/UX & accessibility
+├── file-organization.md   # File structure standards
+├── naming-style-docs.md   # Naming conventions & style
+├── documentation.md       # Documentation standards & auto-updates
+├── anti-patterns.md       # Patterns to avoid
+└── continuous-improvement.md # Ongoing improvements
+```
+
+#### **Managing Cursor Rules**
+```bash
+# Edit modular rules (recommended)
+nano .cursor/rules/typescript.md
+nano .cursor/rules/react.md
+
+# Merge rules into .cursorrules (for Cursor to use)
+npx ts-node scripts/merge-cursor-rules.ts
+
+# View current rules
+cat .cursorrules
+```
+
+#### **Benefits of Modular Rules**
+- **Organized by topic** - Easy to find and edit specific standards
+- **Team collaboration** - Different team members can maintain different rule sets
+- **Version control** - Track changes to specific rule categories
+- **Maintainability** - Smaller, focused files are easier to manage
+
+#### **TypeScript Enforcement**
+- **All scripts and utilities use TypeScript** (.ts/.tsx)
+- **No JavaScript files** (.js/.jsx) are created for new development
+- **Type safety** is enforced across all code, including scripts
+- **Consistent development experience** with proper type checking
+- **Separate build configurations** for main app (`tsconfig.json`) and scripts (`tsconfig.scripts.json`)
 
 ---
 
@@ -341,6 +401,10 @@ git push heroku main
 # Build server
 cd server
 npm run build
+
+# Build server scripts (optional)
+cd server
+npm run build:scripts
 
 # Build client
 cd ../client
@@ -620,17 +684,28 @@ docker-compose -f docker-compose.prod.yml up -d
 
 ### **Database Management**
 
-1. **Migrations:**
-```bash
-# Create migration
-cd server
-npx prisma migrate dev --name add-new-feature
+#### **Database Naming Conventions**
+- **PostgreSQL uses snake_case** for all table names and column names
+- Prisma schema uses camelCase for TypeScript compatibility
+- All database entities are mapped using `@map()` and `@@map()` directives
+- Examples: `createdAt` → `created_at`, `firstName` → `first_name`, `userId` → `user_id`
 
-# Deploy to production
-npx prisma migrate deploy
+#### **Schema Management**
+```bash
+# View current database schema
+cd server && npx prisma studio
+
+# Generate Prisma client after schema changes
+cd server && npx prisma generate
+
+# Create and apply migrations
+cd server && npx prisma migrate dev --name descriptive-name
+
+# Deploy migrations to production
+cd server && npx prisma migrate deploy
 
 # Reset database (development only)
-npx prisma migrate reset
+cd server && npx prisma migrate reset
 ```
 
 2. **Backups:**
@@ -769,6 +844,31 @@ docker-compose exec app env | grep -E "(DATABASE_URL|JWT_SECRET)"
 docker-compose restart app
 ```
 
+**Build Issues (Linux/Mac differences):**
+```bash
+# Regenerate Prisma client after schema changes
+cd server && npx prisma generate
+
+# Run migrations to update database schema
+cd server && npx prisma migrate deploy
+
+# Clear node_modules and reinstall (if needed)
+rm -rf node_modules package-lock.json
+npm install
+```
+
+**SMTP/Email Issues:**
+```bash
+# Test SMTP connectivity
+cd server && npm run test:smtp
+
+# Check email configuration
+echo $EMAIL_USER $EMAIL_PASS
+
+# Verify Gmail app password (if using 2FA)
+# Go to Google Account → Security → App passwords
+```
+
 ### **Performance Issues**
 
 **Slow Database Queries:**
@@ -795,6 +895,38 @@ node --inspect server/dist/index.js
 # Check for memory leaks
 npm install -g clinic
 clinic doctor -- node server/dist/index.js
+```
+
+### **SMTP Testing**
+
+**Test Email Configuration:**
+```bash
+# Test SMTP connectivity
+cd server && npm run test:smtp
+
+# Test via HTTP endpoint (if server is running)
+curl -X POST http://localhost:4010/test-smtp
+
+# Manual SMTP testing
+cd server && node scripts/smtp-cli-test.js
+```
+
+**Common SMTP Issues:**
+- **Gmail App Password**: Use App Password instead of regular password if 2FA is enabled
+- **Network/Firewall**: Check if port 587/465 is blocked
+- **Environment Variables**: Verify EMAIL_USER and EMAIL_PASS are set correctly
+- **Account Settings**: Check Gmail account security settings
+
+### **Secret Generation**
+
+**Generate Secure Secrets:**
+```bash
+# Generate JWT and session secrets
+cd server && npm run generate:secrets
+
+# Copy the generated secrets to your .env file
+# JWT_SECRET=generated-secret-here
+# SESSION_SECRET=generated-secret-here
 ```
 
 ### **Debugging**
@@ -909,6 +1041,12 @@ This project maintains enterprise-grade code quality standards:
 - ✅ Replaced `window.confirm()` with professional confirmation dialogs
 - ✅ Enhanced accessibility testing coverage
 - ✅ Optimized React components with memoization and lazy loading
+- ✅ Added password reset functionality with secure email tokens
+- ✅ Implemented SMTP testing tools for email configuration debugging
+- ✅ Added automated secret generation for JWT and session keys
+- ✅ Enhanced rate limiting for password reset endpoints
+- ✅ Fixed Express 5 compatibility issues and Apollo Server integration
+- ✅ Added comprehensive error handling for email sending operations
 
 ### **🛡️ Production Readiness**
 - **Security**: Enterprise-grade security scanning and validation
@@ -918,6 +1056,51 @@ This project maintains enterprise-grade code quality standards:
 - **DevOps**: Automated CI/CD with security scanning and deployments
 
 **Ready for enterprise deployment with confidence!** 🚀
+
+---
+
+## 🚀 Quick Reference
+
+### **Common Commands**
+```bash
+# Development
+npm run dev                    # Start both client and server
+cd server && npm run dev       # Start server only
+cd client && npm start         # Start client only
+
+# Testing
+cd server && npm run test:smtp # Test SMTP connectivity
+cd server && npm test          # Run server tests
+cd client && npm test          # Run client tests
+
+# Database
+cd server && npx prisma generate    # Regenerate Prisma client
+cd server && npx prisma migrate dev # Run migrations
+cd server && npx prisma studio      # Open database GUI
+
+# Build
+cd server && npm run build          # Build main application
+cd server && npm run build:scripts  # Build utility scripts
+
+# Utilities
+cd server && npm run generate:secrets # Generate secure secrets
+npm run lint                    # Check code quality
+npm run build                   # Build for production
+
+# Cursor Rules
+npx ts-node scripts/merge-cursor-rules.ts # Merge modular rules
+nano .cursor/rules/typescript.md # Edit TypeScript rules
+```
+
+### **Environment Setup**
+```bash
+# Copy and configure environment
+cp env.example .env
+cd server && npm run generate:secrets
+
+# Test email configuration
+cd server && npm run test:smtp
+```
 
 ---
 

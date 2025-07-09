@@ -1,0 +1,54 @@
+{
+  "recommendations": [
+    // Essential Extensions
+    "ms-vscode.vscode-typescript-next",
+    "bradlc.vscode-tailwindcss",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "ms-vscode.vscode-json",
+
+    // React & GraphQL
+    "ms-vscode.vscode-react-native",
+    "GraphQL.vscode-graphql",
+    "GraphQL.vscode-graphql-syntax",
+
+    // Database & ORM
+    "Prisma.prisma",
+    "cweijan.vscode-postgresql-client2",
+
+    // Git & GitHub
+    "eamodio.gitlens",
+    "GitHub.vscode-pull-request-github",
+
+    // Testing
+    "orta.vscode-jest",
+    "ms-playwright.playwright",
+
+    // Productivity
+    "ms-vscode.vscode-typescript-next",
+    "formulahendry.auto-rename-tag",
+    "christian-kohler.path-intellisense",
+    "ms-vscode.vscode-todo-highlight",
+
+    // Docker
+    "ms-azuretools.vscode-docker",
+
+    // Terminal & Shell
+    "ms-vscode.vscode-terminal",
+
+    // Code Quality
+    "streetsidesoftware.code-spell-checker",
+    "ms-vscode.vscode-json",
+
+    // Theme & Icons (Optional)
+    "PKief.material-icon-theme",
+    "zhuangtongfa.Material-theme",
+
+    // Cursor AI
+    "cursor.cursor"
+  ],
+  "unwantedRecommendations": [
+    "ms-vscode.vscode-typescript",
+    "ms-vscode.vscode-javascript"
+  ]
+}

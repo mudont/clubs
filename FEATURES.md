@@ -11,6 +11,7 @@ Clubs is a full-stack social and sports club management platform designed with m
 ### **User Management**
 - **Multi-Authentication Support**: Local email/password, Google OAuth, GitHub OAuth, Facebook OAuth
 - **Email Verification**: Secure account activation with email confirmation
+- **Password Reset**: Secure password reset flow with email tokens
 - **User Profiles**: Comprehensive profile management with avatars and personal information
 - **Role-Based Access**: Admin privileges for club management
 - **Session Management**: Secure session handling with Redis storage
@@ -54,11 +55,12 @@ Clubs is a full-stack social and sports club management platform designed with m
 - **Redis**: Caching and session storage
 
 ### **Database Design**
-- **Normalized Schema**: Efficient relational database design
+- **Normalized Schema**: Efficient relational database design with snake_case naming convention
 - **Foreign Key Constraints**: Data integrity and referential consistency
 - **Indexing Strategy**: Optimized queries with proper indexing
 - **Migration System**: Version-controlled database schema changes
 - **Connection Pooling**: Efficient database connection management
+- **Naming Conventions**: PostgreSQL uses snake_case for tables and columns, mapped via Prisma @map directives
 
 ---
 
@@ -79,11 +81,12 @@ Clubs is a full-stack social and sports club management platform designed with m
 - **CORS Configuration**: Secure cross-origin resource sharing
 
 ### **Security Middleware**
-- **Rate Limiting**: API and authentication endpoint protection
+- **Rate Limiting**: API and authentication endpoint protection with password reset rate limiting
 - **Helmet.js**: Security headers (CSP, HSTS, etc.)
 - **Input Sanitization**: Automatic removal of malicious content
 - **Error Handling**: Secure error responses without information leakage
 - **Security Logging**: Comprehensive security event logging
+- **Password Reset Protection**: Rate-limited password reset endpoints with secure token handling
 
 ### **Environment Security**
 - **Environment Validation**: Zod-based environment variable validation
@@ -173,6 +176,10 @@ Clubs is a full-stack social and sports club management platform designed with m
 - **API Documentation**: GraphQL schema introspection
 - **Error Boundaries**: React error boundaries with fallback UI and retry mechanisms
 - **Accessibility Testing**: Comprehensive accessibility test coverage
+- **SMTP Testing**: Built-in SMTP connectivity testing tools
+- **Secret Generation**: Automated secure secret generation for JWT and sessions
+- **Development Scripts**: Utility scripts for common development tasks
+- **Modular Cursor Rules**: Organized AI coding standards by topic for better maintainability
 
 ### **Code Quality & Standards**
 - **ESLint Configuration**: Enterprise-grade linting with 0 errors
@@ -187,7 +194,7 @@ Clubs is a full-stack social and sports club management platform designed with m
 - **Error Handling Patterns**: Consistent error handling with proper type checking
 - **Accessibility Compliance**: WCAG-compliant UI components and testing
 - **Testing Library Best Practices**: Proper testing patterns avoiding direct DOM access
-- **Modern React Patterns**: 
+- **Modern React Patterns**:
   - Custom confirmation dialogs instead of `window.confirm()`
   - Proper error boundaries with retry mechanisms
   - Memoized callbacks and optimized renders
@@ -276,4 +283,4 @@ Clubs is a full-stack social and sports club management platform designed with m
 
 ---
 
-This comprehensive feature set makes the Clubs application production-ready with enterprise-grade security, scalability, and maintainability. The architecture supports both current requirements and future growth while maintaining developer productivity and operational excellence. 
+This comprehensive feature set makes the Clubs application production-ready with enterprise-grade security, scalability, and maintainability. The architecture supports both current requirements and future growth while maintaining developer productivity and operational excellence.
