@@ -6,3 +6,4 @@
 - Stay updated with best practices
 - Gather user feedback
 - Implement accessibility improvements
+

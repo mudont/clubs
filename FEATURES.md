@@ -14,7 +14,7 @@ Clubs is a full-stack social and sports club management platform designed with m
 - **Password Reset**: Secure password reset flow with email tokens
 - **User Profiles**: Comprehensive profile management with avatars and personal information
 - **Role-Based Access**: Admin privileges for club management
-- **Session Management**: Secure session handling with Redis storage
+- **Session Management**: Secure session handling with Redis storage for persistence and scalability
 
 ### **Club Management**
 - **Club Creation**: Create clubs with descriptions, images, and metadata
@@ -53,6 +53,14 @@ Clubs is a full-stack social and sports club management platform designed with m
 - **Prisma ORM**: Type-safe database operations with migrations
 - **PostgreSQL**: Robust relational database with ACID compliance
 - **Redis**: Caching and session storage
+
+### **Session Management Architecture**
+- **Redis Session Store**: Persistent session storage using `connect-redis`
+- **Session Configuration**: 24-hour session lifetime with automatic cleanup
+- **Security Features**: HTTP-only cookies, secure flags in production
+- **Connection Management**: Graceful Redis connection handling with retry logic
+- **Scalability**: Multiple server instances can share sessions seamlessly
+- **Performance**: Fast session access with Redis in-memory storage
 
 ### **Database Design**
 - **Normalized Schema**: Efficient relational database design with snake_case naming convention

@@ -238,6 +238,34 @@ cd server && npm run generate:secrets  # Generate secure JWT/session secrets
 npx ts-node scripts/merge-cursor-rules.ts  # Merge modular rules into .cursorrules
 ```
 
+### **Session Management with Redis**
+
+This application uses **Redis for persistent session storage** instead of the default in-memory store. This provides:
+
+- **Persistence**: Sessions survive server restarts
+- **Scalability**: Multiple server instances can share sessions
+- **Performance**: Fast session access with automatic expiration
+- **Production Ready**: Industry-standard session storage solution
+
+**Configuration:**
+- Sessions are stored in Redis with prefix `sess:`
+- 24-hour session lifetime with automatic cleanup
+- Secure HTTP-only cookies in production
+- Graceful Redis connection handling with retry logic
+
+**Redis Setup:**
+```bash
+# Start Redis with Docker
+docker-compose up -d redis
+
+# Or install Redis locally
+brew install redis  # macOS
+sudo apt-get install redis-server  # Ubuntu
+
+# Test Redis connection
+redis-cli ping  # Should return PONG
+```
+
 ### **Code Quality Status**
 - ✅ **ESLint**: 0 errors, 20 warnings (TypeScript `any` types only)
 - ✅ **Import Organization**: 100% compliant with import/order rules

@@ -3,6 +3,7 @@ import { expressMiddleware } from '@as-integrations/express5';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import { RedisStore } from 'connect-redis';
 import cors from 'cors';
 import type { NextFunction, Request, Response } from 'express';
 import express from 'express';
@@ -16,6 +17,7 @@ import { generateToken, getUserFromToken } from './auth/jwt';
 import { signup } from './auth/local';
 import passport from './auth/passport';
 import { config, corsConfig, securityConfig } from './config';
+import { redisClient } from './config/redis';
 import {
   authRateLimiter,
   errorHandler,
@@ -48,8 +50,28 @@ async function startServer() {
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-  // Session configuration
+  // Initialize Redis session store
+  let redisStore: any;
+
+  try {
+    console.log('🔄 Attempting to initialize Redis session store...');
+    console.log('📍 Redis URL:', config.REDIS_URL || 'redis://localhost:6379');
+
+    redisStore = new RedisStore({
+      client: redisClient,
+      prefix: 'sess:',
+      ttl: 24 * 60 * 60, // 24 hours in seconds
+    });
+    console.log('✅ Redis session store initialized successfully');
+  } catch (error) {
+    console.warn('⚠️  Redis session store failed to initialize, falling back to memory store');
+    console.error('🔍 Error details:', error);
+    redisStore = undefined;
+  }
+
+  // Session configuration with Redis store (fallback to memory if Redis unavailable)
   app.use(session({
+    store: redisStore,
     secret: securityConfig.sessionSecret,
     resave: false,
     saveUninitialized: false,
