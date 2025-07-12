@@ -91,7 +91,7 @@
 }
 
 .divider::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 50%;
   left: 0;
@@ -189,6 +189,42 @@
   border: 1px solid #9ae6b4;
 }
 
+.password-requirements {
+  margin-top: 8px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 3px solid #667eea;
+}
+
+.password-requirements small {
+  display: block;
+  color: #666;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.password-requirements ul {
+  margin: 0;
+  padding-left: 16px;
+  list-style-type: none;
+}
+
+.password-requirements li {
+  color: #666;
+  font-size: 12px;
+  margin-bottom: 2px;
+  position: relative;
+}
+
+.password-requirements li::before {
+  content: '•';
+  color: #667eea;
+  font-weight: bold;
+  position: absolute;
+  left: -12px;
+}
+
 /* Responsive design */
 @media (max-width: 480px) {
   .auth-card {
@@ -203,5 +239,108 @@
   .btn-oauth {
     font-size: 13px;
     padding: 10px 12px;
+  }
+}
+
+.btn-delete-account:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Email Verification Styles */
+.verification-status {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.status-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.verification-content {
+  margin-top: 24px;
+}
+
+.verification-content p {
+  margin: 12px 0;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.verification-loading .status-icon {
+  animation: pulse 2s infinite;
+}
+
+.verification-success .status-icon {
+  color: #2f855a;
+}
+
+.verification-error .status-icon {
+  color: #c53030;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+
+.redirect-message {
+  color: #666;
+  font-size: 14px;
+  margin-top: 16px;
+}
+
+.verification-actions {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-secondary {
+  padding: 12px 24px;
+  background: #e2e8f0;
+  color: #4a5568;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-secondary:hover {
+  background: #cbd5e0;
+  transform: translateY(-1px);
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }

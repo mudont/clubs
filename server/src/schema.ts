@@ -111,21 +111,21 @@ export const typeDefs = gql`
 
   type Query {
     health: String!
-    
+
     # User queries
     me: User
     user(id: ID!): User
     userSearch(query: String!): [User!]!
-    
+
     # Club queries
     clubs: [Club!]!
     club(id: ID!): Club
     myClubs: [Club!]!
-    
+
     # Event queries
     events(clubId: ID!): [Event!]!
     event(id: ID!): Event
-    
+
     # Message queries
     messages(clubId: ID!, limit: Int = 50): [Message!]!
   }
@@ -141,7 +141,7 @@ export const typeDefs = gql`
     removeMember(clubId: ID!, userId: ID!): Boolean!
     makeAdmin(clubId: ID!, userId: ID!): Membership!
     removeAdmin(clubId: ID!, userId: ID!): Membership!
-    
+
     # Event mutations
     createEvent(input: CreateEventInput!): Event!
     updateEvent(id: ID!, input: CreateEventInput!): Event!
@@ -149,12 +149,13 @@ export const typeDefs = gql`
     createRSVP(input: CreateRSVPInput!): RSVP!
     updateRSVP(id: ID!, status: RSVPStatus!, note: String): RSVP!
     deleteRSVP(id: ID!): Boolean!
-    
+
     # Message mutations
     sendMessage(input: SendMessageInput!): Message!
-    
+
     # User mutations
     updateProfile(input: UpdateUserInput!): User!
+    deleteUser(userId: ID!): Boolean!
   }
 
   type Subscription {
@@ -166,4 +167,4 @@ export const typeDefs = gql`
   }
 
   scalar DateTime
-`; 
+`;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const ResetPassword: React.FC = () => {
   const [password, setPassword] = useState('');
@@ -15,8 +15,8 @@ const ResetPassword: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.');
       return;
     }
     if (password !== confirm) {
@@ -34,7 +34,8 @@ const ResetPassword: React.FC = () => {
         setTimeout(() => navigate('/login'), 2000);
       } else {
         const data = await res.json();
-        setError(data.error || 'Something went wrong.');
+        // Display the specific validation error message if available, otherwise fall back to generic error
+        setError(data.message || data.error || 'Something went wrong.');
       }
     } catch {
       setError('Network error. Please try again.');
@@ -80,8 +81,18 @@ const ResetPassword: React.FC = () => {
               onChange={e => setPassword(e.target.value)}
               required
               placeholder="Enter new password"
-              minLength={6}
+              minLength={8}
             />
+            <div className="password-requirements">
+              <small>Password must contain:</small>
+              <ul>
+                <li>At least 8 characters</li>
+                <li>One uppercase letter (A-Z)</li>
+                <li>One lowercase letter (a-z)</li>
+                <li>One number (0-9)</li>
+                <li>One special character (@$!%*?&)</li>
+              </ul>
+            </div>
           </div>
           <div className="form-group">
             <label htmlFor="confirm">Confirm Password</label>
@@ -92,7 +103,7 @@ const ResetPassword: React.FC = () => {
               onChange={e => setConfirm(e.target.value)}
               required
               placeholder="Confirm new password"
-              minLength={6}
+              minLength={8}
             />
           </div>
           <button type="submit" className="btn-primary">Reset Password</button>
@@ -105,4 +116,4 @@ const ResetPassword: React.FC = () => {
   );
 };
 
-export default ResetPassword; 
+export default ResetPassword;

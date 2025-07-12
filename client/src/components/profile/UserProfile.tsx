@@ -1,6 +1,6 @@
-import { useQuery, useMutation , gql } from '@apollo/client';
+import { gql, useMutation, useQuery } from '@apollo/client';
 import React, { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { RootState } from '../../store';
 import { updateUser } from '../../store/authSlice';
@@ -45,6 +45,12 @@ const CHANGE_PASSWORD = gql`
   }
 `;
 
+const DELETE_USER = gql`
+  mutation DeleteUser($userId: ID!) {
+    deleteUser(userId: $userId)
+  }
+`;
+
 const UserProfile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -75,6 +81,7 @@ const UserProfile: React.FC = () => {
 
   const [updateProfile] = useMutation(UPDATE_PROFILE);
   const [changePassword] = useMutation(CHANGE_PASSWORD);
+  const [deleteUser] = useMutation(DELETE_USER);
 
   // Initialize form data when profile loads
   React.useEffect(() => {
@@ -141,8 +148,8 @@ const UserProfile: React.FC = () => {
       return;
     }
 
-    if (passwordData.newPassword.length < 6) {
-      setError('New password must be at least 6 characters long');
+    if (passwordData.newPassword.length < 8) {
+      setError('New password must be at least 8 characters long');
       setLoading(false);
       return;
     }
@@ -166,6 +173,45 @@ const UserProfile: React.FC = () => {
       });
     } catch (err: any) {
       setError(err.message || 'Failed to change password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      'Are you sure you want to delete your account? This action cannot be undone and will permanently remove all your data including:\n\n' +
+      '• All your club memberships\n' +
+      '• All your messages\n' +
+      '• All your events and RSVPs\n' +
+      '• Your profile information\n\n' +
+      'This action is irreversible!'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      await deleteUser({
+        variables: {
+          userId: user?.id,
+        },
+      });
+
+      setSuccess('Account deleted successfully. You will be logged out.');
+      // Log out the user after a short delay
+      setTimeout(() => {
+        // Clear local storage and redirect to login
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }, 2000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete account');
     } finally {
       setLoading(false);
     }
@@ -197,6 +243,13 @@ const UserProfile: React.FC = () => {
             className="btn-change-password"
           >
             Change Password
+          </button>
+          <button
+            onClick={handleDeleteAccount}
+            className="btn-delete-account"
+            disabled={loading}
+          >
+            {loading ? 'Deleting...' : 'Delete Account'}
           </button>
         </div>
       </div>
@@ -334,8 +387,18 @@ const UserProfile: React.FC = () => {
                   value={passwordData.newPassword}
                   onChange={handlePasswordChange}
                   required
-                  minLength={6}
+                  minLength={8}
                 />
+                <div className="password-requirements">
+                  <small>Password must contain:</small>
+                  <ul>
+                    <li>At least 8 characters</li>
+                    <li>One uppercase letter (A-Z)</li>
+                    <li>One lowercase letter (a-z)</li>
+                    <li>One number (0-9)</li>
+                    <li>One special character (@$!%*?&)</li>
+                  </ul>
+                </div>
               </div>
               <div className="form-group">
                 <label htmlFor="confirmPassword">Confirm New Password</label>
@@ -368,4 +431,4 @@ const UserProfile: React.FC = () => {
   );
 };
 
-export default UserProfile; 
+export default UserProfile;

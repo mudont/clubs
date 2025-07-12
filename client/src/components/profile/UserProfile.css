@@ -54,6 +54,30 @@
   background: #cbd5e0;
 }
 
+.btn-delete-account {
+  padding: 10px 16px;
+  border: 2px solid #e53e3e;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+  color: #e53e3e;
+}
+
+.btn-delete-account:hover:not(:disabled) {
+  background: #e53e3e;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.btn-delete-account:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .profile-content {
   display: flex;
   flex-direction: column;

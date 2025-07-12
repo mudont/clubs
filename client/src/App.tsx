@@ -5,6 +5,7 @@ import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-d
 
 import { client } from './apollo';
 import AuthSuccess from './components/auth/AuthSuccess';
+import EmailVerification from './components/auth/EmailVerification';
 import ForgotPassword from './components/auth/ForgotPassword';
 import Login from './components/auth/Login';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -120,6 +121,7 @@ function App() {
                     <Route path="/auth-success" element={<AuthSuccess />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/email-verification" element={<EmailVerification />} />
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   </Routes>
                 </ErrorBoundary>

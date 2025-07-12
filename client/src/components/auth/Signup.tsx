@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import './Auth.css';
 
@@ -11,7 +11,7 @@ const Signup: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  
+
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,7 +44,8 @@ const Signup: React.FC = () => {
           navigate('/login');
         }, 3000);
       } else {
-        setError(data.error || 'Signup failed');
+        // Display the specific validation error message if available, otherwise fall back to generic error
+        setError(data.message || data.error || 'Signup failed');
       }
     } catch (err) {
       setError('Network error. Please try again.');
@@ -100,8 +101,18 @@ const Signup: React.FC = () => {
               onChange={(e) => setPassword(e.target.value)}
               required
               placeholder="Create a password"
-              minLength={6}
+              minLength={8}
             />
+            <div className="password-requirements">
+              <small>Password must contain:</small>
+              <ul>
+                <li>At least 8 characters</li>
+                <li>One uppercase letter (A-Z)</li>
+                <li>One lowercase letter (a-z)</li>
+                <li>One number (0-9)</li>
+                <li>One special character (@$!%*?&)</li>
+              </ul>
+            </div>
           </div>
 
           <div className="form-group">
@@ -113,7 +124,7 @@ const Signup: React.FC = () => {
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               placeholder="Confirm your password"
-              minLength={6}
+              minLength={8}
             />
           </div>
 
@@ -162,4 +173,4 @@ const Signup: React.FC = () => {
   );
 };
 
-export default Signup; 
+export default Signup;
