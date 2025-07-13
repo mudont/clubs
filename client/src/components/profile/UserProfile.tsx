@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { RootState } from '../../store';
 import { updateUser } from '../../store/authSlice';
+import Header from '../common/Header';
 import './UserProfile.css';
 
 const GET_USER_PROFILE = gql`
@@ -229,6 +230,7 @@ const UserProfile: React.FC = () => {
 
   return (
     <div className="user-profile">
+      <Header title="Profile" showBackButton backTo="/dashboard" />
       <div className="profile-header">
         <h1>Profile</h1>
         <div className="profile-actions">
