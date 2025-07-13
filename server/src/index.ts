@@ -39,6 +39,7 @@ const prisma = new PrismaClient();
 async function startServer() {
   // Set up Express
   const app = express();
+  app.set('trust proxy', true); // Trust X-Forwarded-For header for rate limiting and proxies
 
   // Security middleware
   app.use(securityHeaders);
