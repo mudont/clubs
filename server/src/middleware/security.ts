@@ -12,6 +12,10 @@ export const rateLimiter = rateLimit({
   message: rateLimitConfig.message,
   standardHeaders: rateLimitConfig.standardHeaders,
   legacyHeaders: rateLimitConfig.legacyHeaders,
+  keyGenerator: (req: Request) => {
+    // Use X-Forwarded-For header if available, otherwise use req.ip
+    return req.headers['x-forwarded-for'] as string || req.ip || 'unknown';
+  },
   handler: (req: Request, res: Response) => {
     logSecurityEvent('Rate limit exceeded', {
       ip: req.ip,
@@ -29,6 +33,10 @@ export const authRateLimiter = rateLimit({
   message: 'Too many authentication attempts, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req: Request) => {
+    // Use X-Forwarded-For header if available, otherwise use req.ip
+    return req.headers['x-forwarded-for'] as string || req.ip || 'unknown';
+  },
   handler: (req: Request, res: Response) => {
     logSecurityEvent('Auth rate limit exceeded', {
       ip: req.ip,
@@ -46,6 +54,10 @@ export const passwordResetRateLimiter = rateLimit({
   message: 'Too many password reset requests, please try again in an hour.',
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req: Request) => {
+    // Use X-Forwarded-For header if available, otherwise use req.ip
+    return req.headers['x-forwarded-for'] as string || req.ip || 'unknown';
+  },
   handler: (req: Request, res: Response) => {
     logSecurityEvent('Password reset rate limit exceeded', {
       ip: req.ip,
