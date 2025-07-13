@@ -74,9 +74,10 @@ const UPDATE_RSVP = gql`
 
 interface EventListProps {
   groupId: string;
+  isAdmin?: boolean;
 }
 
-const EventList: React.FC<EventListProps> = ({ groupId }) => {
+const EventList: React.FC<EventListProps> = ({ groupId, isAdmin = false }) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [eventDate, setEventDate] = useState('');
   const [eventDescription, setEventDescription] = useState('');
@@ -259,12 +260,14 @@ const EventList: React.FC<EventListProps> = ({ groupId }) => {
     <div className="event-list">
       <div className="event-header">
         <h2>Events</h2>
-        <button
-          onClick={() => setShowCreateForm(!showCreateForm)}
-          className="btn-create-event"
-        >
-          {showCreateForm ? 'Cancel' : 'Create Event'}
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            className="btn-create-event"
+          >
+            {showCreateForm ? 'Cancel' : 'Create Event'}
+          </button>
+        )}
       </div>
 
       {showCreateForm && (

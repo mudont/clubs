@@ -171,7 +171,7 @@ const GroupDetail: React.FC = () => {
           )}
 
           {activeTab === 'events' && (
-            <EventList groupId={group.id} />
+            <EventList groupId={group.id} isAdmin={isAdmin} />
           )}
 
           {activeTab === 'chat' && (
