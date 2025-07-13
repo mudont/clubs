@@ -95,6 +95,12 @@ export const typeDefs = gql`
     isPublic: Boolean
   }
 
+  input UpdateGroupInput {
+    name: String
+    description: String
+    isPublic: Boolean
+  }
+
   input CreateEventInput {
     groupId: ID!
     date: DateTime!
@@ -152,6 +158,7 @@ export const typeDefs = gql`
   type Mutation {
     # Group mutations
     createGroup(input: CreateGroupInput!): Group!
+    updateGroup(id: ID!, input: UpdateGroupInput!): Group!
     joinGroup(groupId: ID!): Membership!
     leaveGroup(groupId: ID!): Boolean!
     addMember(groupId: ID!, userId: ID!): Membership!

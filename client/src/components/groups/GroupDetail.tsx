@@ -40,6 +40,10 @@ const GroupDetail: React.FC = () => {
   const getInitialTab = (): 'overview' | 'events' | 'chat' | 'management' => {
     const hash = window.location.hash.replace('#', '');
     const validTabs = ['overview', 'events', 'chat', 'management'];
+    // Ignore management-specific hashes (mgmt-*)
+    if (hash.startsWith('mgmt-')) {
+      return 'management';
+    }
     return validTabs.includes(hash) ? (hash as any) : 'overview';
   };
 

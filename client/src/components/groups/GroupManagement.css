@@ -75,10 +75,12 @@
 .input-group {
   display: flex;
   gap: 12px;
+  align-items: flex-start;
 }
 
 .input-wrapper {
   flex: 1;
+  min-width: 0;
   position: relative;
 }
 
@@ -262,6 +264,30 @@
 }
 
 .btn-demote:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  width: fit-content;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }

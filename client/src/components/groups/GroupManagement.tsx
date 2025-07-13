@@ -1,5 +1,5 @@
 import { gql, useLazyQuery, useMutation, useQuery } from '@apollo/client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { RootState } from '../../store';
@@ -90,8 +90,8 @@ const UNBLOCK_USER = gql`
 `;
 
 const UPDATE_GROUP = gql`
-  mutation UpdateGroup($input: UpdateGroupInput!) {
-    updateGroup(input: $input) {
+  mutation UpdateGroup($id: ID!, $input: UpdateGroupInput!) {
+    updateGroup(id: $id, input: $input) {
       id
       name
       description
@@ -154,6 +154,22 @@ const GroupManagement: React.FC<GroupManagementProps> = ({ groupId }) => {
   const [showBlockForm, setShowBlockForm] = useState<string | null>(null);
 
   const { user } = useSelector((state: RootState) => state.auth);
+
+  // Tab state persistence using URL hash
+  useEffect(() => {
+    const hash = window.location.hash.replace('#', '');
+    if (hash.startsWith('mgmt-')) {
+      const tab = hash.replace('mgmt-', '');
+      if (tab === 'members' || tab === 'blocked' || tab === 'settings') {
+        setActiveTab(tab);
+      }
+    }
+  }, []);
+
+  const handleTabChange = (tab: 'members' | 'blocked' | 'settings') => {
+    setActiveTab(tab);
+    window.location.hash = `mgmt-${tab}`;
+  };
 
   const { data, loading: membersLoading, refetch } = useQuery(GET_GROUP_MEMBERS, {
     variables: { groupId },
@@ -326,8 +342,8 @@ const GroupManagement: React.FC<GroupManagementProps> = ({ groupId }) => {
     try {
       await updateGroup({
         variables: {
+          id: groupId,
           input: {
-            groupId,
             name: groupForm.name,
             description: groupForm.description,
             isPublic: groupForm.isPublic,
@@ -433,19 +449,19 @@ const GroupManagement: React.FC<GroupManagementProps> = ({ groupId }) => {
         <h2>Group Management</h2>
         <div className="tab-buttons">
           <button
-            onClick={() => setActiveTab('members')}
+            onClick={() => handleTabChange('members')}
             className={`tab-button ${activeTab === 'members' ? 'active' : ''}`}
           >
             Members
           </button>
           <button
-            onClick={() => setActiveTab('blocked')}
+            onClick={() => handleTabChange('blocked')}
             className={`tab-button ${activeTab === 'blocked' ? 'active' : ''}`}
           >
             Blocked Users
           </button>
           <button
-            onClick={() => setActiveTab('settings')}
+            onClick={() => handleTabChange('settings')}
             className={`tab-button ${activeTab === 'settings' ? 'active' : ''}`}
           >
             Settings
@@ -484,7 +500,11 @@ const GroupManagement: React.FC<GroupManagementProps> = ({ groupId }) => {
                     </div>
                   )}
                 </div>
-                <button type="submit" disabled={loading || !addInput.trim()}>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={loading || !addInput.trim()}
+                >
                   {loading ? 'Adding...' : 'Add Member'}
                 </button>
               </div>
@@ -582,64 +602,62 @@ const GroupManagement: React.FC<GroupManagementProps> = ({ groupId }) => {
       {activeTab === 'settings' && (
         <div className="group-settings">
           <h3>Group Settings</h3>
-          <form onSubmit={handleUpdateGroup} className="settings-form">
-            <div className="form-group">
-              <label htmlFor="groupName">Group Name</label>
-              <input
-                type="text"
-                id="groupName"
-                name="name"
-                value={groupForm.name}
-                onChange={handleGroupFormChange}
-                disabled={!isEditingGroup}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="groupDescription">Description</label>
-              <textarea
-                id="groupDescription"
-                name="description"
-                value={groupForm.description}
-                onChange={handleGroupFormChange}
-                disabled={!isEditingGroup}
-                rows={3}
-              />
-            </div>
-            <div className="form-group">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  name="isPublic"
-                  checked={groupForm.isPublic}
-                  onChange={handleGroupFormChange}
-                  disabled={!isEditingGroup}
-                />
-                <span className="checkmark"></span>
-                Make this group public (anyone can join)
-              </label>
-            </div>
+          {!isEditingGroup ? (
             <div className="form-actions">
-              {isEditingGroup ? (
-                <>
-                  <button type="submit" disabled={loading}>
-                    {loading ? 'Saving...' : 'Save Changes'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingGroup(false)}
-                    disabled={loading}
-                  >
-                    Cancel
-                  </button>
-                </>
-              ) : (
-                <button type="button" onClick={() => setIsEditingGroup(true)}>
-                  Edit Group
-                </button>
-              )}
+              <button type="button" className="btn-primary" onClick={() => setIsEditingGroup(true)}>
+                Edit Group
+              </button>
             </div>
-          </form>
+          ) : (
+            <form onSubmit={handleUpdateGroup} className="settings-form">
+              <div className="form-group">
+                <label htmlFor="groupName">Group Name</label>
+                <input
+                  type="text"
+                  id="groupName"
+                  name="name"
+                  value={groupForm.name}
+                  onChange={handleGroupFormChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="groupDescription">Description</label>
+                <textarea
+                  id="groupDescription"
+                  name="description"
+                  value={groupForm.description}
+                  onChange={handleGroupFormChange}
+                  rows={3}
+                />
+              </div>
+              <div className="form-group">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    name="isPublic"
+                    checked={groupForm.isPublic}
+                    onChange={handleGroupFormChange}
+                  />
+                  <span className="checkmark"></span>
+                  Make this group public (anyone can join)
+                </label>
+              </div>
+              <div className="form-actions">
+                <button type="submit" className="btn-save" disabled={loading}>
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-cancel"
+                  onClick={() => setIsEditingGroup(false)}
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       )}
 

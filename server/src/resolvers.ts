@@ -196,6 +196,21 @@ export const resolvers = {
       return group;
     },
 
+    updateGroup: async (_: any, { id, input }: { id: string; input: { name?: string; description?: string; isPublic?: boolean } }, context: Context) => {
+      await requireGroupAdmin(context, id);
+
+      const updatedGroup = await context.prisma.group.update({
+        where: { id },
+        data: {
+          name: input.name,
+          description: input.description,
+          isPublic: input.isPublic,
+        },
+      });
+
+      return updatedGroup;
+    },
+
     joinGroup: async (_: any, { groupId }: { groupId: string }, context: Context) => {
       const user = requireAuth(context);
 

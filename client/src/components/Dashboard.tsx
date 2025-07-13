@@ -256,7 +256,11 @@ const Dashboard: React.FC = () => {
             </div>
 
             <div className="form-actions">
-              <button type="submit" disabled={loading || !groupName.trim()}>
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={loading || !groupName.trim()}
+              >
                 {loading ? 'Creating...' : 'Create Group'}
               </button>
             </div>
