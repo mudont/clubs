@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import Joi from 'joi';
-import { rateLimitConfig } from '../config';
+import { isDevelopment, rateLimitConfig } from '../config';
 import { logError, logSecurityEvent } from '../utils/logger';
 
 // Rate limiting middleware
@@ -25,7 +25,7 @@ export const rateLimiter = rateLimit({
 // Strict rate limiting for auth endpoints
 export const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 requests per windowMs
+  max: isDevelopment ? 500 : 50, // More lenient in development
   message: 'Too many authentication attempts, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -42,7 +42,7 @@ export const authRateLimiter = rateLimit({
 // Password reset rate limiting
 export const passwordResetRateLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10, // limit each IP to 10 requests per hour
+  max: isDevelopment ? 50 : 10, // More lenient in development
   message: 'Too many password reset requests, please try again in an hour.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -61,11 +61,11 @@ export const securityHeaders = helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "data:"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
       connectSrc: ["'self'", "ws:", "wss:"],
-      fontSrc: ["'self'"],
+      fontSrc: ["'self'", "data:"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
       frameSrc: ["'none'"],
@@ -113,21 +113,21 @@ export const validationSchemas = {
     }),
   }),
 
-  createClub: Joi.object({
+  createGroup: Joi.object({
     name: Joi.string().min(3).max(100).required().messages({
-      'string.min': 'Club name must be at least 3 characters long',
-      'string.max': 'Club name must be at most 100 characters long',
-      'any.required': 'Club name is required',
+      'string.min': 'Group name must be at least 3 characters long',
+      'string.max': 'Group name must be at most 100 characters long',
+      'any.required': 'Group name is required',
     }),
     description: Joi.string().max(1000).optional().messages({
-      'string.max': 'Club description must be at most 1000 characters long',
+      'string.max': 'Group description must be at most 1000 characters long',
     }),
   }),
 
   createEvent: Joi.object({
-    clubId: Joi.string().uuid().required().messages({
-      'string.uuid': 'Invalid club ID format',
-      'any.required': 'Club ID is required',
+    groupId: Joi.string().uuid().required().messages({
+      'string.uuid': 'Invalid group ID format',
+      'any.required': 'Group ID is required',
     }),
     date: Joi.date().greater('now').required().messages({
       'date.greater': 'Event date must be in the future',
@@ -141,9 +141,9 @@ export const validationSchemas = {
   }),
 
   sendMessage: Joi.object({
-    clubId: Joi.string().uuid().required().messages({
-      'string.uuid': 'Invalid club ID format',
-      'any.required': 'Club ID is required',
+    groupId: Joi.string().uuid().required().messages({
+      'string.uuid': 'Invalid group ID format',
+      'any.required': 'Group ID is required',
     }),
     content: Joi.string().min(1).max(1000).required().messages({
       'string.min': 'Message cannot be empty',

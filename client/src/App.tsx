@@ -19,7 +19,7 @@ import { setAuth } from './store/authSlice';
 
 // Lazy load main components for better performance
 const Dashboard = React.lazy(() => import('./components/Dashboard'));
-const ClubDetail = React.lazy(() => import('./components/clubs/ClubDetail'));
+const GroupDetail = React.lazy(() => import('./components/groups/GroupDetail'));
 const UserProfile = React.lazy(() => import('./components/profile/UserProfile'));
 
 interface UserData {
@@ -95,12 +95,12 @@ function App() {
                       }
                     />
                     <Route
-                      path="/club/:id"
+                      path="/group/:id"
                       element={
                         <ProtectedRoute>
                           <ErrorBoundary>
-                            <Suspense fallback={<LoadingSpinner message="Loading club details..." />}>
-                              <ClubDetail />
+                            <Suspense fallback={<LoadingSpinner message="Loading group details..." />}>
+                              <GroupDetail />
                             </Suspense>
                           </ErrorBoundary>
                         </ProtectedRoute>

@@ -1,8 +1,8 @@
-# Clubs Application - Features & Architecture
+# Groups Application - Features & Architecture
 
 ## 🎯 **Application Overview**
 
-Clubs is a full-stack social and sports club management platform designed with modern web technologies and production-ready architecture. The application enables users to create and join clubs, manage events, participate in real-time chat, and handle member administration with a focus on security, scalability, and user experience.
+Groups is a full-stack social and sports group management platform designed with modern web technologies and production-ready architecture. The application enables users to create and join groups, manage events, participate in real-time chat, and handle member administration with a focus on security, scalability, and user experience.
 
 ---
 
@@ -16,11 +16,11 @@ Clubs is a full-stack social and sports club management platform designed with m
 - **Role-Based Access**: Admin privileges for club management
 - **Session Management**: Secure session handling with Redis storage for persistence and scalability
 
-### **Club Management**
-- **Club Creation**: Create clubs with descriptions, images, and metadata
-- **Member Management**: Join/leave clubs, admin controls for member approval
-- **Club Discovery**: Browse and search available clubs
-- **Admin Controls**: Club owners can manage members and settings
+### **Group Management**
+- **Group Creation**: Create groups with descriptions, images, and metadata
+- **Member Management**: Join/leave groups, admin controls for member approval
+- **Group Discovery**: Browse and search available groups
+- **Admin Controls**: Group owners can manage members and settings
 
 ### **Event System**
 - **Event Creation**: Schedule events with dates, descriptions, and details

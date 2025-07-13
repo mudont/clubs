@@ -86,7 +86,7 @@ export const securityConfig = {
 // Rate limiting configuration
 export const rateLimitConfig = {
   windowMs: config.RATE_LIMIT_WINDOW_MS,
-  max: config.RATE_LIMIT_MAX,
+  max: isDevelopment ? 1000 : config.RATE_LIMIT_MAX, // More lenient in development
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,

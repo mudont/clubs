@@ -1,13 +1,13 @@
-import { useQuery, useMutation, useSubscription , gql } from '@apollo/client';
-import React, { useState, useEffect, useRef } from 'react';
+import { gql, useMutation, useQuery, useSubscription } from '@apollo/client';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { RootState } from '../../store';
 import './ChatRoom.css';
 
 const GET_MESSAGES = gql`
-  query GetMessages($clubId: ID!) {
-    messages(clubId: $clubId) {
+  query GetMessages($groupId: ID!) {
+    messages(groupId: $groupId) {
       id
       content
       createdAt
@@ -36,8 +36,8 @@ const SEND_MESSAGE = gql`
 `;
 
 const MESSAGE_SUBSCRIPTION = gql`
-  subscription OnMessageAdded($clubId: ID!) {
-    messageAdded(clubId: $clubId) {
+  subscription OnMessageAdded($groupId: ID!) {
+    messageAdded(groupId: $groupId) {
       id
       content
       createdAt
@@ -51,10 +51,10 @@ const MESSAGE_SUBSCRIPTION = gql`
 `;
 
 interface ChatRoomProps {
-  clubId: string;
+  groupId: string;
 }
 
-const ChatRoom: React.FC<ChatRoomProps> = ({ clubId }) => {
+const ChatRoom: React.FC<ChatRoomProps> = ({ groupId }) => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -62,7 +62,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ clubId }) => {
   const { user } = useSelector((state: RootState) => state.auth);
 
   const { data, loading: messagesLoading, refetch } = useQuery(GET_MESSAGES, {
-    variables: { clubId },
+    variables: { groupId },
     fetchPolicy: 'cache-and-network',
   });
 
@@ -72,7 +72,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ clubId }) => {
 
   // Subscribe to new messages
   const { data: subscriptionData } = useSubscription(MESSAGE_SUBSCRIPTION, {
-    variables: { clubId },
+    variables: { groupId },
     skip: !user,
   });
 
@@ -110,7 +110,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ clubId }) => {
       await sendMessage({
         variables: {
           input: {
-            clubId,
+            groupId,
             content: message.trim(),
           },
         },
@@ -145,7 +145,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ clubId }) => {
   return (
     <div className="chat-room">
       <div className="chat-header">
-        <h2>Club Chat</h2>
+        <h2>Group Chat</h2>
         <button onClick={() => refetch()} className="btn-refresh">
           🔄 Refresh
         </button>
@@ -218,4 +218,4 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ clubId }) => {
   );
 };
 
-export default ChatRoom; 
+export default ChatRoom;

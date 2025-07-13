@@ -18,31 +18,42 @@ export const typeDefs = gql`
     messages: [Message!]!
   }
 
-  type Club {
+  type Group {
     id: ID!
     name: String!
     description: String
+    isPublic: Boolean!
     createdAt: DateTime!
     updatedAt: DateTime!
     memberships: [Membership!]!
     events: [Event!]!
     messages: [Message!]!
     members: [Membership!]!
+    blockedUsers: [BlockedUser!]!
   }
 
   type Membership {
     id: ID!
     user: User!
-    club: Club!
+    group: Group!
     isAdmin: Boolean!
     memberId: Int!
     joinedAt: DateTime!
     role: String!
   }
 
+  type BlockedUser {
+    id: ID!
+    user: User!
+    group: Group!
+    blockedBy: User!
+    blockedAt: DateTime!
+    reason: String
+  }
+
   type Event {
     id: ID!
-    club: Club!
+    group: Group!
     createdBy: User!
     date: DateTime!
     description: String!
@@ -67,7 +78,7 @@ export const typeDefs = gql`
 
   type Message {
     id: ID!
-    club: Club!
+    group: Group!
     user: User!
     content: String!
     createdAt: DateTime!
@@ -78,13 +89,14 @@ export const typeDefs = gql`
     user: User!
   }
 
-  input CreateClubInput {
+  input CreateGroupInput {
     name: String!
     description: String
+    isPublic: Boolean
   }
 
   input CreateEventInput {
-    clubId: ID!
+    groupId: ID!
     date: DateTime!
     description: String!
   }
@@ -96,7 +108,7 @@ export const typeDefs = gql`
   }
 
   input SendMessageInput {
-    clubId: ID!
+    groupId: ID!
     content: String!
   }
 
@@ -109,6 +121,12 @@ export const typeDefs = gql`
     bio: String
   }
 
+  input BlockUserInput {
+    groupId: ID!
+    userId: ID!
+    reason: String
+  }
+
   type Query {
     health: String!
 
@@ -117,30 +135,33 @@ export const typeDefs = gql`
     user(id: ID!): User
     userSearch(query: String!): [User!]!
 
-    # Club queries
-    clubs: [Club!]!
-    club(id: ID!): Club
-    myClubs: [Club!]!
+    # Group queries
+    groups: [Group!]!
+    group(id: ID!): Group
+    myGroups: [Group!]!
+    publicGroups: [Group!]!
 
     # Event queries
-    events(clubId: ID!): [Event!]!
+    events(groupId: ID!): [Event!]!
     event(id: ID!): Event
 
     # Message queries
-    messages(clubId: ID!, limit: Int = 50): [Message!]!
+    messages(groupId: ID!, limit: Int = 50): [Message!]!
   }
 
   type Mutation {
-    # Club mutations
-    createClub(input: CreateClubInput!): Club!
-    joinClub(clubId: ID!): Membership!
-    leaveClub(clubId: ID!): Boolean!
-    addMember(clubId: ID!, userId: ID!): Membership!
-    addMemberByUsername(clubId: ID!, username: String!): Membership!
-    addMemberByEmail(clubId: ID!, email: String!): Membership!
-    removeMember(clubId: ID!, userId: ID!): Boolean!
-    makeAdmin(clubId: ID!, userId: ID!): Membership!
-    removeAdmin(clubId: ID!, userId: ID!): Membership!
+    # Group mutations
+    createGroup(input: CreateGroupInput!): Group!
+    joinGroup(groupId: ID!): Membership!
+    leaveGroup(groupId: ID!): Boolean!
+    addMember(groupId: ID!, userId: ID!): Membership!
+    addMemberByUsername(groupId: ID!, username: String!): Membership!
+    addMemberByEmail(groupId: ID!, email: String!): Membership!
+    removeMember(groupId: ID!, userId: ID!): Boolean!
+    makeAdmin(groupId: ID!, userId: ID!): Membership!
+    removeAdmin(groupId: ID!, userId: ID!): Membership!
+    blockUser(input: BlockUserInput!): Boolean!
+    unblockUser(groupId: ID!, userId: ID!): Boolean!
 
     # Event mutations
     createEvent(input: CreateEventInput!): Event!
@@ -160,10 +181,10 @@ export const typeDefs = gql`
 
   type Subscription {
     # Real-time updates
-    messageAdded(clubId: ID!): Message!
-    eventCreated(clubId: ID!): Event!
+    messageAdded(groupId: ID!): Message!
+    eventCreated(groupId: ID!): Event!
     rsvpUpdated(eventId: ID!): RSVP!
-    memberJoined(clubId: ID!): Membership!
+    memberJoined(groupId: ID!): Membership!
   }
 
   scalar DateTime

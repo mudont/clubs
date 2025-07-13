@@ -4,25 +4,26 @@ import React from 'react';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 
-import ClubCard from '../components/clubs/ClubCard';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import GroupCard from '../components/groups/GroupCard';
 import { store } from '../store';
 
 // Mock data
-const mockClub = {
+const mockGroup = {
   id: '1',
-  name: 'Test Club',
-  description: 'A test club for accessibility testing',
+  name: 'Test Group',
+  description: 'A test group for accessibility testing',
   createdAt: '2023-01-01',
   memberships: [
     {
       id: '1',
       isAdmin: true,
-      memberId: '1',
+      memberId: 1,
       user: {
         id: '1',
         username: 'testuser',
+        email: 'test@example.com',
       },
     },
   ],
@@ -125,11 +126,11 @@ describe('Accessibility Tests', () => {
     });
   });
 
-  describe('ClubCard Component', () => {
+  describe('GroupCard Component', () => {
     it('should render with proper accessibility structure', () => {
       render(
         <TestWrapper>
-          <ClubCard club={mockClub} />
+          <GroupCard group={mockGroup} />
         </TestWrapper>
       );
 
@@ -146,56 +147,56 @@ describe('Accessibility Tests', () => {
     it('should have proper ARIA attributes', () => {
       render(
         <TestWrapper>
-          <ClubCard club={mockClub} />
+          <GroupCard group={mockGroup} />
         </TestWrapper>
       );
 
       const article = screen.getByRole('gridcell');
-      expect(article).toHaveAttribute('aria-labelledby', `club-title-${mockClub.id}`);
-      expect(article).toHaveAttribute('aria-describedby', `club-description-${mockClub.id}`);
+      expect(article).toHaveAttribute('aria-labelledby', `group-title-${mockGroup.id}`);
+      expect(article).toHaveAttribute('aria-describedby', `group-description-${mockGroup.id}`);
 
       const heading = screen.getByRole('heading', { level: 3 });
-      expect(heading).toHaveAttribute('id', `club-title-${mockClub.id}`);
+      expect(heading).toHaveAttribute('id', `group-title-${mockGroup.id}`);
 
       const link = screen.getByRole('link');
-      expect(link).toHaveAttribute('aria-label', `View details for ${mockClub.name} club`);
+      expect(link).toHaveAttribute('aria-label', `View details for ${mockGroup.name} group`);
     });
 
-    it('should handle club without description', () => {
-      const clubWithoutDescription = {
-        ...mockClub,
+    it('should handle group without description', () => {
+      const groupWithoutDescription = {
+        ...mockGroup,
         description: undefined,
       };
 
       render(
         <TestWrapper>
-          <ClubCard club={clubWithoutDescription} />
+          <GroupCard group={groupWithoutDescription} />
         </TestWrapper>
       );
 
       const heading = screen.getByRole('heading', { level: 3 });
-      expect(heading).toHaveTextContent(mockClub.name);
+      expect(heading).toHaveTextContent(mockGroup.name);
     });
 
     it('should have proper heading hierarchy', () => {
       render(
         <TestWrapper>
-          <ClubCard club={mockClub} />
+          <GroupCard group={mockGroup} />
         </TestWrapper>
       );
 
       const heading = screen.getByRole('heading', { level: 3 });
-      expect(heading).toHaveTextContent(mockClub.name);
+      expect(heading).toHaveTextContent(mockGroup.name);
     });
 
     it('should provide meaningful member count information', () => {
       render(
         <TestWrapper>
-          <ClubCard club={mockClub} />
+          <GroupCard group={mockGroup} />
         </TestWrapper>
       );
 
-      const memberCount = screen.getByLabelText(/1 members in this club/i);
+      const memberCount = screen.getByLabelText(/1 members in this group/i);
       expect(memberCount).toBeInTheDocument();
     });
   });
@@ -204,12 +205,12 @@ describe('Accessibility Tests', () => {
     it('should support keyboard navigation for interactive elements', () => {
       render(
         <TestWrapper>
-          <ClubCard club={mockClub} />
+          <GroupCard group={mockGroup} />
         </TestWrapper>
       );
 
       const link = screen.getByRole('link');
-      
+
       // Test that link is focusable
       link.focus();
       expect(link).toHaveFocus();
@@ -218,13 +219,13 @@ describe('Accessibility Tests', () => {
     it('should have visible focus indicators', () => {
       render(
         <TestWrapper>
-          <ClubCard club={mockClub} />
+          <GroupCard group={mockGroup} />
         </TestWrapper>
       );
 
       const link = screen.getByRole('link');
       link.focus();
-      
+
       // Check that focused element has proper styling
       expect(link).toHaveClass('btn-view');
     });
@@ -234,7 +235,7 @@ describe('Accessibility Tests', () => {
     it('should render elements with proper structure', () => {
       render(
         <TestWrapper>
-          <ClubCard club={mockClub} />
+          <GroupCard group={mockGroup} />
         </TestWrapper>
       );
 
@@ -249,46 +250,46 @@ describe('Accessibility Tests', () => {
     it('should provide descriptive text for screen readers', () => {
       render(
         <TestWrapper>
-          <ClubCard club={mockClub} />
+          <GroupCard group={mockGroup} />
         </TestWrapper>
       );
 
       // Check that all text content is meaningful
-      expect(screen.getByText(mockClub.name)).toBeInTheDocument();
-      expect(screen.getByText(mockClub.description!)).toBeInTheDocument();
-      expect(screen.getByLabelText(/1 members in this club/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/View details for Test Club club/i)).toBeInTheDocument();
+      expect(screen.getByText(mockGroup.name)).toBeInTheDocument();
+      expect(screen.getByText(mockGroup.description!)).toBeInTheDocument();
+      expect(screen.getByLabelText(/1 members in this group/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/View details for Test Group group/i)).toBeInTheDocument();
     });
 
     it('should handle dynamic content updates accessibly', () => {
       const { rerender } = render(
         <TestWrapper>
-          <ClubCard club={mockClub} />
+          <GroupCard group={mockGroup} />
         </TestWrapper>
       );
 
-      const updatedClub = {
-        ...mockClub,
-        name: 'Updated Club Name',
+      const updatedGroup = {
+        ...mockGroup,
+        name: 'Updated Group Name',
         memberships: [
-          ...mockClub.memberships,
+          ...mockGroup.memberships,
           {
             id: '2',
             isAdmin: false,
-            memberId: '2',
-            user: { id: '2', username: 'newuser' },
+            memberId: 2,
+            user: { id: '2', username: 'newuser', email: 'newuser@example.com' },
           },
         ],
       };
 
       rerender(
         <TestWrapper>
-          <ClubCard club={updatedClub} />
+          <GroupCard group={updatedGroup} />
         </TestWrapper>
       );
 
-      expect(screen.getByText('Updated Club Name')).toBeInTheDocument();
-      expect(screen.getByLabelText(/2 members in this club/i)).toBeInTheDocument();
+      expect(screen.getByText('Updated Group Name')).toBeInTheDocument();
+      expect(screen.getByLabelText(/2 members in this group/i)).toBeInTheDocument();
     });
   });
-}); 
+});

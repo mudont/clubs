@@ -274,6 +274,286 @@
   color: #234e52;
 }
 
+/* RSVP List Toggle */
+.rsvp-list-toggle {
+  margin-bottom: 16px;
+}
+
+.btn-toggle-rsvps {
+  background: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-toggle-rsvps:hover {
+  background: #f7fafc;
+  border-color: #cbd5e0;
+}
+
+/* RSVP List */
+.rsvp-list {
+  background: #f7fafc;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid #e2e8f0;
+}
+
+.rsvp-list h4 {
+  margin: 0 0 12px 0;
+  color: #2d3748;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.rsvp-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rsvp-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+}
+
+.rsvp-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rsvp-user-name {
+  font-weight: 500;
+  color: #2d3748;
+  font-size: 14px;
+}
+
+.rsvp-time {
+  font-size: 12px;
+  color: #718096;
+}
+
+.rsvp-status-display {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.rsvp-status-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.rsvp-status-badge.available {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.rsvp-status-badge.not_available {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+.rsvp-status-badge.maybe {
+  background: #fef5e7;
+  color: #744210;
+}
+
+.rsvp-status-badge.only_if_needed {
+  background: #e6fffa;
+  color: #234e52;
+}
+
+.rsvp-note {
+  font-size: 12px;
+  color: #4a5568;
+  font-style: italic;
+  max-width: 200px;
+  text-align: right;
+}
+
+/* Updated User RSVP Section */
+.user-rsvp {
+  background: #f7fafc;
+  border-radius: 6px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.current-rsvp {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.change-rsvp-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.btn-rsvp-change {
+  padding: 6px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.btn-rsvp-change.available {
+  color: #22543d;
+  border-color: #9ae6b4;
+}
+
+.btn-rsvp-change.available:hover,
+.btn-rsvp-change.available.active {
+  background: #c6f6d5;
+  border-color: #68d391;
+}
+
+.btn-rsvp-change.not-available {
+  color: #742a2a;
+  border-color: #feb2b2;
+}
+
+.btn-rsvp-change.not-available:hover,
+.btn-rsvp-change.not-available.active {
+  background: #fed7d7;
+  border-color: #fc8181;
+}
+
+.btn-rsvp-change.maybe {
+  color: #744210;
+  border-color: #fbd38d;
+}
+
+.btn-rsvp-change.maybe:hover,
+.btn-rsvp-change.maybe.active {
+  background: #fef5e7;
+  border-color: #f6ad55;
+}
+
+.btn-rsvp-change.only-if-needed {
+  color: #234e52;
+  border-color: #81e6d9;
+}
+
+.btn-rsvp-change.only-if-needed:hover,
+.btn-rsvp-change.only-if-needed.active {
+  background: #e6fffa;
+  border-color: #4fd1c7;
+}
+
+/* RSVP Note Functionality */
+.btn-rsvp-with-note,
+.btn-rsvp-change-with-note {
+  padding: 6px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #f7fafc;
+  color: #4a5568;
+  border-color: #cbd5e0;
+}
+
+.btn-rsvp-with-note:hover,
+.btn-rsvp-change-with-note:hover {
+  background: #edf2f7;
+  border-color: #a0aec0;
+}
+
+.rsvp-form {
+  background: #f7fafc;
+  border-radius: 6px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  margin-top: 8px;
+}
+
+.rsvp-form .form-group {
+  margin-bottom: 12px;
+}
+
+.rsvp-form .form-group label {
+  display: block;
+  margin-bottom: 4px;
+  color: #4a5568;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.rsvp-form .form-group textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 12px;
+  resize: vertical;
+  min-height: 60px;
+  box-sizing: border-box;
+}
+
+.rsvp-form .form-group textarea:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.rsvp-form-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.btn-cancel {
+  padding: 6px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #f7fafc;
+  color: #4a5568;
+}
+
+.btn-cancel:hover {
+  background: #edf2f7;
+  border-color: #a0aec0;
+}
+
+.rsvp-note-display {
+  font-size: 12px;
+  color: #4a5568;
+  font-style: italic;
+  margin-top: 4px;
+  display: block;
+}
+
 .empty-state {
   text-align: center;
   padding: 40px 20px;
@@ -320,5 +600,39 @@
 
   .rsvp-counts {
     justify-content: center;
+  }
+
+  .rsvp-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .rsvp-status-display {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .change-rsvp-actions {
+    flex-direction: column;
+  }
+
+  .btn-rsvp-change {
+    width: 100%;
+  }
+
+  .current-rsvp {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .rsvp-form-actions {
+    flex-direction: column;
+  }
+
+  .btn-rsvp-with-note,
+  .btn-rsvp-change-with-note {
+    width: 100%;
   }
 }

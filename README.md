@@ -1,6 +1,6 @@
-# Clubs - Social & Sports Club Management Platform
+# Groups - Social & Sports Group Management Platform
 
-> **A modern, full-stack web application for managing social and sports clubs with real-time chat, event management, and member administration.**
+> **A modern, full-stack web application for managing social and sports groups with real-time chat, event management, and member administration.**
 
 [![CI/CD Pipeline](https://github.com/username/clubs/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/username/clubs/actions)
 [![Test Coverage](https://codecov.io/gh/username/clubs/branch/main/graph/badge.svg)](https://codecov.io/gh/username/clubs)

@@ -1,59 +1,76 @@
-import { useQuery, useMutation , gql } from '@apollo/client';
-import React, { useState, useCallback } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { gql, useMutation, useQuery } from '@apollo/client';
+import React, { useCallback, useState } from 'react';
 
-import { updateAuthToken } from '../apollo';
-import { RootState } from '../store';
-import { logout } from '../store/authSlice';
-
-import ClubCard from './clubs/ClubCard';
+import Header from './common/Header';
 import './Dashboard.css';
+import GroupCard from './groups/GroupCard';
 
-interface ClubMembership {
+interface GroupMembership {
   id: string;
   isAdmin: boolean;
-  memberId: string;
+  memberId: number;
   user: {
     id: string;
     username: string;
+    email: string;
   };
 }
 
-interface ClubData {
+interface GroupData {
   id: string;
   name: string;
   description?: string;
   createdAt: string;
-  memberships?: ClubMembership[];
+  isPublic?: boolean;
+  memberships?: GroupMembership[];
 }
 
-interface MyClubsData {
-  myClubs: ClubData[];
+interface MyGroupsData {
+  myGroups: GroupData[];
 }
 
-interface CreateClubData {
-  createClub: {
+interface PublicGroupsData {
+  publicGroups: GroupData[];
+}
+
+interface CreateGroupData {
+  createGroup: {
     id: string;
     name: string;
     description?: string;
   };
 }
 
-interface CreateClubInput {
+interface CreateGroupInput {
   input: {
     name: string;
     description?: string;
+    isPublic?: boolean;
   };
 }
 
-const GET_MY_CLUBS = gql`
-  query GetMyClubs {
-    myClubs {
+interface JoinGroupData {
+  joinGroup: {
+    id: string;
+    user: {
+      id: string;
+      username: string;
+    };
+    group: {
+      id: string;
+      name: string;
+    };
+  };
+}
+
+const GET_MY_GROUPS = gql`
+  query GetMyGroups {
+    myGroups {
       id
       name
       description
       createdAt
+      isPublic
       memberships {
         id
         isAdmin
@@ -61,210 +78,267 @@ const GET_MY_CLUBS = gql`
         user {
           id
           username
+          email
         }
       }
     }
   }
 `;
 
-const CREATE_CLUB = gql`
-  mutation CreateClub($input: CreateClubInput!) {
-    createClub(input: $input) {
+const GET_PUBLIC_GROUPS = gql`
+  query GetPublicGroups {
+    publicGroups {
       id
       name
       description
+      createdAt
+      isPublic
+      memberships {
+        id
+        isAdmin
+        memberId
+        user {
+          id
+          username
+          email
+        }
+      }
+    }
+  }
+`;
+
+const CREATE_GROUP = gql`
+  mutation CreateGroup($input: CreateGroupInput!) {
+    createGroup(input: $input) {
+      id
+      name
+      description
+      isPublic
+    }
+  }
+`;
+
+const JOIN_GROUP = gql`
+  mutation JoinGroup($groupId: ID!) {
+    joinGroup(groupId: $groupId) {
+      id
+      user {
+        id
+        username
+      }
+      group {
+        id
+        name
+      }
     }
   }
 `;
 
 const Dashboard: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [clubName, setClubName] = useState('');
-  const [clubDescription, setClubDescription] = useState('');
+  const [groupName, setGroupName] = useState('');
+  const [groupDescription, setGroupDescription] = useState('');
+  const [isPublic, setIsPublic] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
-  const { user } = useSelector((state: RootState) => state.auth);
-  const dispatch = useDispatch();
+  const { data: myGroupsData, loading: myGroupsLoading, refetch: refetchMyGroups } = useQuery<MyGroupsData>(GET_MY_GROUPS);
+  const { data: publicGroupsData, loading: publicGroupsLoading, refetch: refetchPublicGroups } = useQuery<PublicGroupsData>(GET_PUBLIC_GROUPS);
+  const [createGroup] = useMutation<CreateGroupData, CreateGroupInput>(CREATE_GROUP);
+  const [joinGroup] = useMutation<JoinGroupData>(JOIN_GROUP);
 
-  const { data, loading: clubsLoading, refetch } = useQuery<MyClubsData>(GET_MY_CLUBS);
-  const [createClub] = useMutation<CreateClubData, CreateClubInput>(CREATE_CLUB);
-
-  // Memoize logout handler to prevent unnecessary re-renders
-  const handleLogout = useCallback(() => {
-    dispatch(logout());
-    updateAuthToken(null);
-  }, [dispatch]);
-
-  // Memoize create club handler
-  const handleCreateClub = useCallback(async (e: React.FormEvent) => {
+  const handleCreateGroup = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setLoading(true);
-    setError('');
 
     try {
-      await createClub({
+      await createGroup({
         variables: {
           input: {
-            name: clubName,
-            description: clubDescription,
+            name: groupName,
+            description: groupDescription,
+            isPublic,
           },
         },
       });
 
-      setClubName('');
-      setClubDescription('');
+      setGroupName('');
+      setGroupDescription('');
+      setIsPublic(false);
       setShowCreateForm(false);
-      refetch();
+      refetchMyGroups();
+      refetchPublicGroups();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create club');
+      setError(err instanceof Error ? err.message : 'Failed to create group');
     } finally {
       setLoading(false);
     }
-  }, [clubName, clubDescription, createClub, refetch]);
+  }, [groupName, groupDescription, isPublic, createGroup, refetchMyGroups, refetchPublicGroups]);
 
-  // Note: clubStats could be used for displaying statistics in the future
-  // const clubStats = useMemo(() => {
-  //   if (!data?.myClubs) return { totalClubs: 0, totalMembers: 0 };
-  //   
-  //   const totalClubs = data.myClubs.length;
-  //   const totalMembers = data.myClubs.reduce(
-  //     (sum: number, club: ClubData) => sum + (club.memberships?.length || 0), 
-  //     0
-  //   );
-  //   
-  //   return { totalClubs, totalMembers };
-  // }, [data?.myClubs]);
+  const handleJoinGroup = useCallback(async (groupId: string) => {
+    try {
+      await joinGroup({
+        variables: { groupId },
+      });
+      refetchMyGroups();
+      refetchPublicGroups();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to join group');
+    }
+  }, [joinGroup, refetchMyGroups, refetchPublicGroups]);
 
   return (
     <div className="dashboard">
-      <header className="dashboard-header" role="banner">
-        <div className="header-content">
-          <h1 id="dashboard-title">My Clubs</h1>
-          <div className="user-info">
-            <span>Welcome, {user?.username}</span>
-            <nav className="user-actions" role="navigation" aria-label="User account">
-              <Link 
-                to="/profile" 
-                className="btn-profile"
-                aria-label="Go to user profile settings"
-              >
-                Profile
-              </Link>
-              <button 
-                onClick={handleLogout} 
-                className="btn-logout"
-                aria-label="Sign out of your account"
-              >
-                Logout
-              </button>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Header title="Dashboard">
+        <button
+          type="button"
+          onClick={() => setShowCreateForm(!showCreateForm)}
+          className="btn-create-group"
+          aria-expanded={showCreateForm}
+          aria-controls={showCreateForm ? "create-group-form" : undefined}
+          aria-label={showCreateForm ? 'Cancel group creation' : 'Create a new group'}
+        >
+          {showCreateForm ? 'Cancel' : 'Create New Group'}
+        </button>
+      </Header>
 
-      <main className="dashboard-main" role="main" aria-labelledby="dashboard-title">
-        <div className="dashboard-actions">
-          <button
-            onClick={() => setShowCreateForm(!showCreateForm)}
-            className="btn-create-club"
-            aria-expanded={showCreateForm}
-            aria-controls={showCreateForm ? "create-club-form" : undefined}
-            aria-label={showCreateForm ? 'Cancel club creation' : 'Create a new club'}
-          >
-            {showCreateForm ? 'Cancel' : 'Create New Club'}
-          </button>
-        </div>
+      {showCreateForm && (
+        <div className="create-group-form" id="create-group-form" role="region" aria-labelledby="create-group-heading">
+          <h3 id="create-group-heading">Create New Group</h3>
+          {error && <div className="error-message" role="alert">{error}</div>}
 
-        {showCreateForm && (
-          <div className="create-club-form" id="create-club-form" role="region" aria-labelledby="create-club-heading">
-            <h3 id="create-club-heading">Create New Club</h3>
-            {error && (
-              <div className="error-message" role="alert" aria-live="polite">
-                {error}
+          <form onSubmit={handleCreateGroup} noValidate>
+            <div className="form-group">
+              <label htmlFor="groupName">Group Name *</label>
+              <input
+                type="text"
+                id="groupName"
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                required
+                placeholder="Enter group name"
+                aria-describedby="groupName-description"
+              />
+              <div id="groupName-description" className="field-description">
+                Choose a unique name for your group
               </div>
-            )}
-            <form onSubmit={handleCreateClub} noValidate>
-              <div className="form-group">
-                <label htmlFor="clubName">Club Name *</label>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="groupDescription">Description</label>
+              <textarea
+                id="groupDescription"
+                value={groupDescription}
+                onChange={(e) => setGroupDescription(e.target.value)}
+                placeholder="Enter group description"
+                rows={3}
+                aria-describedby="groupDescription-description"
+              />
+              <div id="groupDescription-description" className="field-description">
+                Optional: Describe what your group is about
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="checkbox-label">
                 <input
-                  type="text"
-                  id="clubName"
-                  value={clubName}
-                  onChange={(e) => setClubName(e.target.value)}
-                  required
-                  placeholder="Enter club name"
-                  aria-describedby="clubName-description"
-                  aria-invalid={error ? 'true' : 'false'}
+                  type="checkbox"
+                  checked={isPublic}
+                  onChange={(e) => setIsPublic(e.target.checked)}
                 />
-                <div id="clubName-description" className="field-description">
-                  Choose a unique name for your club
-                </div>
+                <span className="checkmark"></span>
+                Make this group public (anyone can join)
+              </label>
+              <div className="field-description">
+                Public groups will be visible to all users and they can join without invitation
               </div>
-              <div className="form-group">
-                <label htmlFor="clubDescription">Description</label>
-                <textarea
-                  id="clubDescription"
-                  value={clubDescription}
-                  onChange={(e) => setClubDescription(e.target.value)}
-                  placeholder="Enter club description"
-                  rows={3}
-                  aria-describedby="clubDescription-description"
-                />
-                <div id="clubDescription-description" className="field-description">
-                  Optional: Describe what your club is about
-                </div>
-              </div>
-              <button 
-                type="submit" 
-                className="btn-primary" 
-                disabled={loading}
-                aria-busy={loading}
-                aria-describedby={loading ? "creating-status" : undefined}
-              >
-                {loading ? 'Creating...' : 'Create Club'}
-              </button>
-              {loading && (
-                <div id="creating-status" className="sr-only" aria-live="polite">
-                  Creating your club, please wait...
-                </div>
-              )}
-            </form>
-          </div>
-        )}
+            </div>
 
-        {clubsLoading ? (
-          <div className="loading" role="status" aria-live="polite">
-            <span className="sr-only">Loading your clubs, please wait...</span>
-            Loading your clubs...
+            <div className="form-actions">
+              <button type="submit" disabled={loading || !groupName.trim()}>
+                {loading ? 'Creating...' : 'Create Group'}
+              </button>
+            </div>
+          </form>
+
+          {loading && (
+            <div className="loading-message" aria-live="polite">
+              Creating your group, please wait...
+            </div>
+          )}
+        </div>
+      )}
+
+      <main className="dashboard-content">
+        {myGroupsLoading || publicGroupsLoading ? (
+          <div className="loading" aria-live="polite">
+            <span className="sr-only">Loading groups, please wait...</span>
+            Loading groups...
           </div>
         ) : (
-          <section className="clubs-section" aria-labelledby="clubs-heading">
-            <h2 id="clubs-heading" className="sr-only">Your Clubs List</h2>
-            {data?.myClubs?.length === 0 ? (
-              <div className="empty-state" role="region" aria-labelledby="empty-state-heading">
-                <h3 id="empty-state-heading">No clubs yet</h3>
-                <p>Create your first club to get started!</p>
-              </div>
-            ) : (
-              <div
-                className="clubs-grid"
-                role="grid"
-                aria-label={`${data?.myClubs?.length || 0} clubs available`}
-              >
-                                {data?.myClubs?.map((club) => (
-                  <ClubCard 
-                    key={club.id} 
-                    club={club}
+          <>
+            {/* My Groups Section */}
+            <section className="groups-section" aria-labelledby="my-groups-heading">
+              <h2 id="my-groups-heading">My Groups</h2>
+              {myGroupsData?.myGroups?.length === 0 ? (
+                <div className="empty-state" role="status">
+                  <h3 id="empty-state-heading">No groups yet</h3>
+                  <p>Create your first group to get started!</p>
+                </div>
+              ) : (
+                              <div className="groups-grid" role="list">
+                {myGroupsData?.myGroups?.map((group) => (
+                  <GroupCard
+                    key={group.id}
+                    group={group}
+                    onGroupLeft={refetchMyGroups}
                   />
                 ))}
               </div>
+              )}
+            </section>
+
+            {/* Public Groups Section */}
+            {publicGroupsData?.publicGroups && publicGroupsData.publicGroups.length > 0 && (
+              <section className="groups-section" aria-labelledby="public-groups-heading">
+                <h2 id="public-groups-heading">Public Groups</h2>
+                <p className="section-description">
+                  Join these public groups to connect with others
+                </p>
+                <div className="groups-grid" role="list">
+                  {publicGroupsData.publicGroups.map((group) => (
+                    <div key={group.id} className="group-card public-group">
+                      <div className="group-info">
+                        <h3>{group.name}</h3>
+                        <p className="group-description">
+                          {group.description || 'No description available.'}
+                        </p>
+                        <div className="group-meta">
+                          <span className="member-count">
+                            {group.memberships?.length || 0} members
+                          </span>
+                          <span className="group-type">Public Group</span>
+                        </div>
+                      </div>
+                      <div className="group-actions">
+                        <button
+                          onClick={() => handleJoinGroup(group.id)}
+                          className="btn-join-group"
+                        >
+                          Join Group
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
             )}
-          </section>
+          </>
         )}
       </main>
     </div>
   );
 };
 
-export default Dashboard; 
+export default Dashboard;

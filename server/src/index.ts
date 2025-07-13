@@ -1,13 +1,14 @@
 import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@as-integrations/express5';
+import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
-import { RedisStore } from 'connect-redis';
 import cors from 'cors';
 import type { NextFunction, Request, Response } from 'express';
 import express from 'express';
 import session from 'express-session';
+import fs from 'fs';
 import { useServer } from 'graphql-ws/lib/use/ws';
 import { createServer } from 'http';
 import path from 'path';
@@ -20,7 +21,6 @@ import { config, corsConfig, securityConfig } from './config';
 import { redisClient } from './config/redis';
 import {
   authRateLimiter,
-  errorHandler,
   passwordResetRateLimiter,
   rateLimiter,
   requestSizeLimit,
@@ -29,6 +29,7 @@ import {
   validateInput,
   validationSchemas
 } from './middleware/security';
+import { pubsub } from './pubsub';
 import { resolvers } from './resolvers';
 import { typeDefs } from './schema';
 import { logError, logInfo, logRequest } from './utils/logger';
@@ -51,27 +52,27 @@ async function startServer() {
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
   // Initialize Redis session store
-  let redisStore: any;
-
+  let RedisStore: any;
+  let sessionStore: any;
   try {
     console.log('🔄 Attempting to initialize Redis session store...');
-    console.log('📍 Redis URL:', config.REDIS_URL || 'redis://localhost:6379');
+    console.log('📍 Redis URL:', process.env.REDIS_URL);
 
-    redisStore = new RedisStore({
-      client: redisClient,
-      prefix: 'sess:',
-      ttl: 24 * 60 * 60, // 24 hours in seconds
-    });
-    console.log('✅ Redis session store initialized successfully');
-  } catch (error) {
+    // For connect-redis v9+
+    const { RedisStore: RedisStoreClass } = require('connect-redis');
+    RedisStore = RedisStoreClass;
+    sessionStore = new RedisStore({ client: redisClient });
+
+    console.log('✅ Redis session store initialized successfully.');
+  } catch (err) {
     console.warn('⚠️  Redis session store failed to initialize, falling back to memory store');
-    console.error('🔍 Error details:', error);
-    redisStore = undefined;
+    console.warn('🔍 Error details:', err);
+    sessionStore = undefined;
   }
 
   // Session configuration with Redis store (fallback to memory if Redis unavailable)
   app.use(session({
-    store: redisStore,
+    store: sessionStore,
     secret: securityConfig.sessionSecret,
     resave: false,
     saveUninitialized: false,
@@ -90,6 +91,68 @@ async function startServer() {
     logRequest(req, res, (req as any).user?.id);
     next();
   });
+
+  // Serve static files from React build directory
+  const staticPath = path.join(__dirname, '../../client/build');
+  console.log('📁 Serving static files from:', staticPath);
+  app.use(express.static(staticPath));
+
+  // Create HTTP server for GraphQL
+  const httpServer = createServer(app);
+
+  // Create WebSocket server for GraphQL subscriptions
+  const wsServer = new WebSocketServer({
+    server: httpServer,
+    path: '/graphql',
+  });
+
+  // Create GraphQL schema
+  const schema = makeExecutableSchema({ typeDefs, resolvers });
+
+  // Set up WebSocket server for subscriptions
+  const serverCleanup = useServer({ schema }, wsServer);
+
+  // Create Apollo Server
+  const apolloServer = new ApolloServer({
+    schema,
+    plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+      {
+        async serverWillStart() {
+          return {
+            async drainServer() {
+              await serverCleanup.dispose();
+            },
+          };
+        },
+      },
+    ],
+  });
+
+  // Start Apollo Server
+  await apolloServer.start();
+
+  // Apply Apollo middleware (GraphQL endpoint)
+  app.use('/graphql', expressMiddleware(apolloServer, {
+    context: async ({ req }: { req: Request }) => {
+      // Get user from JWT token
+      let user = null;
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.replace('Bearer ', '');
+        try {
+          user = await getUserFromToken(token);
+        } catch (error) {
+          // Token is invalid, but we don't throw here
+        }
+      }
+      return {
+        prisma,
+        user,
+        pubsub,
+      };
+    },
+  }));
 
   // Health check endpoint
   app.get('/health', (req: Request, res: Response) => {
@@ -123,7 +186,7 @@ async function startServer() {
       const testEmail = {
         from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
         to: process.env.EMAIL_USER, // Send to yourself
-        subject: 'SMTP Test - Clubs App',
+        subject: 'SMTP Test - Groups App',
         html: `
                     <h2>SMTP Test Successful!</h2>
                     <p>This is a test email from your Clubs app server.</p>
@@ -365,86 +428,28 @@ async function startServer() {
     }
   );
 
-  // Auth success page (for OAuth redirects)
-  // app.get('/auth-success', (req: Request, res: Response) => {
-  //     const { token } = req.query;
-  //     console.log(`Auth success handled on servertoken: ${token}`);
-  //     res.json({
-  //         message: 'Authentication successful',
-  //         token,
-  //         redirectUrl: '/dashboard' // Frontend can redirect here
-  //     });
-  // });
+  // Catch-all route for React app (must be last)
+  const serveSPA = (req: Request, res: Response) => {
+    const indexPath = path.join(staticPath, 'index.html');
+    if (!fs.existsSync(indexPath)) {
+      console.error('❌ Index file not found at:', indexPath);
+      return res.status(500).send('Internal Server Error');
+    }
+    res.sendFile(indexPath);
+  };
+  app.get('/*splat', serveSPA);
 
-  // Apollo Server
-  const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-    // context is set in expressMiddleware below
-  });
-
-  await server.start();
-  app.use(
-    '/graphql',
-    expressMiddleware(server, {
-      context: async ({ req }: { req: Request }) => {
-        const authHeader = req?.headers?.authorization;
-        const token = typeof authHeader === 'string' && authHeader.startsWith('Bearer ')
-          ? authHeader.replace('Bearer ', '')
-          : undefined;
-        const user = token ? await getUserFromToken(token) : null;
-        return { prisma, user };
-      },
-    })
-  );
-
-  // Create HTTP server
-  const httpServer = createServer(app);
-
-  // Create WebSocket server for subscriptions
-  const wsServer = new WebSocketServer({
-    server: httpServer,
-    path: '/graphql',
-  });
-
-  // Set up GraphQL WebSocket server
-  const schema = makeExecutableSchema({ typeDefs, resolvers });
-  useServer(
-    {
-      schema,
-      context: async (ctx) => {
-        const authHeader = ctx.connectionParams?.authorization;
-        const token = typeof authHeader === 'string' && authHeader.startsWith('Bearer ')
-          ? authHeader.replace('Bearer ', '')
-          : undefined;
-        const user = token ? await getUserFromToken(token) : null;
-        return { prisma, user };
-      },
-    },
-    wsServer
-  );
-
-  // Serve static files from the React app
-  app.use(express.static(path.join(__dirname, '../../client/build')));
-
-  // Catch-all route to serve index.html for SPA routing
-  app.get('/*splat', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../client/build', 'index.html'));
-  });
-
-  // Error handling middleware (must be last)
-  app.use(errorHandler);
-
-  const PORT = config.PORT;
+  // Start server
+  const PORT = process.env.PORT || 4010;
   httpServer.listen(PORT, () => {
-    logInfo(`🚀 Server ready at http://localhost:${PORT}/graphql`);
-    logInfo(`🔌 WebSocket server ready at ws://localhost:${PORT}/graphql`);
-    logInfo(`REST endpoints available at http://localhost:${PORT}/signup and /login`);
-    logInfo(`Environment: ${config.NODE_ENV}`);
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📊 GraphQL endpoint: http://localhost:${PORT}/graphql`);
+    console.log(`🌐 Frontend URL: ${FRONTEND_URL}`);
   });
 }
 
-startServer().catch((err) => {
-  logError('Server failed to start', err);
+// Start the server
+startServer().catch((error) => {
+  console.error('❌ Server failed to start:', error);
   process.exit(1);
 });
