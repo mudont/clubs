@@ -85,14 +85,19 @@
   min-height: 80px;
 }
 
+.btn-primary,
+.btn-remove {
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 4px;
+  line-height: 1.2;
+  font-weight: 500;
+}
+
 .btn-primary {
-  padding: 10px 20px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
   cursor: pointer;
   transition: transform 0.2s ease;
 }
@@ -103,6 +108,24 @@
 
 .btn-primary:disabled {
   opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-remove {
+  background: #e53e3e;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  vertical-align: middle;
+}
+
+.btn-remove:hover:not(:disabled) {
+  background: #c53030;
+}
+
+.btn-remove:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -580,26 +603,6 @@
   margin-bottom: 16px;
   font-size: 14px;
   border: 1px solid #feb2b2;
-}
-
-.btn-remove {
-  padding: 3px 6px;
-  background: #e53e3e;
-  color: white;
-  border: none;
-  border-radius: 3px;
-  font-size: 11px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.btn-remove:hover:not(:disabled) {
-  background: #c53030;
-}
-
-.btn-remove:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 /* Responsive design */

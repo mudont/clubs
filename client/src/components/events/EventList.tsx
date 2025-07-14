@@ -78,6 +78,20 @@ const DELETE_EVENT = gql`
   }
 `;
 
+const UPDATE_EVENT = gql`
+  mutation UpdateEvent($id: ID!, $input: CreateEventInput!) {
+    updateEvent(id: $id, input: $input) {
+      id
+      date
+      description
+      createdBy {
+        id
+        username
+      }
+    }
+  }
+`;
+
 interface EventListProps {
   groupId: string;
   isAdmin?: boolean;
@@ -103,6 +117,10 @@ const EventList: React.FC<EventListProps> = ({ groupId, isAdmin = false }) => {
   const [createRSVP] = useMutation(CREATE_RSVP);
   const [updateRSVP] = useMutation(UPDATE_RSVP);
   const [deleteEventMutation] = useMutation(DELETE_EVENT);
+  const [updateEvent] = useMutation(UPDATE_EVENT);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [editEventDate, setEditEventDate] = useState('');
+  const [editEventDescription, setEditEventDescription] = useState('');
 
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -209,6 +227,38 @@ const EventList: React.FC<EventListProps> = ({ groupId, isAdmin = false }) => {
     } finally {
       setLoading(false);
       setDeletingEventId(null);
+    }
+  };
+
+  const handleEditEvent = (event: any) => {
+    setEditingEventId(event.id);
+    setEditEventDate(event.date.slice(0, 16)); // ISO string to yyyy-MM-ddTHH:mm
+    setEditEventDescription(event.description);
+  };
+
+  const handleUpdateEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      await updateEvent({
+        variables: {
+          id: editingEventId,
+          input: {
+            groupId,
+            date: new Date(editEventDate).toISOString(),
+            description: editEventDescription,
+          },
+        },
+      });
+      setEditingEventId(null);
+      setEditEventDate('');
+      setEditEventDescription('');
+      refetch();
+    } catch (err: any) {
+      setError(err.message || 'Failed to update event');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -333,283 +383,336 @@ const EventList: React.FC<EventListProps> = ({ groupId, isAdmin = false }) => {
         <div className="loading">Loading events...</div>
       ) : (
         <div className="events-grid">
-          {data?.events?.length === 0 ? (
-            <div className="empty-state">
-              <h3>No events yet</h3>
-              <p>Create the first event for this group!</p>
-            </div>
-          ) : (
-            data?.events?.map((event: any) => {
+          {data?.events
+            ?.filter((event: any) => {
+              // Only show events whose date is today or in the future
+              const eventDate = new Date(event.date);
+              const now = new Date();
+              // Remove time from both for comparison
+              eventDate.setHours(0,0,0,0);
+              now.setHours(0,0,0,0);
+              return eventDate >= now;
+            })
+            .map((event: any) => {
               const userRSVP = getRSVPStatus(event);
               const rsvpCounts = getRSVPCounts(event);
               const sortedRSVPs = getSortedRSVPs(event.rsvps);
               const isExpanded = expandedEvents.has(event.id);
               const isRsvpFormOpen = showRsvpForm === event.id;
               const isUpdateFormOpen = userRSVP && showRsvpForm === userRSVP.id;
+              const canEdit = isAdmin || event.createdBy.id === user?.id;
 
               return (
                 <div key={event.id} className="event-card">
-                  <div className="event-header">
-                    <h3>{event.description}</h3>
-                    <span className="event-date">
-                      {new Date(event.date).toLocaleDateString()} at{' '}
-                      {new Date(event.date).toLocaleTimeString()}
-                    </span>
-                  </div>
-
-                  <div className="event-creator">
-                    Created by {event.createdBy.username}
-                  </div>
-
-                  <div className="rsvp-counts">
-                    <span className="rsvp-count available">
-                      ✅ {rsvpCounts.available}
-                    </span>
-                    <span className="rsvp-count not-available">
-                      ❌ {rsvpCounts.notAvailable}
-                    </span>
-                    <span className="rsvp-count maybe">
-                      🤔 {rsvpCounts.maybe}
-                    </span>
-                    <span className="rsvp-count only-if-needed">
-                      ⚠️ {rsvpCounts.onlyIfNeeded}
-                    </span>
-                  </div>
-
-                  {/* RSVP List Toggle */}
-                  {event.rsvps && event.rsvps.length > 0 && (
-                    <div className="rsvp-list-toggle">
-                      <button
-                        onClick={() => toggleEventExpansion(event.id)}
-                        className="btn-toggle-rsvps"
-                      >
-                        {isExpanded ? '▼' : '▶'} View RSVPs ({event.rsvps.length})
-                      </button>
+                  {editingEventId === event.id ? (
+                    <div className="edit-event-form">
+                      <h3>Edit Event</h3>
+                      {error && <div className="error-message">{error}</div>}
+                      <form onSubmit={handleUpdateEvent}>
+                        <div className="form-group">
+                          <label htmlFor="editEventDate">Date & Time</label>
+                          <input
+                            type="datetime-local"
+                            id="editEventDate"
+                            value={editEventDate}
+                            onChange={(e) => setEditEventDate(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label htmlFor="editEventDescription">Description</label>
+                          <textarea
+                            id="editEventDescription"
+                            value={editEventDescription}
+                            onChange={(e) => setEditEventDescription(e.target.value)}
+                            required
+                            rows={3}
+                          />
+                        </div>
+                        <div className="form-actions">
+                          <button type="submit" className="btn-primary" disabled={loading}>
+                            {loading ? 'Saving...' : 'Save'}
+                          </button>
+                          <button type="button" className="btn-cancel" onClick={() => setEditingEventId(null)}>
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
                     </div>
-                  )}
-
-                  {/* Collapsible RSVP List */}
-                  {isExpanded && event.rsvps && event.rsvps.length > 0 && (
-                    <div className="rsvp-list">
-                      <h4>RSVPs</h4>
-                      <div className="rsvp-items">
-                        {sortedRSVPs.map((rsvp: any) => (
-                          <div key={rsvp.id} className="rsvp-item">
-                            <div className="rsvp-user-info">
-                              <span className="rsvp-user-name">
-                                {rsvp.user.username || rsvp.user.email}
-                              </span>
-                              <span className="rsvp-time">
-                                {formatRSVPTime(rsvp.createdAt)}
-                              </span>
-                            </div>
-                            <div className="rsvp-status-display">
-                              <span className={`rsvp-status-badge ${rsvp.status.toLowerCase()}`}>
-                                {getStatusDisplayName(rsvp.status)}
-                              </span>
-                              {rsvp.note && (
-                                <span className="rsvp-note">{rsvp.note}</span>
-                              )}
-                            </div>
-                          </div>
-                        ))}
+                  ) : (
+                    <>
+                      <div className="event-header">
+                        <h3>{event.description}</h3>
+                        <span className="event-date">
+                          {new Date(event.date).toLocaleDateString()} at{' '}
+                          {new Date(event.date).toLocaleTimeString()}
+                        </span>
                       </div>
-                    </div>
-                  )}
+                      <div className="event-creator">
+                        Created by {event.createdBy.username}
+                      </div>
+                      <div className="rsvp-counts">
+                        <span className="rsvp-count available">
+                          ✅ {rsvpCounts.available}
+                        </span>
+                        <span className="rsvp-count not-available">
+                          ❌ {rsvpCounts.notAvailable}
+                        </span>
+                        <span className="rsvp-count maybe">
+                          🤔 {rsvpCounts.maybe}
+                        </span>
+                        <span className="rsvp-count only-if-needed">
+                          ⚠️ {rsvpCounts.onlyIfNeeded}
+                        </span>
+                      </div>
+                      {/* RSVP List Toggle */}
+                      {event.rsvps && event.rsvps.length > 0 && (
+                        <div className="rsvp-list-toggle">
+                          <button
+                            onClick={() => toggleEventExpansion(event.id)}
+                            className="btn-toggle-rsvps"
+                          >
+                            {isExpanded ? '▼' : '▶'} View RSVPs ({event.rsvps.length})
+                          </button>
+                        </div>
+                      )}
 
-                  {/* RSVP Actions */}
-                  {!userRSVP && (
-                    <div className="rsvp-actions">
-                      {!isRsvpFormOpen ? (
-                        <>
-                          <button
-                            onClick={() => handleRSVP(event.id, 'AVAILABLE')}
-                            className="btn-rsvp available"
-                          >
-                            Available
-                          </button>
-                          <button
-                            onClick={() => handleRSVP(event.id, 'NOT_AVAILABLE')}
-                            className="btn-rsvp not-available"
-                          >
-                            Not Available
-                          </button>
-                          <button
-                            onClick={() => handleRSVP(event.id, 'MAYBE')}
-                            className="btn-rsvp maybe"
-                          >
-                            Maybe
-                          </button>
-                          <button
-                            onClick={() => handleRSVP(event.id, 'ONLY_IF_NEEDED')}
-                            className="btn-rsvp only-if-needed"
-                          >
-                            Only if Needed
-                          </button>
-                          <button
-                            onClick={() => toggleRsvpForm(event.id)}
-                            className="btn-rsvp-with-note"
-                          >
-                            RSVP with Note
-                          </button>
-                        </>
-                      ) : (
-                        <div className="rsvp-form">
-                          <div className="form-group">
-                            <label htmlFor={`rsvp-note-${event.id}`}>Add a note (optional)</label>
-                            <textarea
-                              id={`rsvp-note-${event.id}`}
-                              value={rsvpNotes[event.id] || ''}
-                              onChange={(e) => handleNoteChange(event.id, e.target.value)}
-                              placeholder="Add any additional information..."
-                              rows={2}
-                            />
-                          </div>
-                          <div className="rsvp-form-actions">
-                            <button
-                              onClick={() => handleRSVP(event.id, 'AVAILABLE')}
-                              className="btn-rsvp available"
-                            >
-                              Available
-                            </button>
-                            <button
-                              onClick={() => handleRSVP(event.id, 'NOT_AVAILABLE')}
-                              className="btn-rsvp not-available"
-                            >
-                              Not Available
-                            </button>
-                            <button
-                              onClick={() => handleRSVP(event.id, 'MAYBE')}
-                              className="btn-rsvp maybe"
-                            >
-                              Maybe
-                            </button>
-                            <button
-                              onClick={() => handleRSVP(event.id, 'ONLY_IF_NEEDED')}
-                              className="btn-rsvp only-if-needed"
-                            >
-                              Only if Needed
-                            </button>
-                            <button
-                              onClick={() => toggleRsvpForm(event.id)}
-                              className="btn-cancel"
-                            >
-                              Cancel
-                            </button>
+                      {/* Collapsible RSVP List */}
+                      {isExpanded && event.rsvps && event.rsvps.length > 0 && (
+                        <div className="rsvp-list">
+                          <h4>RSVPs</h4>
+                          <div className="rsvp-items">
+                            {sortedRSVPs.map((rsvp: any) => (
+                              <div key={rsvp.id} className="rsvp-item">
+                                <div className="rsvp-user-info">
+                                  <span className="rsvp-user-name">
+                                    {rsvp.user.username || rsvp.user.email}
+                                  </span>
+                                  <span className="rsvp-time">
+                                    {formatRSVPTime(rsvp.createdAt)}
+                                  </span>
+                                </div>
+                                <div className="rsvp-status-display">
+                                  <span className={`rsvp-status-badge ${rsvp.status.toLowerCase()}`}>
+                                    {getStatusDisplayName(rsvp.status)}
+                                  </span>
+                                  {rsvp.note && (
+                                    <span className="rsvp-note">{rsvp.note}</span>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       )}
-                    </div>
-                  )}
 
-                  {userRSVP && (
-                    <div className="user-rsvp">
-                      <div className="current-rsvp">
-                        <span className={`rsvp-status ${userRSVP.status.toLowerCase()}`}>
-                          Your RSVP: {getStatusDisplayName(userRSVP.status)}
-                        </span>
-                        <span className="rsvp-time">
-                          {formatRSVPTime(userRSVP.createdAt)}
-                        </span>
-                        {userRSVP.note && (
-                          <span className="rsvp-note-display">"{userRSVP.note}"</span>
-                        )}
-                      </div>
-                      {!isUpdateFormOpen ? (
-                        <div className="change-rsvp-actions">
-                          <button
-                            onClick={() => handleUpdateRSVP(userRSVP.id, 'AVAILABLE')}
-                            className={`btn-rsvp-change available ${userRSVP.status === 'AVAILABLE' ? 'active' : ''}`}
-                          >
-                            Available
-                          </button>
-                          <button
-                            onClick={() => handleUpdateRSVP(userRSVP.id, 'NOT_AVAILABLE')}
-                            className={`btn-rsvp-change not-available ${userRSVP.status === 'NOT_AVAILABLE' ? 'active' : ''}`}
-                          >
-                            Not Available
-                          </button>
-                          <button
-                            onClick={() => handleUpdateRSVP(userRSVP.id, 'MAYBE')}
-                            className={`btn-rsvp-change maybe ${userRSVP.status === 'MAYBE' ? 'active' : ''}`}
-                          >
-                            Maybe
-                          </button>
-                          <button
-                            onClick={() => handleUpdateRSVP(userRSVP.id, 'ONLY_IF_NEEDED')}
-                            className={`btn-rsvp-change only-if-needed ${userRSVP.status === 'ONLY_IF_NEEDED' ? 'active' : ''}`}
-                          >
-                            Only if Needed
-                          </button>
-                          <button
-                            onClick={() => toggleRsvpForm(userRSVP.id)}
-                            className="btn-rsvp-change-with-note"
-                          >
-                            Update with Note
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="rsvp-form">
-                          <div className="form-group">
-                            <label htmlFor={`rsvp-note-${userRSVP.id}`}>Update note (optional)</label>
-                            <textarea
-                              id={`rsvp-note-${userRSVP.id}`}
-                              value={rsvpNotes[userRSVP.id] || userRSVP.note || ''}
-                              onChange={(e) => handleNoteChange(userRSVP.id, e.target.value)}
-                              placeholder="Update your note..."
-                              rows={2}
-                            />
-                          </div>
-                          <div className="rsvp-form-actions">
-                            <button
-                              onClick={() => handleUpdateRSVP(userRSVP.id, 'AVAILABLE')}
-                              className={`btn-rsvp-change available ${userRSVP.status === 'AVAILABLE' ? 'active' : ''}`}
-                            >
-                              Available
-                            </button>
-                            <button
-                              onClick={() => handleUpdateRSVP(userRSVP.id, 'NOT_AVAILABLE')}
-                              className={`btn-rsvp-change not-available ${userRSVP.status === 'NOT_AVAILABLE' ? 'active' : ''}`}
-                            >
-                              Not Available
-                            </button>
-                            <button
-                              onClick={() => handleUpdateRSVP(userRSVP.id, 'MAYBE')}
-                              className={`btn-rsvp-change maybe ${userRSVP.status === 'MAYBE' ? 'active' : ''}`}
-                            >
-                              Maybe
-                            </button>
-                            <button
-                              onClick={() => handleUpdateRSVP(userRSVP.id, 'ONLY_IF_NEEDED')}
-                              className={`btn-rsvp-change only-if-needed ${userRSVP.status === 'ONLY_IF_NEEDED' ? 'active' : ''}`}
-                            >
-                              Only if Needed
-                            </button>
-                            <button
-                              onClick={() => toggleRsvpForm(userRSVP.id)}
-                              className="btn-cancel"
-                            >
-                              Cancel
-                            </button>
-                          </div>
+                      {/* RSVP Actions */}
+                      {!userRSVP && (
+                        <div className="rsvp-actions">
+                          {!isRsvpFormOpen ? (
+                            <>
+                              <button
+                                onClick={() => handleRSVP(event.id, 'AVAILABLE')}
+                                className="btn-rsvp available"
+                              >
+                                Available
+                              </button>
+                              <button
+                                onClick={() => handleRSVP(event.id, 'NOT_AVAILABLE')}
+                                className="btn-rsvp not-available"
+                              >
+                                Not Available
+                              </button>
+                              <button
+                                onClick={() => handleRSVP(event.id, 'MAYBE')}
+                                className="btn-rsvp maybe"
+                              >
+                                Maybe
+                              </button>
+                              <button
+                                onClick={() => handleRSVP(event.id, 'ONLY_IF_NEEDED')}
+                                className="btn-rsvp only-if-needed"
+                              >
+                                Only if Needed
+                              </button>
+                              <button
+                                onClick={() => toggleRsvpForm(event.id)}
+                                className="btn-rsvp-with-note"
+                              >
+                                RSVP with Note
+                              </button>
+                            </>
+                          ) : (
+                            <div className="rsvp-form">
+                              <div className="form-group">
+                                <label htmlFor={`rsvp-note-${event.id}`}>Add a note (optional)</label>
+                                <textarea
+                                  id={`rsvp-note-${event.id}`}
+                                  value={rsvpNotes[event.id] || ''}
+                                  onChange={(e) => handleNoteChange(event.id, e.target.value)}
+                                  placeholder="Add any additional information..."
+                                  rows={2}
+                                />
+                              </div>
+                              <div className="rsvp-form-actions">
+                                <button
+                                  onClick={() => handleRSVP(event.id, 'AVAILABLE')}
+                                  className="btn-rsvp available"
+                                >
+                                  Available
+                                </button>
+                                <button
+                                  onClick={() => handleRSVP(event.id, 'NOT_AVAILABLE')}
+                                  className="btn-rsvp not-available"
+                                >
+                                  Not Available
+                                </button>
+                                <button
+                                  onClick={() => handleRSVP(event.id, 'MAYBE')}
+                                  className="btn-rsvp maybe"
+                                >
+                                  Maybe
+                                </button>
+                                <button
+                                  onClick={() => handleRSVP(event.id, 'ONLY_IF_NEEDED')}
+                                  className="btn-rsvp only-if-needed"
+                                >
+                                  Only if Needed
+                                </button>
+                                <button
+                                  onClick={() => toggleRsvpForm(event.id)}
+                                  className="btn-cancel"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
-                    </div>
-                  )}
-                  {isAdmin && (
-                    <button
-                      className="btn-remove"
-                      onClick={() => handleDeleteEvent(event.id)}
-                      disabled={loading && deletingEventId === event.id}
-                      style={{ marginLeft: 8 }}
-                    >
-                      {loading && deletingEventId === event.id ? 'Deleting...' : 'Delete'}
-                    </button>
+
+                      {userRSVP && (
+                        <div className="user-rsvp">
+                          <div className="current-rsvp">
+                            <span className={`rsvp-status ${userRSVP.status.toLowerCase()}`}>
+                              Your RSVP: {getStatusDisplayName(userRSVP.status)}
+                            </span>
+                            <span className="rsvp-time">
+                              {formatRSVPTime(userRSVP.createdAt)}
+                            </span>
+                            {userRSVP.note && (
+                              <span className="rsvp-note-display">"{userRSVP.note}"</span>
+                            )}
+                          </div>
+                          {!isUpdateFormOpen ? (
+                            <div className="change-rsvp-actions">
+                              <button
+                                onClick={() => handleUpdateRSVP(userRSVP.id, 'AVAILABLE')}
+                                className={`btn-rsvp-change available ${userRSVP.status === 'AVAILABLE' ? 'active' : ''}`}
+                              >
+                                Available
+                              </button>
+                              <button
+                                onClick={() => handleUpdateRSVP(userRSVP.id, 'NOT_AVAILABLE')}
+                                className={`btn-rsvp-change not-available ${userRSVP.status === 'NOT_AVAILABLE' ? 'active' : ''}`}
+                              >
+                                Not Available
+                              </button>
+                              <button
+                                onClick={() => handleUpdateRSVP(userRSVP.id, 'MAYBE')}
+                                className={`btn-rsvp-change maybe ${userRSVP.status === 'MAYBE' ? 'active' : ''}`}
+                              >
+                                Maybe
+                              </button>
+                              <button
+                                onClick={() => handleUpdateRSVP(userRSVP.id, 'ONLY_IF_NEEDED')}
+                                className={`btn-rsvp-change only-if-needed ${userRSVP.status === 'ONLY_IF_NEEDED' ? 'active' : ''}`}
+                              >
+                                Only if Needed
+                              </button>
+                              <button
+                                onClick={() => toggleRsvpForm(userRSVP.id)}
+                                className="btn-rsvp-change-with-note"
+                              >
+                                Update with Note
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="rsvp-form">
+                              <div className="form-group">
+                                <label htmlFor={`rsvp-note-${userRSVP.id}`}>Update note (optional)</label>
+                                <textarea
+                                  id={`rsvp-note-${userRSVP.id}`}
+                                  value={rsvpNotes[userRSVP.id] || userRSVP.note || ''}
+                                  onChange={(e) => handleNoteChange(userRSVP.id, e.target.value)}
+                                  placeholder="Update your note..."
+                                  rows={2}
+                                />
+                              </div>
+                              <div className="rsvp-form-actions">
+                                <button
+                                  onClick={() => handleUpdateRSVP(userRSVP.id, 'AVAILABLE')}
+                                  className={`btn-rsvp-change available ${userRSVP.status === 'AVAILABLE' ? 'active' : ''}`}
+                                >
+                                  Available
+                                </button>
+                                <button
+                                  onClick={() => handleUpdateRSVP(userRSVP.id, 'NOT_AVAILABLE')}
+                                  className={`btn-rsvp-change not-available ${userRSVP.status === 'NOT_AVAILABLE' ? 'active' : ''}`}
+                                >
+                                  Not Available
+                                </button>
+                                <button
+                                  onClick={() => handleUpdateRSVP(userRSVP.id, 'MAYBE')}
+                                  className={`btn-rsvp-change maybe ${userRSVP.status === 'MAYBE' ? 'active' : ''}`}
+                                >
+                                  Maybe
+                                </button>
+                                <button
+                                  onClick={() => handleUpdateRSVP(userRSVP.id, 'ONLY_IF_NEEDED')}
+                                  className={`btn-rsvp-change only-if-needed ${userRSVP.status === 'ONLY_IF_NEEDED' ? 'active' : ''}`}
+                                >
+                                  Only if Needed
+                                </button>
+                                <button
+                                  onClick={() => toggleRsvpForm(userRSVP.id)}
+                                  className="btn-cancel"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Edit/Delete Buttons Row */}
+                      {(canEdit || isAdmin) && (
+                        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                          {canEdit && (
+                            <button
+                              className="btn-primary"
+                              onClick={() => handleEditEvent(event)}
+                            >
+                              Edit
+                            </button>
+                          )}
+                          {isAdmin && (
+                            <button
+                              className="btn-remove"
+                              onClick={() => handleDeleteEvent(event.id)}
+                              disabled={loading && deletingEventId === event.id}
+                            >
+                              {loading && deletingEventId === event.id ? 'Deleting...' : 'Delete'}
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               );
-            })
-          )}
+            })}
         </div>
       )}
     </div>
