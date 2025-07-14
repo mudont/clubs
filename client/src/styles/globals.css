@@ -1,1 +1,9 @@
 /* Global styles for the app. Add resets, typography, or custom global rules here. */
+
+@media screen and (max-width: 812px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
