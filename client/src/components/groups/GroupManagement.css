@@ -211,8 +211,8 @@
 
 .btn-remove {
   padding: 3px 6px;
-  background: #fed7d7;
-  color: #c53030;
+  background: #e53e3e;
+  color: white;
   border: none;
   border-radius: 3px;
   font-size: 11px;
@@ -221,7 +221,7 @@
 }
 
 .btn-remove:hover:not(:disabled) {
-  background: #feb2b2;
+  background: #c53030;
 }
 
 .btn-remove:disabled {
