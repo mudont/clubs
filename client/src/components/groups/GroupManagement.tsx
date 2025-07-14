@@ -140,6 +140,12 @@ const USER_SEARCH = gql`
   }
 `;
 
+const DELETE_GROUP = gql`
+  mutation DeleteGroup($id: ID!) {
+    deleteGroup(id: $id)
+  }
+`;
+
 interface GroupManagementProps {
   groupId: string;
 }
@@ -435,6 +441,29 @@ const GroupManagement: React.FC<GroupManagementProps> = ({ groupId }) => {
     }
   };
 
+  const [deleteGroup] = useMutation(DELETE_GROUP);
+  const [deletingGroup, setDeletingGroup] = useState(false);
+
+  const handleDeleteGroup = async () => {
+    if (!window.confirm('Are you sure you want to delete this group? This will permanently delete the group, ALL events, RSVPs, messages, memberships, and blocked users. This action cannot be undone.')) {
+      return;
+    }
+    setDeletingGroup(true);
+    setError('');
+    setSuccess('');
+    try {
+      await deleteGroup({ variables: { id: groupId } });
+      setSuccess('Group deleted successfully. Redirecting to dashboard...');
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 2000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete group');
+    } finally {
+      setDeletingGroup(false);
+    }
+  };
+
   if (membersLoading) {
     return <div className="loading">Loading group management...</div>;
   }
@@ -602,13 +631,23 @@ const GroupManagement: React.FC<GroupManagementProps> = ({ groupId }) => {
       {activeTab === 'settings' && (
         <div className="group-settings">
           <h3>Group Settings</h3>
-          {!isEditingGroup ? (
+          {!isEditingGroup && (
             <div className="form-actions">
               <button type="button" className="btn-primary" onClick={() => setIsEditingGroup(true)}>
                 Edit Group
               </button>
+              <button
+                type="button"
+                className="btn-remove"
+                style={{ marginLeft: 8 }}
+                onClick={handleDeleteGroup}
+                disabled={deletingGroup}
+              >
+                {deletingGroup ? 'Deleting...' : 'Delete Group'}
+              </button>
             </div>
-          ) : (
+          )}
+          {isEditingGroup ? (
             <form onSubmit={handleUpdateGroup} className="settings-form">
               <div className="form-group">
                 <label htmlFor="groupName">Group Name</label>
@@ -657,6 +696,13 @@ const GroupManagement: React.FC<GroupManagementProps> = ({ groupId }) => {
                 </button>
               </div>
             </form>
+          ) : (
+            <div className="settings-preview">
+              <h4>Current Settings</h4>
+              <p><strong>Group Name:</strong> {data?.group?.name || 'N/A'}</p>
+              <p><strong>Description:</strong> {data?.group?.description || 'N/A'}</p>
+              <p><strong>Is Public:</strong> {data?.group?.isPublic ? 'Yes' : 'No'}</p>
+            </div>
           )}
         </div>
       )}

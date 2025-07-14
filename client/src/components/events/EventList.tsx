@@ -72,6 +72,12 @@ const UPDATE_RSVP = gql`
   }
 `;
 
+const DELETE_EVENT = gql`
+  mutation DeleteEvent($id: ID!) {
+    deleteEvent(id: $id)
+  }
+`;
+
 interface EventListProps {
   groupId: string;
   isAdmin?: boolean;
@@ -86,6 +92,7 @@ const EventList: React.FC<EventListProps> = ({ groupId, isAdmin = false }) => {
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set());
   const [rsvpNotes, setRsvpNotes] = useState<Record<string, string>>({});
   const [showRsvpForm, setShowRsvpForm] = useState<string | null>(null);
+  const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
 
   const { user } = useSelector((state: RootState) => state.auth);
   const { data, loading: eventsLoading, refetch } = useQuery(GET_EVENTS, {
@@ -95,6 +102,7 @@ const EventList: React.FC<EventListProps> = ({ groupId, isAdmin = false }) => {
   const [createEvent] = useMutation(CREATE_EVENT);
   const [createRSVP] = useMutation(CREATE_RSVP);
   const [updateRSVP] = useMutation(UPDATE_RSVP);
+  const [deleteEventMutation] = useMutation(DELETE_EVENT);
 
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -183,6 +191,24 @@ const EventList: React.FC<EventListProps> = ({ groupId, isAdmin = false }) => {
       setShowRsvpForm(null);
     } else {
       setShowRsvpForm(id);
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    if (!window.confirm('Are you sure you want to delete this event? This will permanently delete the event and ALL RSVPs for it. This action cannot be undone.')) {
+      return;
+    }
+    setLoading(true);
+    setDeletingEventId(eventId);
+    setError('');
+    try {
+      await deleteEventMutation({ variables: { id: eventId } });
+      refetch();
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete event');
+    } finally {
+      setLoading(false);
+      setDeletingEventId(null);
     }
   };
 
@@ -569,6 +595,16 @@ const EventList: React.FC<EventListProps> = ({ groupId, isAdmin = false }) => {
                         </div>
                       )}
                     </div>
+                  )}
+                  {isAdmin && (
+                    <button
+                      className="btn-remove"
+                      onClick={() => handleDeleteEvent(event.id)}
+                      disabled={loading && deletingEventId === event.id}
+                      style={{ marginLeft: 8 }}
+                    >
+                      {loading && deletingEventId === event.id ? 'Deleting...' : 'Delete'}
+                    </button>
                   )}
                 </div>
               );

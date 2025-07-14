@@ -604,7 +604,32 @@ export const resolvers = {
         await requireGroupAdmin(context, event.groupId);
       }
 
+      // Delete all RSVPs for this event
+      await context.prisma.rSVP.deleteMany({ where: { eventId: id } });
+      // Delete the event
       await context.prisma.event.delete({ where: { id } });
+      return true;
+    },
+
+    deleteGroup: async (_: any, { id }: { id: string }, context: Context) => {
+      await requireGroupAdmin(context, id);
+
+      // Delete all RSVPs for all events in the group
+      const events = await context.prisma.event.findMany({ where: { groupId: id } });
+      const eventIds = events.map(e => e.id);
+      if (eventIds.length > 0) {
+        await context.prisma.rSVP.deleteMany({ where: { eventId: { in: eventIds } } });
+      }
+      // Delete all events
+      await context.prisma.event.deleteMany({ where: { groupId: id } });
+      // Delete all messages
+      await context.prisma.message.deleteMany({ where: { groupId: id } });
+      // Delete all memberships
+      await context.prisma.membership.deleteMany({ where: { groupId: id } });
+      // Delete all blocked users
+      await context.prisma.blockedUser.deleteMany({ where: { groupId: id } });
+      // Delete the group
+      await context.prisma.group.delete({ where: { id } });
       return true;
     },
 

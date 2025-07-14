@@ -169,6 +169,7 @@ export const typeDefs = gql`
     removeAdmin(groupId: ID!, userId: ID!): Membership!
     blockUser(input: BlockUserInput!): Boolean!
     unblockUser(groupId: ID!, userId: ID!): Boolean!
+    deleteGroup(id: ID!): Boolean!
 
     # Event mutations
     createEvent(input: CreateEventInput!): Event!
