@@ -41,3 +41,4 @@ coverage/
 ehthumbs.db
 Thumbs.db
 
+server/prisma/ERD.svg
