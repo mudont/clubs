@@ -48,6 +48,481 @@ function publishMemberJoined(membership: any) {
   pubsub.publish(EVENTS.MEMBER_JOINED, { memberJoined: membership });
 }
 
+// TENNIS MODULE RESOLVERS
+const tennisResolvers = {
+  Query: {
+    tennisLeagues: async (_: any, __: any, context: Context) => {
+      try {
+        console.log('tennisLeagues resolver called');
+        const leagues = await context.prisma.teamLeague.findMany();
+        console.log('tennisLeagues result:', leagues);
+        return Array.isArray(leagues) ? leagues : [];
+      } catch (error) {
+        console.error('Error in tennisLeagues resolver:', error);
+        return [];
+      }
+    },
+    tennisLeague: async (_: any, { id }: { id: string }, context: Context) => {
+      return context.prisma.teamLeague.findUnique({
+        where: { id },
+        include: {
+          pointSystem: true,
+          teams: {
+            include: {
+              captain: true,
+              Group: true,
+            },
+          },
+          teamMatches: {
+            include: {
+              homeTeam: true,
+              awayTeam: true,
+            },
+          },
+          // Removed: individualSinglesMatches, individualDoublesMatches
+        },
+      });
+    },
+    tennisLeagueStandings: async (_: any, { id }: { id: string }, context: Context) => {
+      const league = await context.prisma.teamLeague.findUnique({
+        where: { id },
+        include: {
+          teams: { include: { Group: true } },
+          teamMatches: {
+            where: { isCompleted: true },
+            include: {
+              homeTeam: true,
+              awayTeam: true,
+            },
+          },
+          pointSystem: true,
+        },
+      });
+
+      if (!league) {
+        throw new GraphQLError('League not found');
+      }
+
+      const standings = await Promise.all(
+        league.teams.map(async (team) => {
+          let matchesPlayed = 0;
+          let wins = 0;
+          let losses = 0;
+          let draws = 0;
+          let gamesWon = 0;
+          let gamesLost = 0;
+
+          // Calculate team match statistics
+          for (const match of league.teamMatches) {
+            if (match.homeTeamId === team.id || match.awayTeamId === team.id) {
+              matchesPlayed++;
+
+              if (match.homeScore !== null && match.awayScore !== null) {
+                const isHome = match.homeTeamId === team.id;
+                const teamScore = isHome ? match.homeScore : match.awayScore;
+                const opponentScore = isHome ? match.awayScore : match.homeScore;
+
+                gamesWon += teamScore;
+                gamesLost += opponentScore;
+
+                if (teamScore > opponentScore) {
+                  wins++;
+                } else if (teamScore < opponentScore) {
+                  losses++;
+                } else {
+                  draws++;
+                }
+              }
+            }
+          }
+
+          const points = wins * (league.pointSystem?.winPoints || 3) +
+            losses * (league.pointSystem?.lossPoints || 0) +
+            draws * (league.pointSystem?.drawPoints || 1);
+
+          return {
+            teamId: team.id,
+            teamName: team.Group.name,
+            matchesPlayed,
+            wins,
+            losses,
+            draws,
+            points,
+            gamesWon,
+            gamesLost,
+          };
+        })
+      );
+
+      // Sort by points (descending), then by goal difference, then by goals scored
+      return standings.sort((a, b) => {
+        if (b.points !== a.points) return b.points - a.points;
+        const aGoalDiff = a.gamesWon - a.gamesLost;
+        const bGoalDiff = b.gamesWon - b.gamesLost;
+        if (bGoalDiff !== aGoalDiff) return bGoalDiff - aGoalDiff;
+        return b.gamesWon - a.gamesWon;
+      });
+    },
+  },
+  Mutation: {
+    createTennisLeague: async (_: any, { input }: any, context: Context) => {
+      requireAuth(context);
+
+      const league = await context.prisma.teamLeague.create({
+        data: {
+          name: input.name,
+          description: input.description,
+          startDate: new Date(input.startDate),
+          endDate: new Date(input.endDate),
+          isActive: input.isActive ?? true,
+          pointSystem: {
+            create: {
+              winPoints: 3,
+              lossPoints: 0,
+              drawPoints: 1,
+              defaultWinPoints: 3,
+              defaultLossPoints: 0,
+              defaultDrawPoints: 1,
+            },
+          },
+        },
+        include: {
+          pointSystem: true,
+          teams: true,
+          teamMatches: true,
+          // Removed: individualSinglesMatches, individualDoublesMatches
+        },
+      });
+
+      return league;
+    },
+    updateTennisLeague: async (_: any, { id, input }: any, context: Context) => {
+      requireAuth(context);
+
+      const updateData: any = {};
+      if (input.name !== undefined) updateData.name = input.name;
+      if (input.description !== undefined) updateData.description = input.description;
+      if (input.startDate !== undefined) updateData.startDate = new Date(input.startDate);
+      if (input.endDate !== undefined) updateData.endDate = new Date(input.endDate);
+      if (input.isActive !== undefined) updateData.isActive = input.isActive;
+
+      return context.prisma.teamLeague.update({
+        where: { id },
+        data: updateData,
+        include: {
+          pointSystem: true,
+          teams: {
+            include: {
+              captain: true,
+              Group: true,
+            },
+          },
+          teamMatches: {
+            include: {
+              homeTeam: true,
+              awayTeam: true,
+            },
+          },
+          // Removed: individualSinglesMatches, individualDoublesMatches
+        },
+      });
+    },
+    deleteTennisLeague: async (_: any, { id }: any, context: Context) => {
+      requireAuth(context);
+
+      // Delete all related data
+      // No need to delete singles/doubles matches by teamLeagueId, handled by cascading from team matches
+      await context.prisma.teamLeagueTeamMatch.deleteMany({ where: { teamLeagueId: id } });
+      await context.prisma.teamLeagueTeam.deleteMany({ where: { teamLeagueId: id } });
+      await context.prisma.teamLeaguePointSystem.deleteMany({ where: { teamLeagueId: id } });
+      await context.prisma.teamLeague.delete({ where: { id } });
+
+      return true;
+    },
+    createTennisTeam: async (_: any, { leagueId, input }: any, context: Context) => {
+      requireAuth(context);
+
+      const team = await context.prisma.teamLeagueTeam.create({
+        data: {
+          groupId: input.groupId,
+          captainId: input.captainId,
+          teamLeagueId: leagueId,
+        },
+        include: {
+          captain: true,
+          Group: true,
+        },
+      });
+
+      return team;
+    },
+    updateTennisTeam: async (_: any, { id, input }: any, context: Context) => {
+      requireAuth(context);
+
+      const updateData: any = {};
+      if (input.groupId !== undefined) updateData.groupId = input.groupId;
+      if (input.captainId !== undefined) updateData.captainId = input.captainId;
+
+      return context.prisma.teamLeagueTeam.update({
+        where: { id },
+        data: updateData,
+        include: {
+          captain: true,
+          Group: true,
+        },
+      });
+    },
+    deleteTennisTeam: async (_: any, { id }: any, context: Context) => {
+      requireAuth(context);
+
+      await context.prisma.teamLeagueTeam.delete({ where: { id } });
+      return true;
+    },
+    createTeamMatch: async (_: any, { leagueId, input }: any, context: Context) => {
+      requireAuth(context);
+
+      return context.prisma.teamLeagueTeamMatch.create({
+        data: {
+          homeTeamId: input.homeTeamId,
+          awayTeamId: input.awayTeamId,
+          homeScore: input.homeScore,
+          awayScore: input.awayScore,
+          matchDate: new Date(input.matchDate),
+          isCompleted: input.isCompleted ?? false,
+          teamLeagueId: leagueId,
+        },
+        include: {
+          homeTeam: true,
+          awayTeam: true,
+        },
+      });
+    },
+    updateTeamMatch: async (_: any, { id, input }: any, context: Context) => {
+      requireAuth(context);
+
+      const updateData: any = {};
+      if (input.homeTeamId !== undefined) updateData.homeTeamId = input.homeTeamId;
+      if (input.awayTeamId !== undefined) updateData.awayTeamId = input.awayTeamId;
+      if (input.homeScore !== undefined) updateData.homeScore = input.homeScore;
+      if (input.awayScore !== undefined) updateData.awayScore = input.awayScore;
+      if (input.matchDate !== undefined) updateData.matchDate = new Date(input.matchDate);
+      if (input.isCompleted !== undefined) updateData.isCompleted = input.isCompleted;
+
+      return context.prisma.teamLeagueTeamMatch.update({
+        where: { id },
+        data: updateData,
+        include: {
+          homeTeam: true,
+          awayTeam: true,
+        },
+      });
+    },
+    deleteTeamMatch: async (_: any, { id }: any, context: Context) => {
+      requireAuth(context);
+
+      await context.prisma.teamLeagueTeamMatch.delete({ where: { id } });
+      return true;
+    },
+    createIndividualSinglesMatch: async (_: any, { input }: any, context: Context) => {
+      requireAuth(context);
+
+      return context.prisma.teamLeagueIndividualSinglesMatch.create({
+        data: {
+          player1Id: input.player1Id,
+          player2Id: input.player2Id,
+          player1Score: input.player1Score,
+          player2Score: input.player2Score,
+          matchDate: new Date(input.matchDate),
+          isCompleted: input.isCompleted ?? false,
+          teamMatchId: input.teamMatchId,
+        },
+        include: {
+          player1: true,
+          player2: true,
+          teamMatch: true,
+        },
+      });
+    },
+    updateIndividualSinglesMatch: async (_: any, { id, input }: any, context: Context) => {
+      requireAuth(context);
+
+      const updateData: any = {};
+      if (input.player1Id !== undefined) updateData.player1Id = input.player1Id;
+      if (input.player2Id !== undefined) updateData.player2Id = input.player2Id;
+      if (input.player1Score !== undefined) updateData.player1Score = input.player1Score;
+      if (input.player2Score !== undefined) updateData.player2Score = input.player2Score;
+      if (input.matchDate !== undefined) updateData.matchDate = new Date(input.matchDate);
+      if (input.isCompleted !== undefined) updateData.isCompleted = input.isCompleted;
+      if (input.teamMatchId !== undefined) updateData.teamMatchId = input.teamMatchId;
+
+      return context.prisma.teamLeagueIndividualSinglesMatch.update({
+        where: { id },
+        data: updateData,
+        include: {
+          player1: true,
+          player2: true,
+          teamMatch: true,
+        },
+      });
+    },
+    deleteIndividualSinglesMatch: async (_: any, { id }: any, context: Context) => {
+      requireAuth(context);
+      await context.prisma.teamLeagueIndividualSinglesMatch.delete({ where: { id } });
+      return true;
+    },
+    createIndividualDoublesMatch: async (_: any, { input }: any, context: Context) => {
+      requireAuth(context);
+
+      return context.prisma.teamLeagueIndividualDoublesMatch.create({
+        data: {
+          team1Player1Id: input.team1Player1Id,
+          team1Player2Id: input.team1Player2Id,
+          team2Player1Id: input.team2Player1Id,
+          team2Player2Id: input.team2Player2Id,
+          team1Score: input.team1Score,
+          team2Score: input.team2Score,
+          matchDate: new Date(input.matchDate),
+          isCompleted: input.isCompleted ?? false,
+          teamMatchId: input.teamMatchId,
+        },
+        include: {
+          team1Player1: true,
+          team1Player2: true,
+          team2Player1: true,
+          team2Player2: true,
+          teamMatch: true,
+        },
+      });
+    },
+    updateIndividualDoublesMatch: async (_: any, { id, input }: any, context: Context) => {
+      requireAuth(context);
+
+      const updateData: any = {};
+      if (input.team1Player1Id !== undefined) updateData.team1Player1Id = input.team1Player1Id;
+      if (input.team1Player2Id !== undefined) updateData.team1Player2Id = input.team1Player2Id;
+      if (input.team2Player1Id !== undefined) updateData.team2Player1Id = input.team2Player1Id;
+      if (input.team2Player2Id !== undefined) updateData.team2Player2Id = input.team2Player2Id;
+      if (input.team1Score !== undefined) updateData.team1Score = input.team1Score;
+      if (input.team2Score !== undefined) updateData.team2Score = input.team2Score;
+      if (input.matchDate !== undefined) updateData.matchDate = new Date(input.matchDate);
+      if (input.isCompleted !== undefined) updateData.isCompleted = input.isCompleted;
+      if (input.teamMatchId !== undefined) updateData.teamMatchId = input.teamMatchId;
+
+      return context.prisma.teamLeagueIndividualDoublesMatch.update({
+        where: { id },
+        data: updateData,
+        include: {
+          team1Player1: true,
+          team1Player2: true,
+          team2Player1: true,
+          team2Player2: true,
+          teamMatch: true,
+        },
+      });
+    },
+    deleteIndividualDoublesMatch: async (_: any, { id }: any, context: Context) => {
+      requireAuth(context);
+      await context.prisma.teamLeagueIndividualDoublesMatch.delete({ where: { id } });
+      return true;
+    },
+    updatePointSystem: async (_: any, { leagueId, input }: any, context: Context) => {
+      requireAuth(context);
+
+      const updateData: any = {};
+      if (input.winPoints !== undefined) updateData.winPoints = input.winPoints;
+      if (input.lossPoints !== undefined) updateData.lossPoints = input.lossPoints;
+      if (input.drawPoints !== undefined) updateData.drawPoints = input.drawPoints;
+      if (input.defaultWinPoints !== undefined) updateData.defaultWinPoints = input.defaultWinPoints;
+      if (input.defaultLossPoints !== undefined) updateData.defaultLossPoints = input.defaultLossPoints;
+      if (input.defaultDrawPoints !== undefined) updateData.defaultDrawPoints = input.defaultDrawPoints;
+
+      return context.prisma.teamLeaguePointSystem.update({
+        where: { teamLeagueId: leagueId },
+        data: updateData,
+      });
+    },
+  },
+  TeamLeague: {
+    pointSystem: (parent: any, _: any, context: Context) =>
+      context.prisma.teamLeaguePointSystem.findUnique({ where: { teamLeagueId: parent.id } }),
+    teams: (parent: any, _: any, context: Context) =>
+      context.prisma.teamLeagueTeam.findMany({
+        where: { teamLeagueId: parent.id },
+        include: { captain: true, Group: true },
+      }),
+    teamMatches: (parent: any, _: any, context: Context) =>
+      context.prisma.teamLeagueTeamMatch.findMany({
+        where: { teamLeagueId: parent.id },
+        include: {
+          homeTeam: {
+            include: {
+              captain: true,
+              Group: true,
+            },
+          },
+          awayTeam: {
+            include: {
+              captain: true,
+              Group: true,
+            },
+          },
+        },
+      }),
+    // Removed: individualSinglesMatches and individualDoublesMatches
+  },
+  TeamLeagueTeam: {
+    captain: (parent: any, _: any, context: Context) =>
+      context.prisma.user.findUnique({ where: { id: parent.captainId } }),
+    members: async (parent: any, _: any, context: Context) => {
+      // Get the group for this team
+      const group = await context.prisma.group.findUnique({
+        where: { id: parent.groupId },
+        include: { memberships: { include: { user: true } } },
+      });
+      return group ? group.memberships.map((m: any) => m.user) : [];
+    },
+    group: (parent: any, _: any, context: Context) =>
+      context.prisma.group.findUnique({ where: { id: parent.groupId } }),
+  },
+  TeamLeagueTeamMatch: {
+    homeTeam: (parent: any, _: any, context: Context) =>
+      context.prisma.teamLeagueTeam.findUnique({ where: { id: parent.homeTeamId } }),
+    awayTeam: (parent: any, _: any, context: Context) =>
+      context.prisma.teamLeagueTeam.findUnique({ where: { id: parent.awayTeamId } }),
+    individualSinglesMatches: (parent: any, _: any, context: Context) =>
+      context.prisma.teamLeagueIndividualSinglesMatch.findMany({
+        where: { teamMatchId: parent.id },
+        include: { player1: true, player2: true },
+      }),
+    individualDoublesMatches: (parent: any, _: any, context: Context) =>
+      context.prisma.teamLeagueIndividualDoublesMatch.findMany({
+        where: { teamMatchId: parent.id },
+        include: {
+          team1Player1: true,
+          team1Player2: true,
+          team2Player1: true,
+          team2Player2: true,
+        },
+      }),
+  },
+  TeamLeagueIndividualSinglesMatch: {
+    player1: (parent: any, _: any, context: Context) =>
+      context.prisma.user.findUnique({ where: { id: parent.player1Id } }),
+    player2: (parent: any, _: any, context: Context) =>
+      context.prisma.user.findUnique({ where: { id: parent.player2Id } }),
+  },
+  TeamLeagueIndividualDoublesMatch: {
+    team1Player1: (parent: any, _: any, context: Context) =>
+      context.prisma.user.findUnique({ where: { id: parent.team1Player1Id } }),
+    team1Player2: (parent: any, _: any, context: Context) =>
+      context.prisma.user.findUnique({ where: { id: parent.team1Player2Id } }),
+    team2Player1: (parent: any, _: any, context: Context) =>
+      context.prisma.user.findUnique({ where: { id: parent.team2Player1Id } }),
+    team2Player2: (parent: any, _: any, context: Context) =>
+      context.prisma.user.findUnique({ where: { id: parent.team2Player2Id } }),
+  },
+};
+
 export const resolvers = {
   Query: {
     health: () => 'OK',
@@ -95,40 +570,20 @@ export const resolvers = {
       return memberships.map(m => m.group);
     },
 
-    publicGroups: async (_: any, __: any, context: Context) => {
+    publicGroups: async (_: any, args: { query?: string }, context: Context) => {
       const user = requireAuth(context);
-
-      // Get groups that are public and user is not a member of and not blocked from
-      const publicGroups = await context.prisma.group.findMany({
-        where: {
-          isPublic: true,
-          AND: [
-            {
-              memberships: {
-                none: {
-                  userId: user.id
-                }
-              }
-            },
-            {
-              blockedUsers: {
-                none: {
-                  userId: user.id
-                }
-              }
-            }
-          ]
-        },
-        include: {
-          memberships: {
-            include: {
-              user: true
-            }
-          }
-        }
+      const where: any = { isPublic: true };
+      if (args.query) {
+        where.OR = [
+          { name: { contains: args.query, mode: 'insensitive' } },
+          { description: { contains: args.query, mode: 'insensitive' } }
+        ];
+      }
+      return await context.prisma.group.findMany({
+        where,
+        orderBy: { name: 'asc' },
+        take: 10,
       });
-
-      return publicGroups;
     },
 
     // Event queries
@@ -171,6 +626,9 @@ export const resolvers = {
         include: { user: true },
       });
     },
+
+    // Tennis queries - merge from tennisResolvers
+    ...tennisResolvers.Query,
   },
 
   Mutation: {
@@ -215,21 +673,12 @@ export const resolvers = {
       const user = requireAuth(context);
 
       // Check if already a member
-      const existing = await context.prisma.membership.findUnique({
-        where: { userId_groupId: { userId: user.id, groupId } },
+      const memberships = await context.prisma.membership.findMany({
+        where: { userId: user.id },
+        include: { group: true },
       });
-
-      if (existing) {
+      if (memberships.some(m => m.groupId === groupId)) {
         throw new GraphQLError('You are already a member of this group', { extensions: { code: 'BAD_USER_INPUT' } });
-      }
-
-      // Check if user is blocked from this group
-      const blocked = await context.prisma.blockedUser.findUnique({
-        where: { userId_groupId: { userId: user.id, groupId } },
-      });
-
-      if (blocked) {
-        throw new GraphQLError('You are blocked from joining this group', { extensions: { code: 'FORBIDDEN' } });
       }
 
       // Check if group is public or user is being added by admin
@@ -245,34 +694,30 @@ export const resolvers = {
         throw new GraphQLError('This group is not public', { extensions: { code: 'FORBIDDEN' } });
       }
 
-      // Get next member ID
-      const lastMember = await context.prisma.membership.findFirst({
+      // Get the next member ID for this group
+      const maxMember = await context.prisma.membership.findFirst({
         where: { groupId },
         orderBy: { memberId: 'desc' },
       });
 
-      const memberId = (lastMember?.memberId || 0) + 1;
+      const nextMemberId = (maxMember?.memberId || 0) + 1;
 
       const membership = await context.prisma.membership.create({
         data: {
           userId: user.id,
           groupId,
-          memberId,
-          isAdmin: false,
+          memberId: nextMemberId,
         },
         include: { user: true, group: true },
       });
 
-      // Publish member joined event
       publishMemberJoined(membership);
-
       return membership;
     },
 
     leaveGroup: async (_: any, { groupId }: { groupId: string }, context: Context) => {
       const user = requireAuth(context);
 
-      // Check if user is a member
       const membership = await context.prisma.membership.findUnique({
         where: { userId_groupId: { userId: user.id, groupId } },
       });
@@ -281,13 +726,14 @@ export const resolvers = {
         throw new GraphQLError('You are not a member of this group', { extensions: { code: 'BAD_USER_INPUT' } });
       }
 
-      // Check if this would leave the group without admins
       if (membership.isAdmin) {
+        // Check if this is the last admin
         const adminCount = await context.prisma.membership.count({
           where: { groupId, isAdmin: true },
         });
+
         if (adminCount <= 1) {
-          throw new GraphQLError('Cannot leave group as the last admin', { extensions: { code: 'FORBIDDEN' } });
+          throw new GraphQLError('Cannot leave group: you are the last admin. Transfer admin role or delete the group.', { extensions: { code: 'BAD_USER_INPUT' } });
         }
       }
 
@@ -301,121 +747,121 @@ export const resolvers = {
     addMember: async (_: any, { groupId, userId }: { groupId: string; userId: string }, context: Context) => {
       await requireGroupAdmin(context, groupId);
 
-      // Check if user exists
-      const user = await context.prisma.user.findUnique({ where: { id: userId } });
-      if (!user) {
-        throw new GraphQLError('User not found', { extensions: { code: 'BAD_USER_INPUT' } });
+      // Check if user is already a member
+      const existing = await context.prisma.membership.findUnique({
+        where: { userId_groupId: { userId, groupId } },
+      });
+
+      if (existing) {
+        throw new GraphQLError('User is already a member of this group', { extensions: { code: 'BAD_USER_INPUT' } });
       }
 
-      // Get next member ID
-      const lastMember = await context.prisma.membership.findFirst({
+      // Get the next member ID for this group
+      const maxMember = await context.prisma.membership.findFirst({
         where: { groupId },
         orderBy: { memberId: 'desc' },
       });
 
-      const memberId = (lastMember?.memberId || 0) + 1;
+      const nextMemberId = (maxMember?.memberId || 0) + 1;
 
       const membership = await context.prisma.membership.create({
         data: {
           userId,
           groupId,
-          memberId,
-          isAdmin: false,
+          memberId: nextMemberId,
         },
         include: { user: true, group: true },
       });
 
+      publishMemberJoined(membership);
       return membership;
     },
 
     addMemberByUsername: async (_: any, { groupId, username }: { groupId: string; username: string }, context: Context) => {
       await requireGroupAdmin(context, groupId);
 
-      // Check if user exists
-      const user = await context.prisma.user.findUnique({ where: { username } });
+      const user = await context.prisma.user.findUnique({
+        where: { username },
+      });
+
       if (!user) {
         throw new GraphQLError('User not found', { extensions: { code: 'BAD_USER_INPUT' } });
       }
 
       // Check if user is already a member
-      const existingMembership = await context.prisma.membership.findUnique({
+      const existing = await context.prisma.membership.findUnique({
         where: { userId_groupId: { userId: user.id, groupId } },
       });
 
-      if (existingMembership) {
+      if (existing) {
         throw new GraphQLError('User is already a member of this group', { extensions: { code: 'BAD_USER_INPUT' } });
       }
 
-      // Get next member ID
-      const lastMember = await context.prisma.membership.findFirst({
+      // Get the next member ID for this group
+      const maxMember = await context.prisma.membership.findFirst({
         where: { groupId },
         orderBy: { memberId: 'desc' },
       });
 
-      const memberId = (lastMember?.memberId || 0) + 1;
+      const nextMemberId = (maxMember?.memberId || 0) + 1;
 
       const membership = await context.prisma.membership.create({
         data: {
           userId: user.id,
           groupId,
-          memberId,
-          isAdmin: false,
+          memberId: nextMemberId,
         },
         include: { user: true, group: true },
       });
 
-      // Publish member joined event
       publishMemberJoined(membership);
-
       return membership;
     },
 
     addMemberByEmail: async (_: any, { groupId, email }: { groupId: string; email: string }, context: Context) => {
       await requireGroupAdmin(context, groupId);
 
-      // Check if user exists
-      const user = await context.prisma.user.findUnique({ where: { email } });
+      const user = await context.prisma.user.findUnique({
+        where: { email },
+      });
+
       if (!user) {
         throw new GraphQLError('User not found', { extensions: { code: 'BAD_USER_INPUT' } });
       }
 
       // Check if user is already a member
-      const existingMembership = await context.prisma.membership.findUnique({
+      const existing = await context.prisma.membership.findUnique({
         where: { userId_groupId: { userId: user.id, groupId } },
       });
 
-      if (existingMembership) {
+      if (existing) {
         throw new GraphQLError('User is already a member of this group', { extensions: { code: 'BAD_USER_INPUT' } });
       }
 
-      // Get next member ID
-      const lastMember = await context.prisma.membership.findFirst({
+      // Get the next member ID for this group
+      const maxMember = await context.prisma.membership.findFirst({
         where: { groupId },
         orderBy: { memberId: 'desc' },
       });
 
-      const memberId = (lastMember?.memberId || 0) + 1;
+      const nextMemberId = (maxMember?.memberId || 0) + 1;
 
       const membership = await context.prisma.membership.create({
         data: {
           userId: user.id,
           groupId,
-          memberId,
-          isAdmin: false,
+          memberId: nextMemberId,
         },
         include: { user: true, group: true },
       });
 
-      // Publish member joined event
       publishMemberJoined(membership);
-
       return membership;
     },
 
     removeMember: async (_: any, { groupId, userId }: { groupId: string; userId: string }, context: Context) => {
       await requireGroupAdmin(context, groupId);
 
-      // Check if user is a member
       const membership = await context.prisma.membership.findUnique({
         where: { userId_groupId: { userId, groupId } },
       });
@@ -424,14 +870,8 @@ export const resolvers = {
         throw new GraphQLError('User is not a member of this group', { extensions: { code: 'BAD_USER_INPUT' } });
       }
 
-      // Cannot remove the last admin
       if (membership.isAdmin) {
-        const adminCount = await context.prisma.membership.count({
-          where: { groupId, isAdmin: true },
-        });
-        if (adminCount <= 1) {
-          throw new GraphQLError('Cannot remove the last admin', { extensions: { code: 'FORBIDDEN' } });
-        }
+        throw new GraphQLError('Cannot remove an admin. Remove admin role first.', { extensions: { code: 'BAD_USER_INPUT' } });
       }
 
       await context.prisma.membership.delete({
@@ -444,33 +884,45 @@ export const resolvers = {
     makeAdmin: async (_: any, { groupId, userId }: { groupId: string; userId: string }, context: Context) => {
       await requireGroupAdmin(context, groupId);
 
-      const membership = await context.prisma.membership.update({
+      const membership = await context.prisma.membership.findUnique({
+        where: { userId_groupId: { userId, groupId } },
+      });
+
+      if (!membership) {
+        throw new GraphQLError('User is not a member of this group', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+
+      const updatedMembership = await context.prisma.membership.update({
         where: { userId_groupId: { userId, groupId } },
         data: { isAdmin: true },
         include: { user: true, group: true },
       });
 
-      return membership;
+      return updatedMembership;
     },
 
     removeAdmin: async (_: any, { groupId, userId }: { groupId: string; userId: string }, context: Context) => {
       await requireGroupAdmin(context, groupId);
 
-      // Check if user is an admin
       const membership = await context.prisma.membership.findUnique({
         where: { userId_groupId: { userId, groupId } },
       });
 
-      if (!membership || !membership.isAdmin) {
-        throw new GraphQLError('User is not an admin of this group', { extensions: { code: 'BAD_USER_INPUT' } });
+      if (!membership) {
+        throw new GraphQLError('User is not a member of this group', { extensions: { code: 'BAD_USER_INPUT' } });
       }
 
-      // Check if this would leave the group without admins
+      if (!membership.isAdmin) {
+        throw new GraphQLError('User is not an admin', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+
+      // Check if this is the last admin
       const adminCount = await context.prisma.membership.count({
         where: { groupId, isAdmin: true },
       });
+
       if (adminCount <= 1) {
-        throw new GraphQLError('Cannot remove the last admin', { extensions: { code: 'FORBIDDEN' } });
+        throw new GraphQLError('Cannot remove the last admin', { extensions: { code: 'BAD_USER_INPUT' } });
       }
 
       const updatedMembership = await context.prisma.membership.update({
@@ -485,34 +937,23 @@ export const resolvers = {
     blockUser: async (_: any, { input }: { input: { groupId: string; userId: string; reason?: string } }, context: Context) => {
       await requireGroupAdmin(context, input.groupId);
 
-      // Check if user exists
-      const user = await context.prisma.user.findUnique({ where: { id: input.userId } });
-      if (!user) {
-        throw new GraphQLError('User not found', { extensions: { code: 'BAD_USER_INPUT' } });
-      }
-
       // Check if user is already blocked
-      const existingBlock = await context.prisma.blockedUser.findUnique({
+      const existing = await context.prisma.blockedUser.findUnique({
         where: { userId_groupId: { userId: input.userId, groupId: input.groupId } },
       });
 
-      if (existingBlock) {
+      if (existing) {
         throw new GraphQLError('User is already blocked from this group', { extensions: { code: 'BAD_USER_INPUT' } });
       }
 
-      // Remove user from group if they are a member
-      await context.prisma.membership.deleteMany({
-        where: { userId: input.userId, groupId: input.groupId },
-      });
-
-      // Block the user
-      await context.prisma.blockedUser.create({
+      const blockedUser = await context.prisma.blockedUser.create({
         data: {
           userId: input.userId,
           groupId: input.groupId,
           blockedById: context.user!.id,
           reason: input.reason,
         },
+        include: { user: true, blockedBy: true, group: true },
       });
 
       return true;
@@ -521,7 +962,6 @@ export const resolvers = {
     unblockUser: async (_: any, { groupId, userId }: { groupId: string; userId: string }, context: Context) => {
       await requireGroupAdmin(context, groupId);
 
-      // Check if user is blocked
       const blockedUser = await context.prisma.blockedUser.findUnique({
         where: { userId_groupId: { userId, groupId } },
       });
@@ -530,7 +970,6 @@ export const resolvers = {
         throw new GraphQLError('User is not blocked from this group', { extensions: { code: 'BAD_USER_INPUT' } });
       }
 
-      // Remove the block
       await context.prisma.blockedUser.delete({
         where: { userId_groupId: { userId, groupId } },
       });
@@ -539,15 +978,15 @@ export const resolvers = {
     },
 
     // Event mutations
-    createEvent: async (_: any, { input }: { input: { groupId: string; date: Date; description: string } }, context: Context) => {
+    createEvent: async (_: any, { input }: { input: { groupId: string; date: string; description: string } }, context: Context) => {
       const user = requireAuth(context);
-      await requireGroupAdmin(context, input.groupId);
+      await requireGroupMember(context, input.groupId);
 
       const event = await context.prisma.event.create({
         data: {
           groupId: input.groupId,
           createdById: user.id,
-          date: input.date,
+          date: new Date(input.date),
           description: input.description,
         },
         include: { createdBy: true, group: true },
@@ -557,7 +996,7 @@ export const resolvers = {
       return event;
     },
 
-    updateEvent: async (_: any, { id, input }: { id: string; input: { groupId: string; date: Date; description: string } }, context: Context) => {
+    updateEvent: async (_: any, { id, input }: { id: string; input: { groupId: string; date: string; description: string } }, context: Context) => {
       const user = requireAuth(context);
 
       const event = await context.prisma.event.findUnique({
@@ -578,7 +1017,7 @@ export const resolvers = {
         where: { id },
         data: {
           groupId: input.groupId,
-          date: input.date,
+          date: new Date(input.date),
           description: input.description,
         },
         include: { createdBy: true, group: true },
@@ -628,6 +1067,8 @@ export const resolvers = {
       await context.prisma.membership.deleteMany({ where: { groupId: id } });
       // Delete all blocked users
       await context.prisma.blockedUser.deleteMany({ where: { groupId: id } });
+      // Delete all team matches
+      await context.prisma.teamLeagueTeamMatch.deleteMany({ where: { teamLeagueId: id } });
       // Delete the group
       await context.prisma.group.delete({ where: { id } });
       return true;
@@ -759,6 +1200,9 @@ export const resolvers = {
 
       return true;
     },
+
+    // Tennis mutations - merge from tennisResolvers
+    ...tennisResolvers.Mutation,
   },
 
   Subscription: {
@@ -827,6 +1271,13 @@ export const resolvers = {
       return parent.isAdmin ? 'ADMIN' : 'MEMBER';
     },
   },
+
+  // Tennis field resolvers - merge from tennisResolvers (excluding Query and Mutation)
+  TeamLeague: tennisResolvers.TeamLeague,
+  TeamLeagueTeam: tennisResolvers.TeamLeagueTeam,
+  TeamLeagueTeamMatch: tennisResolvers.TeamLeagueTeamMatch,
+  TeamLeagueIndividualSinglesMatch: tennisResolvers.TeamLeagueIndividualSinglesMatch,
+  TeamLeagueIndividualDoublesMatch: tennisResolvers.TeamLeagueIndividualDoublesMatch,
 };
 
 

@@ -335,7 +335,40 @@
 }
 
 .btn-join-group:hover {
-  background: #38a169;
+  background: #2b6cb0;
+}
+
+.tennis-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.tennis-info {
+  background: #f7fafc;
+  border-radius: 6px;
+  padding: 12px;
+  border-left: 4px solid #38a169;
+}
+
+.tennis-info p {
+  margin: 0 0 8px 0;
+  color: #2d3748;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.tennis-info ul {
+  margin: 0;
+  padding-left: 16px;
+  color: #4a5568;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.tennis-info li {
+  margin-bottom: 4px;
 }
 
 .checkbox-label {
@@ -357,6 +390,40 @@
   color: #667eea;
 }
 
+.btn-logout:hover {
+  background: #c53030;
+}
+
+/* Tennis Section Styles */
+.tennis-actions {
+  background: white;
+  border-radius: 6px;
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-top: 8px;
+}
+
+.tennis-info {
+  margin-top: 8px;
+  color: #4a5568;
+  font-size: 12px;
+}
+
+.tennis-info p {
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.tennis-info ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.tennis-info li {
+  margin-bottom: 2px;
+}
+
+/* Responsive design */
 @media (max-width: 768px) {
   .dashboard-header {
     flex-direction: column;

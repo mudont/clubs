@@ -1,5 +1,6 @@
 import { gql, useMutation, useQuery } from '@apollo/client';
 import React, { useCallback, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import Header from './common/Header';
 import './Dashboard.css';
@@ -338,6 +339,28 @@ const Dashboard: React.FC = () => {
                 </div>
               </section>
             )}
+
+            {/* Tennis Section */}
+            <section className="groups-section" aria-labelledby="tennis-heading">
+              <h2 id="tennis-heading">Tennis Leagues</h2>
+              <p className="section-description">
+                Manage tennis leagues, teams, and matches
+              </p>
+              <div className="tennis-actions">
+                <Link to="/tennis/leagues" className="btn-primary">
+                  🎾 View Tennis Leagues
+                </Link>
+                <div className="tennis-info">
+                  <p>Create and manage tennis leagues with:</p>
+                  <ul>
+                    <li>Team management and player rosters</li>
+                    <li>Match scheduling and results tracking</li>
+                    <li>Singles and doubles competitions</li>
+                    <li>League standings and point systems</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
           </>
         )}
       </main>

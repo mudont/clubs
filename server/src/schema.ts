@@ -145,7 +145,7 @@ export const typeDefs = gql`
     groups: [Group!]!
     group(id: ID!): Group
     myGroups: [Group!]!
-    publicGroups: [Group!]!
+    publicGroups(query: String): [Group!]!
 
     # Event queries
     events(groupId: ID!): [Event!]!
@@ -153,6 +153,11 @@ export const typeDefs = gql`
 
     # Message queries
     messages(groupId: ID!, limit: Int = 50): [Message!]!
+
+    # Tennis queries
+    tennisLeagues: [TeamLeague!]!
+    tennisLeague(id: ID!): TeamLeague
+    tennisLeagueStandings(id: ID!): [TeamLeagueStandingsRow!]!
   }
 
   type Mutation {
@@ -185,6 +190,24 @@ export const typeDefs = gql`
     # User mutations
     updateProfile(input: UpdateUserInput!): User!
     deleteUser(userId: ID!): Boolean!
+
+    # Tennis mutations
+    createTennisLeague(input: CreateTennisLeagueInput!): TeamLeague!
+    updateTennisLeague(id: ID!, input: UpdateTennisLeagueInput!): TeamLeague!
+    deleteTennisLeague(id: ID!): Boolean!
+    createTennisTeam(leagueId: ID!, input: CreateTennisTeamInput!): TeamLeagueTeam!
+    updateTennisTeam(id: ID!, input: UpdateTennisTeamInput!): TeamLeagueTeam!
+    deleteTennisTeam(id: ID!): Boolean!
+    createTeamMatch(leagueId: ID!, input: CreateTeamMatchInput!): TeamLeagueTeamMatch!
+    updateTeamMatch(id: ID!, input: UpdateTeamMatchInput!): TeamLeagueTeamMatch!
+    deleteTeamMatch(id: ID!): Boolean!
+    createIndividualSinglesMatch(leagueId: ID!, input: CreateIndividualSinglesMatchInput!): TeamLeagueIndividualSinglesMatch!
+    updateIndividualSinglesMatch(id: ID!, input: UpdateIndividualSinglesMatchInput!): TeamLeagueIndividualSinglesMatch!
+    deleteIndividualSinglesMatch(id: ID!): Boolean!
+    createIndividualDoublesMatch(leagueId: ID!, input: CreateIndividualDoublesMatchInput!): TeamLeagueIndividualDoublesMatch!
+    updateIndividualDoublesMatch(id: ID!, input: UpdateIndividualDoublesMatchInput!): TeamLeagueIndividualDoublesMatch!
+    deleteIndividualDoublesMatch(id: ID!): Boolean!
+    updatePointSystem(leagueId: ID!, input: UpdatePointSystemInput!): TeamLeaguePointSystem!
   }
 
   type Subscription {
@@ -196,4 +219,197 @@ export const typeDefs = gql`
   }
 
   scalar DateTime
+
+  type TeamLeague {
+    id: ID!
+    name: String!
+    description: String
+    startDate: DateTime!
+    endDate: DateTime!
+    isActive: Boolean!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    pointSystem: TeamLeaguePointSystem!
+    teams: [TeamLeagueTeam!]!
+    teamMatches: [TeamLeagueTeamMatch!]!
+  }
+
+  type TeamLeaguePointSystem {
+    id: ID!
+    winPoints: Int!
+    lossPoints: Int!
+    drawPoints: Int!
+    defaultWinPoints: Int!
+    defaultLossPoints: Int!
+    defaultDrawPoints: Int!
+  }
+
+  type TeamLeagueTeam {
+    id: ID!
+    group: Group!
+    captainId: String!
+    captain: User!
+    # Members are derived from the group's memberships
+    members: [User!]!
+  }
+
+  type TeamLeagueTeamMatch {
+    id: ID!
+    homeTeamId: String!
+    awayTeamId: String!
+    homeTeam: TeamLeagueTeam!
+    awayTeam: TeamLeagueTeam!
+    homeScore: Int
+    awayScore: Int
+    matchDate: DateTime!
+    isCompleted: Boolean!
+    createdAt: DateTime!
+    individualSinglesMatches: [TeamLeagueIndividualSinglesMatch!]!
+    individualDoublesMatches: [TeamLeagueIndividualDoublesMatch!]!
+  }
+
+  type TeamLeagueIndividualSinglesMatch {
+    id: ID!
+    player1Id: String!
+    player2Id: String!
+    player1: User!
+    player2: User!
+    player1Score: Int
+    player2Score: Int
+    matchDate: DateTime!
+    isCompleted: Boolean!
+    createdAt: DateTime!
+    teamMatchId: String!
+    teamMatch: TeamLeagueTeamMatch!
+  }
+
+  type TeamLeagueIndividualDoublesMatch {
+    id: ID!
+    team1Player1Id: String!
+    team1Player2Id: String!
+    team2Player1Id: String!
+    team2Player2Id: String!
+    team1Player1: User!
+    team1Player2: User!
+    team2Player1: User!
+    team2Player2: User!
+    team1Score: Int
+    team2Score: Int
+    matchDate: DateTime!
+    isCompleted: Boolean!
+    createdAt: DateTime!
+    teamMatchId: String!
+    teamMatch: TeamLeagueTeamMatch!
+  }
+
+  type TeamLeagueStandingsRow {
+    teamId: String!
+    teamName: String!
+    matchesPlayed: Int!
+    wins: Int!
+    losses: Int!
+    draws: Int!
+    points: Int!
+    gamesWon: Int!
+    gamesLost: Int!
+  }
+
+  input CreateTennisLeagueInput {
+    name: String!
+    description: String
+    startDate: DateTime!
+    endDate: DateTime!
+    isActive: Boolean
+  }
+
+  input UpdateTennisLeagueInput {
+    name: String
+    description: String
+    startDate: DateTime
+    endDate: DateTime
+    isActive: Boolean
+  }
+
+  input CreateTennisTeamInput {
+    groupId: String!
+    captainId: String!
+    # memberIds is deprecated; team members are now determined by the group's members
+  }
+
+  input UpdateTennisTeamInput {
+    groupId: String
+    captainId: String
+    # memberIds is deprecated; team members are now determined by the group's members
+  }
+
+  input CreateTeamMatchInput {
+    homeTeamId: String!
+    awayTeamId: String!
+    matchDate: DateTime!
+    homeScore: Int
+    awayScore: Int
+    isCompleted: Boolean
+  }
+
+  input UpdateTeamMatchInput {
+    homeTeamId: String
+    awayTeamId: String
+    matchDate: DateTime
+    homeScore: Int
+    awayScore: Int
+    isCompleted: Boolean
+  }
+
+  input CreateIndividualSinglesMatchInput {
+    player1Id: String!
+    player2Id: String!
+    matchDate: DateTime!
+    player1Score: Int
+    player2Score: Int
+    isCompleted: Boolean
+    teamMatchId: String!
+  }
+
+  input UpdateIndividualSinglesMatchInput {
+    player1Id: String
+    player2Id: String
+    matchDate: DateTime
+    player1Score: Int
+    player2Score: Int
+    isCompleted: Boolean
+    teamMatchId: String
+  }
+
+  input CreateIndividualDoublesMatchInput {
+    team1Player1Id: String!
+    team1Player2Id: String!
+    team2Player1Id: String!
+    team2Player2Id: String!
+    matchDate: DateTime!
+    team1Score: Int
+    team2Score: Int
+    isCompleted: Boolean
+    teamMatchId: String!
+  }
+
+  input UpdateIndividualDoublesMatchInput {
+    team1Player1Id: String
+    team1Player2Id: String
+    team2Player1Id: String
+    team2Player2Id: String
+    matchDate: DateTime
+    team1Score: Int
+    team2Score: Int
+    isCompleted: Boolean
+    teamMatchId: String
+  }
+
+  input UpdatePointSystemInput {
+    winPoints: Int
+    lossPoints: Int
+    drawPoints: Int
+    defaultWinPoints: Int
+    defaultLossPoints: Int
+    defaultDrawPoints: Int
+  }
 `;

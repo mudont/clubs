@@ -13,6 +13,7 @@ import ResetPassword from './components/auth/ResetPassword';
 import Signup from './components/auth/Signup';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import LoadingSpinner from './components/common/LoadingSpinner';
+import { LeagueDetail, LeagueList } from './components/tennis';
 import { RootState, store } from './store';
 import { setAuth } from './store/authSlice';
 
@@ -114,6 +115,30 @@ function App() {
                             <Suspense fallback={<LoadingSpinner message="Loading profile..." />}>
                               <UserProfile />
                             </Suspense>
+                          </ErrorBoundary>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/tennis"
+                      element={<Navigate to="/tennis/leagues" replace />}
+                    />
+                    <Route
+                      path="/tennis/leagues"
+                      element={
+                        <ProtectedRoute>
+                          <ErrorBoundary>
+                            <LeagueList />
+                          </ErrorBoundary>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/tennis/leagues/:id"
+                      element={
+                        <ProtectedRoute>
+                          <ErrorBoundary>
+                            <LeagueDetail />
                           </ErrorBoundary>
                         </ProtectedRoute>
                       }
