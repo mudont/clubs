@@ -29,9 +29,9 @@ const LeagueDetail: React.FC = () => {
     player1Id: '',
     player2Id: '',
     matchDate: '',
-    player1Score: undefined,
-    player2Score: undefined,
-    isCompleted: false,
+    order: 1,
+    score: '',
+    winner: null,
     teamMatchId: '',
   });
   const [showDoublesForm, setShowDoublesForm] = useState(false);
@@ -42,9 +42,9 @@ const LeagueDetail: React.FC = () => {
     team2Player1Id: '',
     team2Player2Id: '',
     matchDate: '',
-    team1Score: undefined,
-    team2Score: undefined,
-    isCompleted: false,
+    order: 1,
+    score: '',
+    winner: null,
     teamMatchId: '',
   });
   const [createSinglesMatch] = useMutation(CREATE_INDIVIDUAL_SINGLES_MATCH, { onCompleted: () => { setShowSinglesForm(false); setEditingSinglesMatch(null); refetch(); } });
@@ -297,7 +297,7 @@ const LeagueDetail: React.FC = () => {
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-semibold">All Singles Matches</h3>
-                <button className="btn-primary" onClick={() => { setShowSinglesForm(true); setEditingSinglesMatch(null); setSinglesFormData({ player1Id: '', player2Id: '', matchDate: '', player1Score: undefined, player2Score: undefined, isCompleted: false, teamMatchId: league.teamMatches[0]?.id || '' }); }}>Create New Match</button>
+                <button className="btn-primary" onClick={() => { setShowSinglesForm(true); setEditingSinglesMatch(null); setSinglesFormData({ player1Id: '', player2Id: '', matchDate: '', order: 1, score: '', winner: null, teamMatchId: league.teamMatches[0]?.id || '' }); }}>Create New Match</button>
               </div>
               {showSinglesForm && (
                 <form className="mb-6 bg-gray-50 p-4 rounded" onSubmit={e => { e.preventDefault(); if (editingSinglesMatch) { updateSinglesMatch({ variables: { id: editingSinglesMatch.id, input: singlesFormData } }); } else { createSinglesMatch({ variables: { leagueId: league.id, input: singlesFormData } }); } }}>
@@ -341,12 +341,23 @@ const LeagueDetail: React.FC = () => {
                       <input type="date" value={singlesFormData.matchDate} onChange={e => setSinglesFormData(f => ({ ...f, matchDate: e.target.value }))} className="w-full border rounded p-2" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium">Player 1 Score</label>
-                      <input type="number" value={singlesFormData.player1Score ?? ''} onChange={e => setSinglesFormData(f => ({ ...f, player1Score: e.target.value ? Number(e.target.value) : undefined }))} className="w-full border rounded p-2" />
+                      <label className="block text-sm font-medium">Order</label>
+                      <input type="number" value={singlesFormData.order} onChange={e => setSinglesFormData(f => ({ ...f, order: parseInt(e.target.value, 10) || 1 }))} className="w-full border rounded p-2" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+                    <div>
+                      <label className="block text-sm font-medium">Score</label>
+                      <input type="text" value={singlesFormData.score} onChange={e => setSinglesFormData(f => ({ ...f, score: e.target.value }))} className="w-full border rounded p-2" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium">Player 2 Score</label>
-                      <input type="number" value={singlesFormData.player2Score ?? ''} onChange={e => setSinglesFormData(f => ({ ...f, player2Score: e.target.value ? Number(e.target.value) : undefined }))} className="w-full border rounded p-2" />
+                      <label className="block text-sm font-medium">Winner</label>
+                      <select value={singlesFormData.winner ?? ''} onChange={e => setSinglesFormData(f => ({ ...f, winner: e.target.value === '' ? null : e.target.value as 'HOME' | 'AWAY' }))} className="w-full border rounded p-2">
+                        <option value="">Select Winner</option>
+                        <option value="HOME">Home</option>
+                        <option value="AWAY">Away</option>
+                        <option value="DRAW">Draw</option>
+                      </select>
                     </div>
                   </div>
                   <div className="flex gap-2 mt-2">
@@ -362,6 +373,7 @@ const LeagueDetail: React.FC = () => {
                     <th className="px-4 py-2">Player 1</th>
                     <th className="px-4 py-2">Player 2</th>
                     <th className="px-4 py-2">Score</th>
+                    <th className="px-4 py-2">Winner</th>
                     <th className="px-4 py-2">Actions</th>
                   </tr>
                 </thead>
@@ -379,9 +391,10 @@ const LeagueDetail: React.FC = () => {
                           ? `${match.player2.firstName ?? ''} ${match.player2.lastName ?? ''}`.trim()
                           : (match.player2.username || match.player2.email)
                       }</td>
-                      <td className="px-4 py-2">{match.player1Score ?? '-'} : {match.player2Score ?? '-'}</td>
+                      <td className="px-4 py-2">{match.score}</td>
+                      <td className="px-4 py-2">{match.winner ? (match.winner === 'HOME' ? 'Home' : 'Away') : '-'}</td>
                       <td className="px-4 py-2 flex gap-2">
-                        <button className="btn-secondary" onClick={() => { setShowSinglesForm(true); setEditingSinglesMatch(match); setSinglesFormData({ player1Id: match.player1Id, player2Id: match.player2Id, matchDate: match.matchDate, player1Score: match.player1Score, player2Score: match.player2Score, isCompleted: match.isCompleted, teamMatchId: match.teamMatchId }); }}>Edit</button>
+                        <button className="btn-secondary" onClick={() => { setShowSinglesForm(true); setEditingSinglesMatch(match); setSinglesFormData({ player1Id: match.player1Id, player2Id: match.player2Id, matchDate: match.matchDate, order: match.order, score: match.score, winner: match.winner, teamMatchId: match.teamMatchId }); }}>Edit</button>
                         <button className="btn-danger" onClick={() => { if (window.confirm('Delete this match?')) deleteSinglesMatch({ variables: { id: match.id } }); }}>Delete</button>
                       </td>
                     </tr>
@@ -395,7 +408,7 @@ const LeagueDetail: React.FC = () => {
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-semibold">All Doubles Matches</h3>
-                <button className="btn-primary" onClick={() => { setShowDoublesForm(true); setEditingDoublesMatch(null); setDoublesFormData({ team1Player1Id: '', team1Player2Id: '', team2Player1Id: '', team2Player2Id: '', matchDate: '', team1Score: undefined, team2Score: undefined, isCompleted: false, teamMatchId: league.teamMatches[0]?.id || '' }); }}>Create New Match</button>
+                <button className="btn-primary" onClick={() => { setShowDoublesForm(true); setEditingDoublesMatch(null); setDoublesFormData({ team1Player1Id: '', team1Player2Id: '', team2Player1Id: '', team2Player2Id: '', matchDate: '', order: 1, score: '', winner: null, teamMatchId: league.teamMatches[0]?.id || '' }); }}>Create New Match</button>
               </div>
               {showDoublesForm && (
                 <form className="mb-6 bg-gray-50 p-4 rounded" onSubmit={e => { e.preventDefault(); if (editingDoublesMatch) { updateDoublesMatch({ variables: { id: editingDoublesMatch.id, input: doublesFormData } }); } else { createDoublesMatch({ variables: { leagueId: league.id, input: doublesFormData } }); } }}>
@@ -467,16 +480,21 @@ const LeagueDetail: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
                     <div>
-                      <label className="block text-sm font-medium">Team 1 Score</label>
-                      <input type="number" value={doublesFormData.team1Score ?? ''} onChange={e => setDoublesFormData(f => ({ ...f, team1Score: e.target.value ? Number(e.target.value) : undefined }))} className="w-full border rounded p-2" />
+                      <label className="block text-sm font-medium">Order</label>
+                      <input type="number" value={doublesFormData.order} onChange={e => setDoublesFormData(f => ({ ...f, order: parseInt(e.target.value, 10) || 1 }))} className="w-full border rounded p-2" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium">Team 2 Score</label>
-                      <input type="number" value={doublesFormData.team2Score ?? ''} onChange={e => setDoublesFormData(f => ({ ...f, team2Score: e.target.value ? Number(e.target.value) : undefined }))} className="w-full border rounded p-2" />
+                      <label className="block text-sm font-medium">Score</label>
+                      <input type="text" value={doublesFormData.score} onChange={e => setDoublesFormData(f => ({ ...f, score: e.target.value }))} className="w-full border rounded p-2" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium">Completed</label>
-                      <input type="checkbox" checked={doublesFormData.isCompleted} onChange={e => setDoublesFormData(f => ({ ...f, isCompleted: e.target.checked }))} className="w-full border rounded p-2" />
+                      <label className="block text-sm font-medium">Winner</label>
+                      <select value={doublesFormData.winner ?? ''} onChange={e => setDoublesFormData(f => ({ ...f, winner: e.target.value === '' ? null : e.target.value as 'HOME' | 'AWAY' }))} className="w-full border rounded p-2">
+                        <option value="">Select Winner</option>
+                        <option value="HOME">Home</option>
+                        <option value="AWAY">Away</option>
+                        <option value="DRAW">Draw</option>
+                      </select>
                     </div>
                   </div>
                   <div className="flex gap-2 mt-2">
@@ -492,6 +510,7 @@ const LeagueDetail: React.FC = () => {
                     <th className="px-4 py-2">Team 1</th>
                     <th className="px-4 py-2">Team 2</th>
                     <th className="px-4 py-2">Score</th>
+                    <th className="px-4 py-2">Winner</th>
                     <th className="px-4 py-2">Actions</th>
                   </tr>
                 </thead>
@@ -517,9 +536,10 @@ const LeagueDetail: React.FC = () => {
                           ? `${match.team2Player2.firstName ?? ''} ${match.team2Player2.lastName ?? ''}`.trim()
                           : (match.team2Player2.username || match.team2Player2.email)
                       }</td>
-                      <td className="px-4 py-2">{match.team1Score ?? '-'} : {match.team2Score ?? '-'}</td>
+                      <td className="px-4 py-2">{match.score}</td>
+                      <td className="px-4 py-2">{match.winner ? (match.winner === 'HOME' ? 'Home' : 'Away') : '-'}</td>
                       <td className="px-4 py-2 flex gap-2">
-                        <button className="btn-secondary" onClick={() => { setShowDoublesForm(true); setEditingDoublesMatch(match); setDoublesFormData({ team1Player1Id: match.team1Player1Id, team1Player2Id: match.team1Player2Id, team2Player1Id: match.team2Player1Id, team2Player2Id: match.team2Player2Id, matchDate: match.matchDate, team1Score: match.team1Score, team2Score: match.team2Score, isCompleted: match.isCompleted, teamMatchId: match.teamMatchId }); }}>Edit</button>
+                        <button className="btn-secondary" onClick={() => { setShowDoublesForm(true); setEditingDoublesMatch(match); setDoublesFormData({ team1Player1Id: match.team1Player1Id, team1Player2Id: match.team1Player2Id, team2Player1Id: match.team2Player1Id, team2Player2Id: match.team2Player2Id, matchDate: match.matchDate, order: match.order, score: match.score, winner: match.winner, teamMatchId: match.teamMatchId }); }}>Edit</button>
                         <button className="btn-danger" onClick={() => { if (window.confirm('Delete this match?')) deleteDoublesMatch({ variables: { id: match.id } }); }}>Delete</button>
                       </td>
                     </tr>
@@ -531,13 +551,13 @@ const LeagueDetail: React.FC = () => {
 
           {activeTab === 'standings' && (
             <div className="p-6">
-              <StandingsTable standings={standings} loading={standingsLoading} />
+              <StandingsTable standings={standings} loading={standingsLoading} teams={league.teams.map(t => ({ teamId: t.id, teamName: t.group.name }))} />
             </div>
           )}
 
           {activeTab === 'settings' && (
             <div className="p-6">
-              <PointSystemEditor leagueId={id!} pointSystem={league.pointSystem} />
+              <PointSystemEditor leagueId={id!} />
             </div>
           )}
         </div>

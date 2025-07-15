@@ -44,13 +44,12 @@ export interface TeamLeagueTeamMatch {
   awayTeamId: string;
   homeTeam: TeamLeagueTeam;
   awayTeam: TeamLeagueTeam;
-  homeScore?: number;
-  awayScore?: number;
   matchDate: string;
-  isCompleted: boolean;
   createdAt: string;
   individualSinglesMatches: IndividualSinglesMatch[];
   individualDoublesMatches: IndividualDoublesMatch[];
+  singlesMatches?: IndividualSinglesMatch[];
+  doublesMatches?: IndividualDoublesMatch[];
 }
 
 export interface IndividualSinglesMatch {
@@ -59,13 +58,13 @@ export interface IndividualSinglesMatch {
   player2Id: string;
   player1: User;
   player2: User;
-  player1Score?: number;
-  player2Score?: number;
   matchDate: string;
-  isCompleted: boolean;
   createdAt: string;
   teamMatchId: string;
   teamMatch: TeamLeagueTeamMatch;
+  order: number;
+  score: string;
+  winner: 'HOME' | 'AWAY' | null;
 }
 
 export interface IndividualDoublesMatch {
@@ -78,13 +77,13 @@ export interface IndividualDoublesMatch {
   team1Player2: User;
   team2Player1: User;
   team2Player2: User;
-  team1Score?: number;
-  team2Score?: number;
   matchDate: string;
-  isCompleted: boolean;
   createdAt: string;
   teamMatchId: string;
   teamMatch: TeamLeagueTeamMatch;
+  order: number;
+  score: string;
+  winner: 'HOME' | 'AWAY' | null;
 }
 
 export interface TeamLeague {
@@ -96,7 +95,7 @@ export interface TeamLeague {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-  pointSystem: PointSystem;
+  pointSystems: TeamLeaguePointSystem[];
   teams: TeamLeagueTeam[];
   teamMatches: TeamLeagueTeamMatch[];
   // individualSinglesMatches: IndividualSinglesMatch[]; // Remove if present
@@ -166,20 +165,20 @@ export interface CreateIndividualSinglesMatchInput {
   player1Id: string;
   player2Id: string;
   matchDate: string;
-  player1Score?: number;
-  player2Score?: number;
-  isCompleted?: boolean;
   teamMatchId: string;
+  order: number;
+  score: string;
+  winner: 'HOME' | 'AWAY' | null;
 }
 
 export interface UpdateIndividualSinglesMatchInput {
   player1Id?: string;
   player2Id?: string;
   matchDate?: string;
-  player1Score?: number;
-  player2Score?: number;
-  isCompleted?: boolean;
   teamMatchId?: string;
+  order?: number;
+  score?: string;
+  winner?: 'HOME' | 'AWAY' | null;
 }
 
 export interface CreateIndividualDoublesMatchInput {
@@ -188,10 +187,10 @@ export interface CreateIndividualDoublesMatchInput {
   team2Player1Id: string;
   team2Player2Id: string;
   matchDate: string;
-  team1Score?: number;
-  team2Score?: number;
-  isCompleted?: boolean;
   teamMatchId: string;
+  order: number;
+  score: string;
+  winner: 'HOME' | 'AWAY' | null;
 }
 
 export interface UpdateIndividualDoublesMatchInput {
@@ -200,10 +199,10 @@ export interface UpdateIndividualDoublesMatchInput {
   team2Player1Id?: string;
   team2Player2Id?: string;
   matchDate?: string;
-  team1Score?: number;
-  team2Score?: number;
-  isCompleted?: boolean;
   teamMatchId?: string;
+  order?: number;
+  score?: string;
+  winner?: 'HOME' | 'AWAY' | null;
 }
 
 export interface UpdatePointSystemInput {
@@ -299,4 +298,37 @@ export interface DeleteIndividualDoublesMatchData {
 
 export interface UpdatePointSystemData {
   updatePointSystem: PointSystem;
+}
+
+export type MatchType = 'SINGLES' | 'DOUBLES';
+
+export interface TeamLeaguePointSystem {
+  id: string;
+  matchType: MatchType;
+  order: number;
+  winPoints: number;
+  lossPoints: number;
+  drawPoints: number;
+  defaultWinPoints: number;
+  defaultLossPoints: number;
+  defaultDrawPoints: number;
+}
+
+export interface GetLeaguePointSystemsData {
+  tennisLeague: {
+    id: string;
+    pointSystems: TeamLeaguePointSystem[];
+  };
+}
+
+export interface CreateLeaguePointSystemData {
+  createTeamLeaguePointSystem: TeamLeaguePointSystem;
+}
+
+export interface UpdateLeaguePointSystemData {
+  updateTeamLeaguePointSystem: TeamLeaguePointSystem;
+}
+
+export interface DeleteLeaguePointSystemData {
+  deleteTeamLeaguePointSystem: boolean;
 }

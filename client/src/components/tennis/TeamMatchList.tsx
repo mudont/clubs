@@ -2,6 +2,7 @@ import { useMutation, useQuery } from '@apollo/client';
 import React, { useState } from 'react';
 
 import { CREATE_TEAM_MATCH, DELETE_TEAM_MATCH, GET_TENNIS_LEAGUE, UPDATE_TEAM_MATCH } from './graphql';
+import IndividualMatchList from './IndividualMatchList';
 import { CreateTeamMatchData, CreateTeamMatchInput, DeleteTeamMatchData, TeamLeagueTeamMatch, UpdateTeamMatchData, UpdateTeamMatchInput } from './types';
 
 interface TeamMatchListProps {
@@ -12,14 +13,12 @@ interface TeamMatchListProps {
 const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingMatch, setEditingMatch] = useState<TeamLeagueTeamMatch | null>(null);
-  const [formData, setFormData] = useState<CreateTeamMatchInput>({
+  const [formData, setFormData] = useState({
     homeTeamId: '',
     awayTeamId: '',
     matchDate: '',
-    homeScore: undefined,
-    awayScore: undefined,
-    isCompleted: false,
   });
+  const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
 
   const { data: leagueData } = useQuery(GET_TENNIS_LEAGUE, { variables: { id: leagueId } });
   const { refetch } = useQuery(GET_TENNIS_LEAGUE, { variables: { id: leagueId } });
@@ -29,7 +28,7 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
     {
       onCompleted: () => {
         setShowCreateForm(false);
-        setFormData({ homeTeamId: '', awayTeamId: '', matchDate: '', homeScore: undefined, awayScore: undefined, isCompleted: false });
+        setFormData({ homeTeamId: '', awayTeamId: '', matchDate: '' });
         refetch();
       },
       onError: (error) => {
@@ -44,7 +43,7 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
     {
       onCompleted: () => {
         setEditingMatch(null);
-        setFormData({ homeTeamId: '', awayTeamId: '', matchDate: '', homeScore: undefined, awayScore: undefined, isCompleted: false });
+        setFormData({ homeTeamId: '', awayTeamId: '', matchDate: '' });
         refetch();
       },
       onError: (error) => {
@@ -88,10 +87,7 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
     setFormData({
       homeTeamId: match.homeTeamId,
       awayTeamId: match.awayTeamId,
-      matchDate: match.matchDate.split('T')[0], // Convert to date input format
-      homeScore: match.homeScore || undefined,
-      awayScore: match.awayScore || undefined,
-      isCompleted: match.isCompleted,
+      matchDate: match.matchDate.split('T')[0],
     });
   };
 
@@ -104,25 +100,11 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
   const handleCancel = () => {
     setShowCreateForm(false);
     setEditingMatch(null);
-    setFormData({ homeTeamId: '', awayTeamId: '', matchDate: '', homeScore: undefined, awayScore: undefined, isCompleted: false });
+    setFormData({ homeTeamId: '', awayTeamId: '', matchDate: '' });
   };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
-  };
-
-  const getMatchResult = (match: TeamLeagueTeamMatch) => {
-    if (!match.isCompleted || match.homeScore === undefined || match.awayScore === undefined) {
-      return 'Scheduled';
-    }
-
-    if (match.homeScore > match.awayScore) {
-      return `${match.homeTeam.group.name} wins`;
-    } else if (match.awayScore > match.homeScore) {
-      return `${match.awayTeam.group.name} wins`;
-    } else {
-      return 'Draw';
-    }
   };
 
   const teams = leagueData?.tennisLeague?.teams || [];
@@ -196,44 +178,6 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
                 required
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Home Score
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.homeScore || ''}
-                  onChange={(e) => setFormData({ ...formData, homeScore: e.target.value ? parseInt(e.target.value) : undefined })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Away Score
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.awayScore || ''}
-                  onChange={(e) => setFormData({ ...formData, awayScore: e.target.value ? parseInt(e.target.value) : undefined })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="isCompleted"
-                  checked={formData.isCompleted}
-                  onChange={(e) => setFormData({ ...formData, isCompleted: e.target.checked })}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="isCompleted" className="ml-2 block text-sm text-gray-900">
-                  Match Completed
-                </label>
-              </div>
-            </div>
             <div className="flex gap-3">
               <button
                 type="submit"
@@ -264,15 +208,6 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
                   <div className="text-lg font-semibold">
                     {match.homeTeam.group.name} vs {match.awayTeam.group.name}
                   </div>
-                  <span
-                    className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      match.isCompleted
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}
-                  >
-                    {match.isCompleted ? 'Completed' : 'Scheduled'}
-                  </span>
                 </div>
                 <div className="text-sm text-gray-600">
                   {formatDate(match.matchDate)}
@@ -293,33 +228,48 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
                 >
                   🗑️
                 </button>
+                <button
+                  onClick={() => setExpandedMatchId(expandedMatchId === match.id ? null : match.id)}
+                  className="text-gray-600 hover:text-gray-900 ml-2"
+                  title={expandedMatchId === match.id ? 'Hide Individual Matches' : 'Show Individual Matches'}
+                  aria-expanded={expandedMatchId === match.id}
+                >
+                  {expandedMatchId === match.id ? '▲' : '▼'}
+                </button>
               </div>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">
-                  {match.homeScore !== undefined ? match.homeScore : '-'}
+                  {match.homeTeam.group.name}
                 </div>
-                <div className="text-sm text-gray-600">{match.homeTeam.group.name}</div>
               </div>
               <div className="text-center flex items-center justify-center">
                 <div className="text-lg font-medium text-gray-500">vs</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-red-600">
-                  {match.awayScore !== undefined ? match.awayScore : '-'}
+                  {match.awayTeam.group.name}
                 </div>
-                <div className="text-sm text-gray-600">{match.awayTeam.group.name}</div>
               </div>
             </div>
-
-            {match.isCompleted && (
-              <div className="mt-4 pt-4 border-t">
-                <div className="text-center">
-                  <span className="text-sm font-medium text-gray-700">Result: </span>
-                  <span className="text-sm font-semibold text-gray-900">{getMatchResult(match)}</span>
-                </div>
+            {/* Collapsible Individual Matches Table */}
+            {expandedMatchId === match.id && (
+              <div className="mt-6">
+                <div className="mb-2 text-lg font-semibold">Singles Matches</div>
+                <IndividualMatchList
+                  teamMatchId={match.id}
+                  leagueId={leagueId}
+                  matches={match.individualSinglesMatches || []}
+                  matchType="singles"
+                />
+                <div className="mt-4 mb-2 text-lg font-semibold">Doubles Matches</div>
+                <IndividualMatchList
+                  teamMatchId={match.id}
+                  leagueId={leagueId}
+                  matches={match.individualDoublesMatches || []}
+                  matchType="doubles"
+                />
               </div>
             )}
           </div>

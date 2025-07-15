@@ -208,6 +208,9 @@ export const typeDefs = gql`
     updateIndividualDoublesMatch(id: ID!, input: UpdateIndividualDoublesMatchInput!): TeamLeagueIndividualDoublesMatch!
     deleteIndividualDoublesMatch(id: ID!): Boolean!
     updatePointSystem(leagueId: ID!, input: UpdatePointSystemInput!): TeamLeaguePointSystem!
+    createTeamLeaguePointSystem(leagueId: ID!, input: CreateTeamLeaguePointSystemInput!): TeamLeaguePointSystem!
+    updateTeamLeaguePointSystem(id: ID!, input: UpdateTeamLeaguePointSystemInput!): TeamLeaguePointSystem!
+    deleteTeamLeaguePointSystem(id: ID!): Boolean!
   }
 
   type Subscription {
@@ -229,13 +232,21 @@ export const typeDefs = gql`
     isActive: Boolean!
     createdAt: DateTime!
     updatedAt: DateTime!
-    pointSystem: TeamLeaguePointSystem!
+    pointSystems: [TeamLeaguePointSystem!]!
     teams: [TeamLeagueTeam!]!
     teamMatches: [TeamLeagueTeamMatch!]!
   }
 
+  enum MatchType {
+    SINGLES
+    DOUBLES
+  }
+
   type TeamLeaguePointSystem {
     id: ID!
+    teamLeagueId: String!
+    matchType: MatchType!
+    order: Int!
     winPoints: Int!
     lossPoints: Int!
     drawPoints: Int!
@@ -259,13 +270,15 @@ export const typeDefs = gql`
     awayTeamId: String!
     homeTeam: TeamLeagueTeam!
     awayTeam: TeamLeagueTeam!
-    homeScore: Int
-    awayScore: Int
     matchDate: DateTime!
-    isCompleted: Boolean!
     createdAt: DateTime!
     individualSinglesMatches: [TeamLeagueIndividualSinglesMatch!]!
     individualDoublesMatches: [TeamLeagueIndividualDoublesMatch!]!
+  }
+
+  enum Winner {
+    HOME
+    AWAY
   }
 
   type TeamLeagueIndividualSinglesMatch {
@@ -274,13 +287,13 @@ export const typeDefs = gql`
     player2Id: String!
     player1: User!
     player2: User!
-    player1Score: Int
-    player2Score: Int
     matchDate: DateTime!
-    isCompleted: Boolean!
     createdAt: DateTime!
     teamMatchId: String!
     teamMatch: TeamLeagueTeamMatch!
+    order: Int!
+    score: String!
+    winner: Winner
   }
 
   type TeamLeagueIndividualDoublesMatch {
@@ -293,13 +306,13 @@ export const typeDefs = gql`
     team1Player2: User!
     team2Player1: User!
     team2Player2: User!
-    team1Score: Int
-    team2Score: Int
     matchDate: DateTime!
-    isCompleted: Boolean!
     createdAt: DateTime!
     teamMatchId: String!
     teamMatch: TeamLeagueTeamMatch!
+    order: Int!
+    score: String!
+    winner: Winner
   }
 
   type TeamLeagueStandingsRow {
@@ -346,38 +359,32 @@ export const typeDefs = gql`
     homeTeamId: String!
     awayTeamId: String!
     matchDate: DateTime!
-    homeScore: Int
-    awayScore: Int
-    isCompleted: Boolean
   }
 
   input UpdateTeamMatchInput {
     homeTeamId: String
     awayTeamId: String
     matchDate: DateTime
-    homeScore: Int
-    awayScore: Int
-    isCompleted: Boolean
   }
 
   input CreateIndividualSinglesMatchInput {
     player1Id: String!
     player2Id: String!
     matchDate: DateTime!
-    player1Score: Int
-    player2Score: Int
-    isCompleted: Boolean
     teamMatchId: String!
+    order: Int!
+    score: String!
+    winner: Winner
   }
 
   input UpdateIndividualSinglesMatchInput {
     player1Id: String
     player2Id: String
     matchDate: DateTime
-    player1Score: Int
-    player2Score: Int
-    isCompleted: Boolean
     teamMatchId: String
+    order: Int
+    score: String
+    winner: Winner
   }
 
   input CreateIndividualDoublesMatchInput {
@@ -386,10 +393,10 @@ export const typeDefs = gql`
     team2Player1Id: String!
     team2Player2Id: String!
     matchDate: DateTime!
-    team1Score: Int
-    team2Score: Int
-    isCompleted: Boolean
     teamMatchId: String!
+    order: Int!
+    score: String!
+    winner: Winner
   }
 
   input UpdateIndividualDoublesMatchInput {
@@ -398,10 +405,10 @@ export const typeDefs = gql`
     team2Player1Id: String
     team2Player2Id: String
     matchDate: DateTime
-    team1Score: Int
-    team2Score: Int
-    isCompleted: Boolean
     teamMatchId: String
+    order: Int
+    score: String
+    winner: Winner
   }
 
   input UpdatePointSystemInput {
@@ -411,5 +418,21 @@ export const typeDefs = gql`
     defaultWinPoints: Int
     defaultLossPoints: Int
     defaultDrawPoints: Int
+  }
+
+  input CreateTeamLeaguePointSystemInput {
+    matchType: MatchType!
+    order: Int!
+    winPoints: Int!
+    lossPoints: Int
+    drawPoints: Int
+  }
+
+  input UpdateTeamLeaguePointSystemInput {
+    matchType: MatchType
+    order: Int
+    winPoints: Int
+    lossPoints: Int
+    drawPoints: Int
   }
 `;

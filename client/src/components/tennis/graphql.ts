@@ -11,8 +11,10 @@ export const TEAM_LEAGUE_FRAGMENT = gql`
     isActive
     createdAt
     updatedAt
-    pointSystem {
+    pointSystems {
       id
+      matchType
+      order
       winPoints
       lossPoints
       drawPoints
@@ -80,10 +82,7 @@ export const TEAM_LEAGUE_FRAGMENT = gql`
           }
         }
       }
-      homeScore
-      awayScore
       matchDate
-      isCompleted
       createdAt
       individualSinglesMatches {
         id
@@ -91,12 +90,12 @@ export const TEAM_LEAGUE_FRAGMENT = gql`
         player2Id
         player1 { id username firstName lastName email }
         player2 { id username firstName lastName email }
-        player1Score
-        player2Score
         matchDate
-        isCompleted
         createdAt
         teamMatchId
+        order
+        score
+        winner
       }
       individualDoublesMatches {
         id
@@ -108,12 +107,12 @@ export const TEAM_LEAGUE_FRAGMENT = gql`
         team1Player2 { id username firstName lastName email }
         team2Player1 { id username firstName lastName email }
         team2Player2 { id username firstName lastName email }
-        team1Score
-        team2Score
         matchDate
-        isCompleted
         createdAt
         teamMatchId
+        order
+        score
+        winner
       }
     }
   }
@@ -183,33 +182,20 @@ export const MATCH_FRAGMENT = gql`
         }
       }
     }
-    homeScore
-    awayScore
     matchDate
-    isCompleted
     createdAt
     individualSinglesMatches {
       id
       player1Id
       player2Id
-      player1 {
-        id
-        username
-        firstName
-        lastName
-      }
-      player2 {
-        id
-        username
-        firstName
-        lastName
-      }
-      player1Score
-      player2Score
+      player1 { id username firstName lastName email }
+      player2 { id username firstName lastName email }
       matchDate
-      isCompleted
       createdAt
       teamMatchId
+      order
+      score
+      winner
     }
     individualDoublesMatches {
       id
@@ -217,36 +203,16 @@ export const MATCH_FRAGMENT = gql`
       team1Player2Id
       team2Player1Id
       team2Player2Id
-      team1Player1 {
-        id
-        username
-        firstName
-        lastName
-      }
-      team1Player2 {
-        id
-        username
-        firstName
-        lastName
-      }
-      team2Player1 {
-        id
-        username
-        firstName
-        lastName
-      }
-      team2Player2 {
-        id
-        username
-        firstName
-        lastName
-      }
-      team1Score
-      team2Score
+      team1Player1 { id username firstName lastName email }
+      team1Player2 { id username firstName lastName email }
+      team2Player1 { id username firstName lastName email }
+      team2Player2 { id username firstName lastName email }
       matchDate
-      isCompleted
       createdAt
       teamMatchId
+      order
+      score
+      winner
     }
   }
 `;
@@ -294,6 +260,25 @@ export const GET_TENNIS_LEAGUE_STANDINGS = gql`
       points
       gamesWon
       gamesLost
+    }
+  }
+`;
+
+export const GET_LEAGUE_POINT_SYSTEMS = gql`
+  query GetLeaguePointSystems($leagueId: ID!) {
+    tennisLeague(id: $leagueId) {
+      id
+      pointSystems {
+        id
+        matchType
+        order
+        winPoints
+        lossPoints
+        drawPoints
+        defaultWinPoints
+        defaultLossPoints
+        defaultDrawPoints
+      }
     }
   }
 `;
@@ -389,12 +374,12 @@ export const CREATE_INDIVIDUAL_SINGLES_MATCH = gql`
         firstName
         lastName
       }
-      player1Score
-      player2Score
       matchDate
-      isCompleted
       createdAt
       teamMatchId
+      order
+      score
+      winner
     }
   }
 `;
@@ -417,12 +402,12 @@ export const UPDATE_INDIVIDUAL_SINGLES_MATCH = gql`
         firstName
         lastName
       }
-      player1Score
-      player2Score
       matchDate
-      isCompleted
       createdAt
       teamMatchId
+      order
+      score
+      winner
     }
   }
 `;
@@ -465,12 +450,12 @@ export const CREATE_INDIVIDUAL_DOUBLES_MATCH = gql`
         firstName
         lastName
       }
-      team1Score
-      team2Score
       matchDate
-      isCompleted
       createdAt
       teamMatchId
+      order
+      score
+      winner
     }
   }
 `;
@@ -507,12 +492,12 @@ export const UPDATE_INDIVIDUAL_DOUBLES_MATCH = gql`
         firstName
         lastName
       }
-      team1Score
-      team2Score
       matchDate
-      isCompleted
       createdAt
       teamMatchId
+      order
+      score
+      winner
     }
   }
 `;
@@ -520,6 +505,44 @@ export const UPDATE_INDIVIDUAL_DOUBLES_MATCH = gql`
 export const DELETE_INDIVIDUAL_DOUBLES_MATCH = gql`
   mutation DeleteIndividualDoublesMatch($id: ID!) {
     deleteIndividualDoublesMatch(id: $id)
+  }
+`;
+
+export const CREATE_LEAGUE_POINT_SYSTEM = gql`
+  mutation CreateLeaguePointSystem($leagueId: ID!, $input: CreateTeamLeaguePointSystemInput!) {
+    createTeamLeaguePointSystem(leagueId: $leagueId, input: $input) {
+      id
+      matchType
+      order
+      winPoints
+      lossPoints
+      drawPoints
+      defaultWinPoints
+      defaultLossPoints
+      defaultDrawPoints
+    }
+  }
+`;
+
+export const UPDATE_LEAGUE_POINT_SYSTEM = gql`
+  mutation UpdateLeaguePointSystem($id: ID!, $input: UpdateTeamLeaguePointSystemInput!) {
+    updateTeamLeaguePointSystem(id: $id, input: $input) {
+      id
+      matchType
+      order
+      winPoints
+      lossPoints
+      drawPoints
+      defaultWinPoints
+      defaultLossPoints
+      defaultDrawPoints
+    }
+  }
+`;
+
+export const DELETE_LEAGUE_POINT_SYSTEM = gql`
+  mutation DeleteLeaguePointSystem($id: ID!) {
+    deleteTeamLeaguePointSystem(id: $id)
   }
 `;
 

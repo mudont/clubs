@@ -5,9 +5,10 @@ import { TeamLeagueStanding } from './types';
 interface StandingsTableProps {
   standings: TeamLeagueStanding[];
   loading?: boolean;
+  teams?: { teamId: string; teamName: string }[];
 }
 
-const StandingsTable: React.FC<StandingsTableProps> = ({ standings, loading = false }) => {
+const StandingsTable: React.FC<StandingsTableProps> = ({ standings, loading = false, teams = [] }) => {
   if (loading) {
     return (
       <div className="text-center p-4">
@@ -17,18 +18,21 @@ const StandingsTable: React.FC<StandingsTableProps> = ({ standings, loading = fa
     );
   }
 
-  if (standings.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <div className="text-gray-400 text-6xl mb-4">📈</div>
-        <h3 className="text-xl font-medium text-gray-900 mb-2">No Standings Available</h3>
-        <p className="text-gray-600">Standings will appear once matches are played and completed.</p>
-      </div>
-    );
-  }
+  // If standings is empty, show all teams with 0 stats
+  const displayStandings = standings.length > 0 ? standings : teams.map(t => ({
+    teamId: t.teamId,
+    teamName: t.teamName,
+    matchesPlayed: 0,
+    wins: 0,
+    losses: 0,
+    draws: 0,
+    points: 0,
+    gamesWon: 0,
+    gamesLost: 0,
+  }));
 
   // Sort standings by points (descending), then by goal difference, then by goals scored
-  const sortedStandings = [...standings].sort((a, b) => {
+  const sortedStandings = [...displayStandings].sort((a, b) => {
     // First by points (descending)
     if (b.points !== a.points) {
       return b.points - a.points;
@@ -78,22 +82,12 @@ const StandingsTable: React.FC<StandingsTableProps> = ({ standings, loading = fa
                   D
                 </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  GF
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  GA
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  GD
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Pts
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {sortedStandings.map((standing, index) => {
-                const goalDifference = standing.gamesWon - standing.gamesLost;
                 const isTopThree = index < 3;
 
                 return (
@@ -145,24 +139,6 @@ const StandingsTable: React.FC<StandingsTableProps> = ({ standings, loading = fa
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <span className="text-sm text-gray-900">
-                        {standing.gamesWon}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <span className="text-sm text-gray-900">
-                        {standing.gamesLost}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <span className={`text-sm font-medium ${
-                        goalDifference > 0 ? 'text-green-600' :
-                        goalDifference < 0 ? 'text-red-600' : 'text-gray-600'
-                      }`}>
-                        {goalDifference > 0 ? '+' : ''}{goalDifference}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
                       <span className="text-sm font-bold text-gray-900">
                         {standing.points}
                       </span>
@@ -194,18 +170,6 @@ const StandingsTable: React.FC<StandingsTableProps> = ({ standings, loading = fa
           <div className="flex items-center">
             <span className="w-4 h-4 bg-gray-100 border border-gray-200 rounded mr-2"></span>
             <span>D = Draws</span>
-          </div>
-          <div className="flex items-center">
-            <span className="w-4 h-4 bg-blue-100 border border-blue-200 rounded mr-2"></span>
-            <span>GF = Goals For</span>
-          </div>
-          <div className="flex items-center">
-            <span className="w-4 h-4 bg-purple-100 border border-purple-200 rounded mr-2"></span>
-            <span>GA = Goals Against</span>
-          </div>
-          <div className="flex items-center">
-            <span className="w-4 h-4 bg-indigo-100 border border-indigo-200 rounded mr-2"></span>
-            <span>GD = Goal Difference</span>
           </div>
           <div className="flex items-center">
             <span className="w-4 h-4 bg-yellow-100 border border-yellow-200 rounded mr-2"></span>

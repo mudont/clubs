@@ -66,7 +66,7 @@ const tennisResolvers = {
       return context.prisma.teamLeague.findUnique({
         where: { id },
         include: {
-          pointSystem: true,
+          pointSystems: true,
           teams: {
             include: {
               captain: true,
@@ -89,83 +89,87 @@ const tennisResolvers = {
         include: {
           teams: { include: { Group: true } },
           teamMatches: {
-            where: { isCompleted: true },
             include: {
               homeTeam: true,
               awayTeam: true,
+              singlesMatches: true,
+              doublesMatches: true,
             },
           },
-          pointSystem: true,
+          pointSystems: true,
         },
       });
 
-      if (!league) {
-        throw new GraphQLError('League not found');
+      if (!league || !league.teams || !league.teamMatches || !league.pointSystems) {
+        throw new GraphQLError('League not found or missing data');
       }
 
-      const standings = await Promise.all(
-        league.teams.map(async (team) => {
-          let matchesPlayed = 0;
-          let wins = 0;
-          let losses = 0;
-          let draws = 0;
-          let gamesWon = 0;
-          let gamesLost = 0;
-
-          // Calculate team match statistics
-          for (const match of league.teamMatches) {
-            if (match.homeTeamId === team.id || match.awayTeamId === team.id) {
-              matchesPlayed++;
-
-              if (match.homeScore !== null && match.awayScore !== null) {
-                const isHome = match.homeTeamId === team.id;
-                const teamScore = isHome ? match.homeScore : match.awayScore;
-                const opponentScore = isHome ? match.awayScore : match.homeScore;
-
-                gamesWon += teamScore;
-                gamesLost += opponentScore;
-
-                if (teamScore > opponentScore) {
-                  wins++;
-                } else if (teamScore < opponentScore) {
-                  losses++;
-                } else {
-                  draws++;
-                }
-              }
-            }
+      // Standings calculation: sum points for each team from all completed singles/doubles matches
+      const teamPoints: Record<string, number> = {};
+      const teamWins: Record<string, number> = {};
+      const teamLosses: Record<string, number> = {};
+      for (const team of league.teams) {
+        teamPoints[team.id] = 0;
+        teamWins[team.id] = 0;
+        teamLosses[team.id] = 0;
+      }
+      for (const match of league.teamMatches) {
+        // Singles
+        for (const singles of match.singlesMatches ?? []) {
+          if (!singles.winner) continue;
+          const ps = league.pointSystems.find(
+            (ps: any) => ps.matchType === 'SINGLES' && ps.order === singles.order
+          );
+          if (!ps) continue;
+          const homeId = match.homeTeamId;
+          const awayId = match.awayTeamId;
+          if (singles.winner === 'HOME') {
+            teamWins[homeId]++;
+            teamLosses[awayId]++;
+            if (homeId in teamPoints) teamPoints[homeId] += ps.winPoints;
+          } else if (singles.winner === 'AWAY') {
+            teamWins[awayId]++;
+            teamLosses[homeId]++;
+            if (awayId in teamPoints) teamPoints[awayId] += ps.winPoints;
           }
-
-          const points = wins * (league.pointSystem?.winPoints || 3) +
-            losses * (league.pointSystem?.lossPoints || 0) +
-            draws * (league.pointSystem?.drawPoints || 1);
-
-          return {
-            teamId: team.id,
-            teamName: team.Group.name,
-            matchesPlayed,
-            wins,
-            losses,
-            draws,
-            points,
-            gamesWon,
-            gamesLost,
-          };
-        })
-      );
-
-      // Sort by points (descending), then by goal difference, then by goals scored
-      return standings.sort((a, b) => {
-        if (b.points !== a.points) return b.points - a.points;
-        const aGoalDiff = a.gamesWon - a.gamesLost;
-        const bGoalDiff = b.gamesWon - b.gamesLost;
-        if (bGoalDiff !== aGoalDiff) return bGoalDiff - aGoalDiff;
-        return b.gamesWon - a.gamesWon;
-      });
+        }
+        // Doubles
+        for (const doubles of match.doublesMatches ?? []) {
+          if (!doubles.winner) continue;
+          const ps = league.pointSystems.find(
+            (ps: any) => ps.matchType === 'DOUBLES' && ps.order === doubles.order
+          );
+          if (!ps) continue;
+          const homeId = match.homeTeamId;
+          const awayId = match.awayTeamId;
+          if (doubles.winner === 'HOME') {
+            teamWins[homeId]++;
+            teamLosses[awayId]++;
+            if (homeId in teamPoints) teamPoints[homeId] += ps.winPoints;
+          } else if (doubles.winner === 'AWAY') {
+            teamWins[awayId]++;
+            teamLosses[homeId]++;
+            if (awayId in teamPoints) teamPoints[awayId] += ps.winPoints;
+          }
+        }
+      }
+      const standings = league.teams.map((team: any) => ({
+        teamId: team.id,
+        teamName: team.Group.name,
+        matchesPlayed: 0,
+        wins: teamWins[team.id],
+        losses: teamLosses[team.id],
+        draws: 0,
+        points: teamPoints[team.id],
+        gamesWon: 0,
+        gamesLost: 0,
+      }));
+      standings.sort((a: { points: number }, b: { points: number }) => b.points - a.points);
+      return standings;
     },
   },
   Mutation: {
-    createTennisLeague: async (_: any, { input }: any, context: Context) => {
+    createTennisLeague: async (_: any, { input, pointSystems }: any, context: Context) => {
       requireAuth(context);
 
       const league = await context.prisma.teamLeague.create({
@@ -175,25 +179,34 @@ const tennisResolvers = {
           startDate: new Date(input.startDate),
           endDate: new Date(input.endDate),
           isActive: input.isActive ?? true,
-          pointSystem: {
-            create: {
-              winPoints: 3,
-              lossPoints: 0,
-              drawPoints: 1,
-              defaultWinPoints: 3,
-              defaultLossPoints: 0,
-              defaultDrawPoints: 1,
-            },
-          },
-        },
-        include: {
-          pointSystem: true,
-          teams: true,
-          teamMatches: true,
-          // Removed: individualSinglesMatches, individualDoublesMatches
         },
       });
 
+      // Create point systems if provided
+      if (Array.isArray(pointSystems) && pointSystems.length > 0) {
+        // Validate order/winPoints
+        for (const matchType of ['SINGLES', 'DOUBLES']) {
+          const systems = pointSystems.filter(ps => ps.matchType === matchType).sort((a, b) => a.order - b.order);
+          for (let i = 1; i < systems.length; ++i) {
+            if (systems[i].winPoints > systems[i - 1].winPoints) {
+              throw new GraphQLError(`For matchType ${matchType}, lower order must have higher or equal winPoints`);
+            }
+          }
+        }
+        await context.prisma.teamLeaguePointSystem.createMany({
+          data: pointSystems.map(ps => ({
+            teamLeagueId: league.id,
+            matchType: ps.matchType,
+            order: ps.order,
+            winPoints: ps.winPoints,
+            lossPoints: ps.lossPoints ?? 0,
+            drawPoints: ps.drawPoints ?? 0,
+            defaultWinPoints: 3,
+            defaultLossPoints: 0,
+            defaultDrawPoints: 0,
+          })),
+        });
+      }
       return league;
     },
     updateTennisLeague: async (_: any, { id, input }: any, context: Context) => {
@@ -210,7 +223,7 @@ const tennisResolvers = {
         where: { id },
         data: updateData,
         include: {
-          pointSystem: true,
+          pointSystems: true,
           teams: {
             include: {
               captain: true,
@@ -280,15 +293,11 @@ const tennisResolvers = {
     },
     createTeamMatch: async (_: any, { leagueId, input }: any, context: Context) => {
       requireAuth(context);
-
       return context.prisma.teamLeagueTeamMatch.create({
         data: {
           homeTeamId: input.homeTeamId,
           awayTeamId: input.awayTeamId,
-          homeScore: input.homeScore,
-          awayScore: input.awayScore,
           matchDate: new Date(input.matchDate),
-          isCompleted: input.isCompleted ?? false,
           teamLeagueId: leagueId,
         },
         include: {
@@ -299,15 +308,10 @@ const tennisResolvers = {
     },
     updateTeamMatch: async (_: any, { id, input }: any, context: Context) => {
       requireAuth(context);
-
       const updateData: any = {};
       if (input.homeTeamId !== undefined) updateData.homeTeamId = input.homeTeamId;
       if (input.awayTeamId !== undefined) updateData.awayTeamId = input.awayTeamId;
-      if (input.homeScore !== undefined) updateData.homeScore = input.homeScore;
-      if (input.awayScore !== undefined) updateData.awayScore = input.awayScore;
       if (input.matchDate !== undefined) updateData.matchDate = new Date(input.matchDate);
-      if (input.isCompleted !== undefined) updateData.isCompleted = input.isCompleted;
-
       return context.prisma.teamLeagueTeamMatch.update({
         where: { id },
         data: updateData,
@@ -325,16 +329,18 @@ const tennisResolvers = {
     },
     createIndividualSinglesMatch: async (_: any, { input }: any, context: Context) => {
       requireAuth(context);
-
+      if (input.score !== undefined && input.score !== null && input.score !== '' && !isValidTennisScore(input.score)) {
+        throw new GraphQLError('Invalid tennis score format');
+      }
       return context.prisma.teamLeagueIndividualSinglesMatch.create({
         data: {
           player1Id: input.player1Id,
           player2Id: input.player2Id,
-          player1Score: input.player1Score,
-          player2Score: input.player2Score,
           matchDate: new Date(input.matchDate),
-          isCompleted: input.isCompleted ?? false,
           teamMatchId: input.teamMatchId,
+          order: input.order,
+          score: input.score ?? '',
+          winner: input.winner ?? null,
         },
         include: {
           player1: true,
@@ -345,16 +351,17 @@ const tennisResolvers = {
     },
     updateIndividualSinglesMatch: async (_: any, { id, input }: any, context: Context) => {
       requireAuth(context);
-
+      if (input.score !== undefined && !isValidTennisScore(input.score)) {
+        throw new GraphQLError('Invalid tennis score format');
+      }
       const updateData: any = {};
       if (input.player1Id !== undefined) updateData.player1Id = input.player1Id;
       if (input.player2Id !== undefined) updateData.player2Id = input.player2Id;
-      if (input.player1Score !== undefined) updateData.player1Score = input.player1Score;
-      if (input.player2Score !== undefined) updateData.player2Score = input.player2Score;
       if (input.matchDate !== undefined) updateData.matchDate = new Date(input.matchDate);
-      if (input.isCompleted !== undefined) updateData.isCompleted = input.isCompleted;
       if (input.teamMatchId !== undefined) updateData.teamMatchId = input.teamMatchId;
-
+      if (input.order !== undefined) updateData.order = input.order;
+      if (input.score !== undefined) updateData.score = input.score;
+      if (input.winner !== undefined) updateData.winner = input.winner;
       return context.prisma.teamLeagueIndividualSinglesMatch.update({
         where: { id },
         data: updateData,
@@ -372,18 +379,20 @@ const tennisResolvers = {
     },
     createIndividualDoublesMatch: async (_: any, { input }: any, context: Context) => {
       requireAuth(context);
-
+      if (input.score !== undefined && input.score !== null && input.score !== '' && !isValidTennisScore(input.score)) {
+        throw new GraphQLError('Invalid tennis score format');
+      }
       return context.prisma.teamLeagueIndividualDoublesMatch.create({
         data: {
           team1Player1Id: input.team1Player1Id,
           team1Player2Id: input.team1Player2Id,
           team2Player1Id: input.team2Player1Id,
           team2Player2Id: input.team2Player2Id,
-          team1Score: input.team1Score,
-          team2Score: input.team2Score,
           matchDate: new Date(input.matchDate),
-          isCompleted: input.isCompleted ?? false,
           teamMatchId: input.teamMatchId,
+          order: input.order,
+          score: input.score ?? '',
+          winner: input.winner ?? null,
         },
         include: {
           team1Player1: true,
@@ -396,18 +405,19 @@ const tennisResolvers = {
     },
     updateIndividualDoublesMatch: async (_: any, { id, input }: any, context: Context) => {
       requireAuth(context);
-
+      if (input.score !== undefined && !isValidTennisScore(input.score)) {
+        throw new GraphQLError('Invalid tennis score format');
+      }
       const updateData: any = {};
       if (input.team1Player1Id !== undefined) updateData.team1Player1Id = input.team1Player1Id;
       if (input.team1Player2Id !== undefined) updateData.team1Player2Id = input.team1Player2Id;
       if (input.team2Player1Id !== undefined) updateData.team2Player1Id = input.team2Player1Id;
       if (input.team2Player2Id !== undefined) updateData.team2Player2Id = input.team2Player2Id;
-      if (input.team1Score !== undefined) updateData.team1Score = input.team1Score;
-      if (input.team2Score !== undefined) updateData.team2Score = input.team2Score;
       if (input.matchDate !== undefined) updateData.matchDate = new Date(input.matchDate);
-      if (input.isCompleted !== undefined) updateData.isCompleted = input.isCompleted;
       if (input.teamMatchId !== undefined) updateData.teamMatchId = input.teamMatchId;
-
+      if (input.order !== undefined) updateData.order = input.order;
+      if (input.score !== undefined) updateData.score = input.score;
+      if (input.winner !== undefined) updateData.winner = input.winner;
       return context.prisma.teamLeagueIndividualDoublesMatch.update({
         where: { id },
         data: updateData,
@@ -436,15 +446,29 @@ const tennisResolvers = {
       if (input.defaultLossPoints !== undefined) updateData.defaultLossPoints = input.defaultLossPoints;
       if (input.defaultDrawPoints !== undefined) updateData.defaultDrawPoints = input.defaultDrawPoints;
 
+      // Use the compound unique key for update
+      if (!input.matchType || input.order === undefined) {
+        throw new Error('matchType and order are required to update a point system entry');
+      }
+
       return context.prisma.teamLeaguePointSystem.update({
-        where: { teamLeagueId: leagueId },
+        where: {
+          teamLeagueId_matchType_order: {
+            teamLeagueId: leagueId,
+            matchType: input.matchType,
+            order: input.order,
+          },
+        },
         data: updateData,
       });
     },
   },
   TeamLeague: {
-    pointSystem: (parent: any, _: any, context: Context) =>
-      context.prisma.teamLeaguePointSystem.findUnique({ where: { teamLeagueId: parent.id } }),
+    pointSystems: (parent: any, _: any, context: Context) =>
+      context.prisma.teamLeaguePointSystem.findMany({
+        where: { teamLeagueId: parent.id },
+        orderBy: [{ matchType: 'asc' }, { order: 'asc' }],
+      }),
     teams: (parent: any, _: any, context: Context) =>
       context.prisma.teamLeagueTeam.findMany({
         where: { teamLeagueId: parent.id },
@@ -466,6 +490,8 @@ const tennisResolvers = {
               Group: true,
             },
           },
+          singlesMatches: true,
+          doublesMatches: true,
         },
       }),
     // Removed: individualSinglesMatches and individualDoublesMatches
@@ -523,6 +549,15 @@ const tennisResolvers = {
   },
 };
 
+// Tennis score validation helper
+function isValidTennisScore(score: string): boolean {
+  // Accepts scores like "6-4", "6-4 0-6 7-6", "7-6(5) 6-7(3) 7-5", etc.
+  // Each set: number-number, optional (tiebreak)
+  const set = /([0-7])-([0-7])(\([0-9]+\))?/;
+  const pattern = new RegExp(`^${set.source}( ${set.source})*$`);
+  return pattern.test(score.trim());
+}
+
 export const resolvers = {
   Query: {
     health: () => 'OK',
@@ -562,9 +597,8 @@ export const resolvers = {
     },
 
     myGroups: async (_: any, __: any, context: Context) => {
-      const user = requireAuth(context);
       const memberships = await context.prisma.membership.findMany({
-        where: { userId: user.id },
+        where: { userId: requireAuth(context).id },
         include: { group: true },
       });
       return memberships.map(m => m.group);
@@ -1203,6 +1237,72 @@ export const resolvers = {
 
     // Tennis mutations - merge from tennisResolvers
     ...tennisResolvers.Mutation,
+    createTeamLeaguePointSystem: async (_: any, { leagueId, input }: any, context: Context) => {
+      requireAuth(context);
+      // Validate: for this leagueId and matchType, order must not have winPoints greater than any lower order
+      const existing = await context.prisma.teamLeaguePointSystem.findMany({
+        where: { teamLeagueId: leagueId, matchType: input.matchType },
+        orderBy: { order: 'asc' },
+      });
+      for (let i = 0; i < existing.length; ++i) {
+        if (existing[i].order < input.order && existing[i].winPoints < input.winPoints) {
+          throw new GraphQLError('Lower order must have higher or equal winPoints');
+        }
+        if (existing[i].order > input.order && existing[i].winPoints > input.winPoints) {
+          throw new GraphQLError('Lower order must have higher or equal winPoints');
+        }
+      }
+      return context.prisma.teamLeaguePointSystem.create({
+        data: {
+          teamLeagueId: leagueId,
+          matchType: input.matchType,
+          order: input.order,
+          winPoints: input.winPoints,
+          lossPoints: input.lossPoints ?? 0,
+          drawPoints: input.drawPoints ?? 0,
+          defaultWinPoints: 3,
+          defaultLossPoints: 0,
+          defaultDrawPoints: 0,
+        },
+      });
+    },
+    updateTeamLeaguePointSystem: async (_: any, { id, input }: any, context: Context) => {
+      requireAuth(context);
+      const current = await context.prisma.teamLeaguePointSystem.findUnique({ where: { id } });
+      if (!current) throw new GraphQLError('Point system not found');
+      const matchType = input.matchType ?? current.matchType;
+      const order = input.order ?? current.order;
+      const winPoints = input.winPoints ?? current.winPoints;
+      // Validate
+      const siblings = await context.prisma.teamLeaguePointSystem.findMany({
+        where: { teamLeagueId: current.teamLeagueId, matchType },
+        orderBy: { order: 'asc' },
+      });
+      for (let i = 0; i < siblings.length; ++i) {
+        if (siblings[i].id === id) continue;
+        if (siblings[i].order < order && siblings[i].winPoints < winPoints) {
+          throw new GraphQLError('Lower order must have higher or equal winPoints');
+        }
+        if (siblings[i].order > order && siblings[i].winPoints > winPoints) {
+          throw new GraphQLError('Lower order must have higher or equal winPoints');
+        }
+      }
+      return context.prisma.teamLeaguePointSystem.update({
+        where: { id },
+        data: {
+          matchType,
+          order,
+          winPoints,
+          lossPoints: input.lossPoints ?? current.lossPoints,
+          drawPoints: input.drawPoints ?? current.drawPoints,
+        },
+      });
+    },
+    deleteTeamLeaguePointSystem: async (_: any, { id }: any, context: Context) => {
+      requireAuth(context);
+      await context.prisma.teamLeaguePointSystem.delete({ where: { id } });
+      return true;
+    },
   },
 
   Subscription: {
