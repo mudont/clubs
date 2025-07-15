@@ -1,0 +1,161 @@
+.tennis-navbar {
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.tennis-navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+}
+
+.tennis-navbar-brand {
+  display: flex;
+  align-items: center;
+}
+
+.tennis-navbar-logo {
+  color: #2d3748;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.tennis-navbar-logo:hover {
+  background-color: #f7fafc;
+  color: #667eea;
+}
+
+.tennis-navbar-menu {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tennis-navbar-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  color: #4a5568;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.tennis-navbar-item:hover {
+  background-color: #f7fafc;
+  color: #2d3748;
+}
+
+.tennis-navbar-item-active {
+  background-color: #667eea;
+  color: white;
+}
+
+.tennis-navbar-item-active:hover {
+  background-color: #5a67d8;
+  color: white;
+}
+
+.tennis-navbar-icon {
+  font-size: 16px;
+}
+
+.tennis-navbar-label {
+  white-space: nowrap;
+}
+
+.tennis-navbar-actions {
+  display: flex;
+  align-items: center;
+}
+
+.tennis-navbar-back {
+  color: #667eea;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.tennis-navbar-back:hover {
+  background-color: #f7fafc;
+  color: #5a67d8;
+}
+
+/* Tennis page layout */
+.tennis-page {
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .tennis-navbar-container {
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 12px;
+  }
+
+  .tennis-navbar-menu {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2px;
+  }
+
+  .tennis-navbar-item {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+
+  .tennis-navbar-icon {
+    font-size: 14px;
+  }
+
+  .tennis-navbar-label {
+    display: none;
+  }
+
+  .tennis-navbar-actions {
+    order: -1;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .tennis-navbar-back {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tennis-navbar-container {
+    padding: 6px 8px;
+  }
+
+  .tennis-navbar-item {
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+
+  .tennis-navbar-icon {
+    font-size: 12px;
+  }
+}
