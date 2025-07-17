@@ -234,13 +234,16 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
   const getAllPlayers = () => {
     const players: { id: string; name: string }[] = [];
     if (leagueData && leagueData.tennisLeague && Array.isArray(leagueData.tennisLeague.teams)) {
-      leagueData.tennisLeague.teams.forEach((team: { members: { id: string; firstName: string; lastName: string }[] }) => {
-        if (Array.isArray(team.members)) {
-          team.members.forEach(member => {
-            if (!players.find(p => p.id === member.id)) {
+      leagueData.tennisLeague.teams.forEach((team: any) => {
+        if (team.group && Array.isArray(team.group.members)) {
+          team.group.members.forEach((membership: any) => {
+            if (membership.user && !players.find(p => p.id === membership.user.id)) {
+              const name = (membership.user.firstName || membership.user.lastName)
+                ? `${membership.user.firstName ?? ''} ${membership.user.lastName ?? ''}`.trim()
+                : membership.user.username || membership.user.email;
               players.push({
-                id: member.id,
-                name: `${member.firstName} ${member.lastName}`
+                id: membership.user.id,
+                name,
               });
             }
           });
