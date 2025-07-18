@@ -156,7 +156,9 @@ const tennisResolvers = {
       const standings = league.teams.map((team: any) => ({
         teamId: team.id,
         teamName: team.Group.name,
-        matchesPlayed: 0,
+        matchesPlayed: league.teamMatches.filter(
+          (m: any) => m.homeTeamId === team.id || m.awayTeamId === team.id
+        ).length,
         wins: teamWins[team.id],
         losses: teamLosses[team.id],
         draws: 0,
