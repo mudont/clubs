@@ -72,12 +72,18 @@ const LeagueDetail: React.FC = () => {
 
   // Move useEffect hooks for resetting player fields above any early returns
   useEffect(() => {
-    setSinglesFormData(f => ({ ...f, player1Id: '', player2Id: '' }));
-  }, [singlesFormData.teamMatchId]);
+    // Only clear player fields when creating new matches, not when editing
+    if (!editingSinglesMatch) {
+      setSinglesFormData(f => ({ ...f, player1Id: '', player2Id: '' }));
+    }
+  }, [singlesFormData.teamMatchId, editingSinglesMatch]);
 
   useEffect(() => {
-    setDoublesFormData(f => ({ ...f, team1Player1Id: '', team1Player2Id: '', team2Player1Id: '', team2Player2Id: '' }));
-  }, [doublesFormData.teamMatchId]);
+    // Only clear player fields when creating new matches, not when editing
+    if (!editingDoublesMatch) {
+      setDoublesFormData(f => ({ ...f, team1Player1Id: '', team1Player2Id: '', team2Player1Id: '', team2Player2Id: '' }));
+    }
+  }, [doublesFormData.teamMatchId, editingDoublesMatch]);
 
   if (leagueLoading) return <div className="text-center p-4">Loading league details...</div>;
   if (leagueError) return <div className="text-red-500 p-4">Error loading league: {leagueError.message}</div>;
@@ -118,6 +124,11 @@ const LeagueDetail: React.FC = () => {
   // Helper to get selected team match
   const selectedSinglesTeamMatch = league.teamMatches.find(tm => tm.id === singlesFormData.teamMatchId);
   const selectedDoublesTeamMatch = league.teamMatches.find(tm => tm.id === doublesFormData.teamMatchId);
+
+  // Helper to format date for HTML date input
+  const formatDateForInput = (dateString: string) => {
+    return dateString.split('T')[0]; // Convert "2024-01-15T00:00:00.000Z" to "2024-01-15"
+  };
 
   return (
     <div className="tennis-page">
@@ -308,6 +319,8 @@ const LeagueDetail: React.FC = () => {
                         {league.teamMatches.map(tm => <option key={tm.id} value={tm.id}>{formatDate(tm.matchDate)}: {tm.homeTeam.group.name} vs {tm.awayTeam.group.name}</option>)}
                       </select>
                     </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
                     <div>
                       <label className="block text-sm font-medium">Player 1</label>
                       <select value={singlesFormData.player1Id} onChange={e => setSinglesFormData(f => ({ ...f, player1Id: e.target.value }))} className="w-full border rounded p-2">
@@ -369,18 +382,33 @@ const LeagueDetail: React.FC = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-2">Date</th>
-                    <th className="px-4 py-2">Player 1</th>
-                    <th className="px-4 py-2">Player 2</th>
+                    <th className="px-4 py-2">Sched/Played</th>
+                    <th className="px-4 py-2">Order</th>
+                    <th className="px-4 py-2">Home</th>
+                    <th className="px-4 py-2">Away</th>
                     <th className="px-4 py-2">Score</th>
                     <th className="px-4 py-2">Winner</th>
                     <th className="px-4 py-2">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {league.teamMatches.flatMap(m => m.individualSinglesMatches ?? []).map(match => (
+                  {league.teamMatches.flatMap(m => m.individualSinglesMatches ?? []).map(match => {
+                    const teamMatch = league.teamMatches.find(tm => tm.id === match.teamMatchId);
+                    return { match, teamMatch };
+                  }).sort((a, b) => {
+                    // Sort by team match date first, then by order
+                    const dateA = new Date(a.teamMatch?.matchDate || '');
+                    const dateB = new Date(b.teamMatch?.matchDate || '');
+                    if (dateA.getTime() !== dateB.getTime()) {
+                      return dateA.getTime() - dateB.getTime();
+                    }
+                    return (a.match.order || 0) - (b.match.order || 0);
+                  }).map(({ match, teamMatch }) => (
                     <tr key={match.id} className="bg-white">
-                      <td className="px-4 py-2">{formatDate(match.matchDate)}</td>
+                      <td className="px-4 py-2">
+                        {teamMatch ? `${formatDate(teamMatch.matchDate)} / ${formatDate(match.matchDate)}` : formatDate(match.matchDate)}
+                      </td>
+                      <td className="px-4 py-2">{match.order}</td>
                       <td className="px-4 py-2">{
                         (match.player1.firstName || match.player1.lastName)
                           ? `${match.player1.firstName ?? ''} ${match.player1.lastName ?? ''}`.trim()
@@ -394,8 +422,32 @@ const LeagueDetail: React.FC = () => {
                       <td className="px-4 py-2">{match.score}</td>
                       <td className="px-4 py-2">{match.winner ? (match.winner === 'HOME' ? 'Home' : 'Away') : '-'}</td>
                       <td className="px-4 py-2 flex gap-2">
-                        <button className="btn-secondary" onClick={() => { setShowSinglesForm(true); setEditingSinglesMatch(match); setSinglesFormData({ player1Id: match.player1Id, player2Id: match.player2Id, matchDate: match.matchDate, order: match.order, score: match.score, winner: match.winner, teamMatchId: match.teamMatchId }); }}>Edit</button>
-                        <button className="btn-danger" onClick={() => { if (window.confirm('Delete this match?')) deleteSinglesMatch({ variables: { id: match.id } }); }}>Delete</button>
+                        <button
+                          className="text-blue-600 hover:text-blue-800 p-1"
+                          onClick={() => {
+                            setShowSinglesForm(true);
+                            setEditingSinglesMatch(match);
+                            setSinglesFormData({
+                              player1Id: match.player1Id,
+                              player2Id: match.player2Id,
+                              matchDate: formatDateForInput(match.matchDate),
+                              order: match.order,
+                              score: match.score,
+                              winner: match.winner,
+                              teamMatchId: match.teamMatchId
+                            });
+                          }}
+                          title="Edit Match"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          className="text-red-600 hover:text-red-800 p-1"
+                          onClick={() => { if (window.confirm('Delete this match?')) deleteSinglesMatch({ variables: { id: match.id } }); }}
+                          title="Delete Match"
+                        >
+                          🗑️
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -419,10 +471,12 @@ const LeagueDetail: React.FC = () => {
                         {league.teamMatches.map(tm => <option key={tm.id} value={tm.id}>{formatDate(tm.matchDate)}: {tm.homeTeam.group.name} vs {tm.awayTeam.group.name}</option>)}
                       </select>
                     </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
                     <div>
-                      <label className="block text-sm font-medium">Team 1</label>
+                      <label className="block text-sm font-medium">Home</label>
                       <select value={doublesFormData.team1Player1Id} onChange={e => setDoublesFormData(f => ({ ...f, team1Player1Id: e.target.value }))} className="w-full border rounded p-2">
-                        <option value="">Select Team 1 Player 1</option>
+                        <option value="">Select Home Player 1</option>
                         {(selectedDoublesTeamMatch?.homeTeam.group?.members?.map(m => m.user) || []).map((u: User) => (
                           <option key={u.id} value={u.id}>
                             {((u.firstName || u.lastName)
@@ -433,9 +487,9 @@ const LeagueDetail: React.FC = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium">Team 1</label>
+                      <label className="block text-sm font-medium">Home</label>
                       <select value={doublesFormData.team1Player2Id} onChange={e => setDoublesFormData(f => ({ ...f, team1Player2Id: e.target.value }))} className="w-full border rounded p-2">
-                        <option value="">Select Team 1 Player 2</option>
+                        <option value="">Select Home Player 2</option>
                         {(selectedDoublesTeamMatch?.homeTeam.group?.members?.map(m => m.user) || []).map((u: User) => (
                           <option key={u.id} value={u.id}>
                             {((u.firstName || u.lastName)
@@ -446,11 +500,11 @@ const LeagueDetail: React.FC = () => {
                       </select>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
                     <div>
-                      <label className="block text-sm font-medium">Team 2</label>
+                      <label className="block text-sm font-medium">Away</label>
                       <select value={doublesFormData.team2Player1Id} onChange={e => setDoublesFormData(f => ({ ...f, team2Player1Id: e.target.value }))} className="w-full border rounded p-2">
-                        <option value="">Select Team 2 Player 1</option>
+                        <option value="">Select Away Player 1</option>
                         {(selectedDoublesTeamMatch?.awayTeam.group?.members?.map(m => m.user) || []).map((u: User) => (
                           <option key={u.id} value={u.id}>
                             {((u.firstName || u.lastName)
@@ -461,9 +515,9 @@ const LeagueDetail: React.FC = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium">Team 2</label>
+                      <label className="block text-sm font-medium">Away</label>
                       <select value={doublesFormData.team2Player2Id} onChange={e => setDoublesFormData(f => ({ ...f, team2Player2Id: e.target.value }))} className="w-full border rounded p-2">
-                        <option value="">Select Team 2 Player 2</option>
+                        <option value="">Select Away Player 2</option>
                         {(selectedDoublesTeamMatch?.awayTeam.group?.members?.map(m => m.user) || []).map((u: User) => (
                           <option key={u.id} value={u.id}>
                             {((u.firstName || u.lastName)
@@ -473,6 +527,8 @@ const LeagueDetail: React.FC = () => {
                         ))}
                       </select>
                     </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
                     <div>
                       <label className="block text-sm font-medium">Date</label>
                       <input type="date" value={doublesFormData.matchDate} onChange={e => setDoublesFormData(f => ({ ...f, matchDate: e.target.value }))} className="w-full border rounded p-2" />
@@ -506,18 +562,33 @@ const LeagueDetail: React.FC = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-2">Date</th>
-                    <th className="px-4 py-2">Team 1</th>
-                    <th className="px-4 py-2">Team 2</th>
+                    <th className="px-4 py-2">Sched/Played</th>
+                    <th className="px-4 py-2">Order</th>
+                    <th className="px-4 py-2">Home</th>
+                    <th className="px-4 py-2">Away</th>
                     <th className="px-4 py-2">Score</th>
                     <th className="px-4 py-2">Winner</th>
                     <th className="px-4 py-2">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {league.teamMatches.flatMap(m => m.individualDoublesMatches ?? []).map(match => (
+                  {league.teamMatches.flatMap(m => m.individualDoublesMatches ?? []).map(match => {
+                    const teamMatch = league.teamMatches.find(tm => tm.id === match.teamMatchId);
+                    return { match, teamMatch };
+                  }).sort((a, b) => {
+                    // Sort by team match date first, then by order
+                    const dateA = new Date(a.teamMatch?.matchDate || '');
+                    const dateB = new Date(b.teamMatch?.matchDate || '');
+                    if (dateA.getTime() !== dateB.getTime()) {
+                      return dateA.getTime() - dateB.getTime();
+                    }
+                    return (a.match.order || 0) - (b.match.order || 0);
+                  }).map(({ match, teamMatch }) => (
                     <tr key={match.id} className="bg-white">
-                      <td className="px-4 py-2">{formatDate(match.matchDate)}</td>
+                      <td className="px-4 py-2">
+                        {teamMatch ? `${formatDate(teamMatch.matchDate)} / ${formatDate(match.matchDate)}` : formatDate(match.matchDate)}
+                      </td>
+                      <td className="px-4 py-2">{match.order}</td>
                       <td className="px-4 py-2">{
                         (match.team1Player1.firstName || match.team1Player1.lastName)
                           ? `${match.team1Player1.firstName ?? ''} ${match.team1Player1.lastName ?? ''}`.trim()
@@ -539,8 +610,34 @@ const LeagueDetail: React.FC = () => {
                       <td className="px-4 py-2">{match.score}</td>
                       <td className="px-4 py-2">{match.winner ? (match.winner === 'HOME' ? 'Home' : 'Away') : '-'}</td>
                       <td className="px-4 py-2 flex gap-2">
-                        <button className="btn-secondary" onClick={() => { setShowDoublesForm(true); setEditingDoublesMatch(match); setDoublesFormData({ team1Player1Id: match.team1Player1Id, team1Player2Id: match.team1Player2Id, team2Player1Id: match.team2Player1Id, team2Player2Id: match.team2Player2Id, matchDate: match.matchDate, order: match.order, score: match.score, winner: match.winner, teamMatchId: match.teamMatchId }); }}>Edit</button>
-                        <button className="btn-danger" onClick={() => { if (window.confirm('Delete this match?')) deleteDoublesMatch({ variables: { id: match.id } }); }}>Delete</button>
+                        <button
+                          className="text-blue-600 hover:text-blue-800 p-1"
+                          onClick={() => {
+                            setShowDoublesForm(true);
+                            setEditingDoublesMatch(match);
+                            setDoublesFormData({
+                              team1Player1Id: match.team1Player1Id,
+                              team1Player2Id: match.team1Player2Id,
+                              team2Player1Id: match.team2Player1Id,
+                              team2Player2Id: match.team2Player2Id,
+                              matchDate: formatDateForInput(match.matchDate),
+                              order: match.order,
+                              score: match.score,
+                              winner: match.winner,
+                              teamMatchId: match.teamMatchId
+                            });
+                          }}
+                          title="Edit Match"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          className="text-red-600 hover:text-red-800 p-1"
+                          onClick={() => { if (window.confirm('Delete this match?')) deleteDoublesMatch({ variables: { id: match.id } }); }}
+                          title="Delete Match"
+                        >
+                          🗑️
+                        </button>
                       </td>
                     </tr>
                   ))}

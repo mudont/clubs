@@ -8,9 +8,6 @@ const TennisNavbar: React.FC = () => {
 
   const navItems = [
     { path: '/tennis/leagues', label: 'Leagues', icon: '🏆' },
-    { path: '/tennis/teams', label: 'Teams', icon: '👥' },
-    { path: '/tennis/matches', label: 'Matches', icon: '🎾' },
-    { path: '/tennis/standings', label: 'Standings', icon: '📈' },
   ];
 
   const isActive = (path: string) => {

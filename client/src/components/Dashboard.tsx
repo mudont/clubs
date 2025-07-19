@@ -17,51 +17,49 @@ interface GroupMembership {
   };
 }
 
-interface GroupData {
+interface Group {
   id: string;
   name: string;
-  description?: string;
+  description: string;
+  isPublic: boolean;
   createdAt: string;
-  isPublic?: boolean;
-  memberships?: GroupMembership[];
+  memberships: GroupMembership[];
 }
 
 interface MyGroupsData {
-  myGroups: GroupData[];
+  myGroups: Group[];
 }
 
 interface PublicGroupsData {
-  publicGroups: GroupData[];
-}
-
-interface CreateGroupData {
-  createGroup: {
-    id: string;
-    name: string;
-    description?: string;
-  };
+  publicGroups: Group[];
 }
 
 interface CreateGroupInput {
   input: {
     name: string;
-    description?: string;
-    isPublic?: boolean;
+    description: string;
+    isPublic: boolean;
   };
 }
 
+interface CreateGroupData {
+  createGroup: Group;
+}
+
 interface JoinGroupData {
-  joinGroup: {
-    id: string;
-    user: {
-      id: string;
-      username: string;
-    };
-    group: {
-      id: string;
-      name: string;
-    };
-  };
+  joinGroup: Group;
+}
+
+// Tennis League interfaces
+interface TennisLeague {
+  id: string;
+  name: string;
+  description: string;
+  isActive: boolean;
+}
+
+interface UserTennisLeaguesData {
+  userTennisLeagues: TennisLeague[];
 }
 
 const GET_MY_GROUPS = gql`
@@ -70,8 +68,8 @@ const GET_MY_GROUPS = gql`
       id
       name
       description
-      createdAt
       isPublic
+      createdAt
       memberships {
         id
         isAdmin
@@ -92,8 +90,8 @@ const GET_PUBLIC_GROUPS = gql`
       id
       name
       description
-      createdAt
       isPublic
+      createdAt
       memberships {
         id
         isAdmin
@@ -108,6 +106,17 @@ const GET_PUBLIC_GROUPS = gql`
   }
 `;
 
+const GET_USER_TENNIS_LEAGUES = gql`
+  query GetUserTennisLeagues {
+    userTennisLeagues {
+      id
+      name
+      description
+      isActive
+    }
+  }
+`;
+
 const CREATE_GROUP = gql`
   mutation CreateGroup($input: CreateGroupInput!) {
     createGroup(input: $input) {
@@ -115,6 +124,7 @@ const CREATE_GROUP = gql`
       name
       description
       isPublic
+      createdAt
     }
   }
 `;
@@ -123,14 +133,10 @@ const JOIN_GROUP = gql`
   mutation JoinGroup($groupId: ID!) {
     joinGroup(groupId: $groupId) {
       id
-      user {
-        id
-        username
-      }
-      group {
-        id
-        name
-      }
+      name
+      description
+      isPublic
+      createdAt
     }
   }
 `;
@@ -145,8 +151,15 @@ const Dashboard: React.FC = () => {
 
   const { data: myGroupsData, loading: myGroupsLoading, refetch: refetchMyGroups } = useQuery<MyGroupsData>(GET_MY_GROUPS);
   const { data: publicGroupsData, loading: publicGroupsLoading, refetch: refetchPublicGroups } = useQuery<PublicGroupsData>(GET_PUBLIC_GROUPS);
+  const { data: tennisLeaguesData, loading: tennisLeaguesLoading } = useQuery<UserTennisLeaguesData>(GET_USER_TENNIS_LEAGUES);
   const [createGroup] = useMutation<CreateGroupData, CreateGroupInput>(CREATE_GROUP);
   const [joinGroup] = useMutation<JoinGroupData>(JOIN_GROUP);
+
+  // Determine tennis league navigation
+  const tennisLeagues = tennisLeaguesData?.userTennisLeagues || [];
+  const hasSingleLeague = tennisLeagues.length === 1;
+  const hasMultipleLeagues = tennisLeagues.length > 1;
+  const singleLeague = hasSingleLeague ? tennisLeagues[0] : null;
 
   const handleCreateGroup = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -202,6 +215,15 @@ const Dashboard: React.FC = () => {
         >
           {showCreateForm ? 'Cancel' : 'Create New Group'}
         </button>
+        {/* Conditional Tennis League Navigation */}
+        {!tennisLeaguesLoading && (hasSingleLeague || hasMultipleLeagues) && (
+          <Link
+            to={hasSingleLeague ? `/tennis/leagues/${singleLeague?.id}` : '/tennis/leagues'}
+            className="btn-tennis-league"
+          >
+            🎾 {hasSingleLeague ? singleLeague?.name : 'Tennis Leagues'}
+          </Link>
+        )}
       </Header>
 
       {showCreateForm && (

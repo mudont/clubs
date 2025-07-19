@@ -65,6 +65,26 @@
   transform: translateY(-1px);
 }
 
+.btn-tennis-league {
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  margin-left: 8px;
+}
+
+.btn-tennis-league:hover {
+  transform: translateY(-1px);
+  color: white;
+  text-decoration: none;
+}
+
 .create-group-form {
   background: white;
   border-radius: 6px;

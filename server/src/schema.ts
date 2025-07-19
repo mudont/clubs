@@ -158,6 +158,7 @@ export const typeDefs = gql`
     tennisLeagues: [TeamLeague!]!
     tennisLeague(id: ID!): TeamLeague
     tennisLeagueStandings(id: ID!): [TeamLeagueStandingsRow!]!
+    userTennisLeagues: [TeamLeague!]!
   }
 
   type Mutation {

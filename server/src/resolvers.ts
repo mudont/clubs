@@ -169,6 +169,47 @@ const tennisResolvers = {
       standings.sort((a: { points: number }, b: { points: number }) => b.points - a.points);
       return standings;
     },
+    userTennisLeagues: async (_: any, __: any, context: Context) => {
+      const user = requireAuth(context);
+      const currentDate = new Date();
+
+      // Find all teams where the user is a member of the team's group
+      const userTeams = await context.prisma.teamLeagueTeam.findMany({
+        where: {
+          Group: {
+            memberships: {
+              some: {
+                userId: user.id
+              }
+            }
+          }
+        },
+        include: {
+          teamLeague: true
+        }
+      });
+
+      // Extract unique leagues from the teams
+      const leagueIds = [...new Set(userTeams.map(team => team.teamLeagueId))];
+
+      // Get the full league data, filtering for active leagues within date range
+      const leagues = await context.prisma.teamLeague.findMany({
+        where: {
+          id: {
+            in: leagueIds
+          },
+          isActive: true,
+          startDate: {
+            lte: currentDate
+          },
+          endDate: {
+            gte: currentDate
+          }
+        }
+      });
+
+      return leagues;
+    },
   },
   Mutation: {
     createTennisLeague: async (_: any, { input, pointSystems }: any, context: Context) => {

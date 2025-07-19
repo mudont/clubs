@@ -220,12 +220,22 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
   const getMatchResult = (match: IndividualSinglesMatch | IndividualDoublesMatch) => {
     if (match.winner === 'HOME') {
       return matchType === 'singles'
-        ? `${(match as IndividualSinglesMatch).player1.firstName} ${(match as IndividualSinglesMatch).player1.lastName} wins`
-        : 'Team 1 wins';
+        ? (() => {
+            const player = (match as IndividualSinglesMatch).player1;
+            return (player.firstName || player.lastName)
+              ? `${player.firstName ?? ''} ${player.lastName ?? ''}`.trim()
+              : (player.username || player.email);
+          })()
+        : 'Home wins';
     } else if (match.winner === 'AWAY') {
       return matchType === 'singles'
-        ? `${(match as IndividualSinglesMatch).player2.firstName} ${(match as IndividualSinglesMatch).player2.lastName} wins`
-        : 'Team 2 wins';
+        ? (() => {
+            const player = (match as IndividualSinglesMatch).player2;
+            return (player.firstName || player.lastName)
+              ? `${player.firstName ?? ''} ${player.lastName ?? ''}`.trim()
+              : (player.username || player.email);
+          })()
+        : 'Away wins';
     } else {
       return 'Scheduled';
     }
@@ -326,7 +336,7 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                     </select>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Match Date *
@@ -354,6 +364,18 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Score
+                    </label>
+                    <input
+                      type="text"
+                      value={singlesFormData.score}
+                      onChange={(e) => setSinglesFormData({ ...singlesFormData, score: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="e.g., 6-4, 6-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Match Winner *
                     </label>
                     <select
@@ -375,7 +397,7 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Team 1 Player 1 *
+                      Home Player 1 *
                     </label>
                     <select
                       value={doublesFormData.team1Player1Id}
@@ -393,7 +415,7 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Team 1 Player 2 *
+                      Home Player 2 *
                     </label>
                     <select
                       value={doublesFormData.team1Player2Id}
@@ -411,7 +433,7 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Team 2 Player 1 *
+                      Away Player 1 *
                     </label>
                     <select
                       value={doublesFormData.team2Player1Id}
@@ -429,7 +451,7 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Team 2 Player 2 *
+                      Away Player 2 *
                     </label>
                     <select
                       value={doublesFormData.team2Player2Id}
@@ -446,7 +468,7 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                     </select>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Match Date *
@@ -470,6 +492,18 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                       onChange={(e) => setDoublesFormData({ ...doublesFormData, order: parseInt(e.target.value) })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Score
+                    </label>
+                    <input
+                      type="text"
+                      value={doublesFormData.score}
+                      onChange={(e) => setDoublesFormData({ ...doublesFormData, score: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="e.g., 6-4, 6-2"
                     />
                   </div>
                   <div>
@@ -521,11 +555,36 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                   <div className="text-lg font-semibold">
                     {matchType === 'singles' ? (
                       <>
-                        {(match as IndividualSinglesMatch).player1.firstName} {(match as IndividualSinglesMatch).player1.lastName} vs {(match as IndividualSinglesMatch).player2.firstName} {(match as IndividualSinglesMatch).player2.lastName}
+                        {(() => {
+                          const player1 = (match as IndividualSinglesMatch).player1;
+                          const player2 = (match as IndividualSinglesMatch).player2;
+                          const player1Name = (player1.firstName || player1.lastName)
+                            ? `${player1.firstName ?? ''} ${player1.lastName ?? ''}`.trim()
+                            : (player1.username || player1.email);
+                          const player2Name = (player2.firstName || player2.lastName)
+                            ? `${player2.firstName ?? ''} ${player2.lastName ?? ''}`.trim()
+                            : (player2.username || player2.email);
+                          return `${player1Name} vs ${player2Name}`;
+                        })()}
                       </>
                     ) : (
                       <>
-                        Team 1 ({(match as IndividualDoublesMatch).team1Player1.firstName} & {(match as IndividualDoublesMatch).team1Player2.firstName}) vs Team 2 ({(match as IndividualDoublesMatch).team2Player1.firstName} & {(match as IndividualDoublesMatch).team2Player2.firstName})
+                        {(() => {
+                          const matchDoubles = match as IndividualDoublesMatch;
+                          const team1Player1Name = (matchDoubles.team1Player1.firstName || matchDoubles.team1Player1.lastName)
+                            ? `${matchDoubles.team1Player1.firstName ?? ''} ${matchDoubles.team1Player1.lastName ?? ''}`.trim()
+                            : (matchDoubles.team1Player1.username || matchDoubles.team1Player1.email);
+                          const team1Player2Name = (matchDoubles.team1Player2.firstName || matchDoubles.team1Player2.lastName)
+                            ? `${matchDoubles.team1Player2.firstName ?? ''} ${matchDoubles.team1Player2.lastName ?? ''}`.trim()
+                            : (matchDoubles.team1Player2.username || matchDoubles.team1Player2.email);
+                          const team2Player1Name = (matchDoubles.team2Player1.firstName || matchDoubles.team2Player1.lastName)
+                            ? `${matchDoubles.team2Player1.firstName ?? ''} ${matchDoubles.team2Player1.lastName ?? ''}`.trim()
+                            : (matchDoubles.team2Player1.username || matchDoubles.team2Player1.email);
+                          const team2Player2Name = (matchDoubles.team2Player2.firstName || matchDoubles.team2Player2.lastName)
+                            ? `${matchDoubles.team2Player2.firstName ?? ''} ${matchDoubles.team2Player2.lastName ?? ''}`.trim()
+                            : (matchDoubles.team2Player2.username || matchDoubles.team2Player2.email);
+                          return `Home (${team1Player1Name} & ${team1Player2Name}) vs Away (${team2Player1Name} & ${team2Player2Name})`;
+                        })()}
                       </>
                     )}
                   </div>
@@ -571,8 +630,13 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                 </div>
                 <div className="text-sm text-gray-600">
                   {matchType === 'singles'
-                    ? `${(match as IndividualSinglesMatch).player1.firstName} ${(match as IndividualSinglesMatch).player1.lastName}`
-                    : 'Team 1'
+                    ? (() => {
+                        const player = (match as IndividualSinglesMatch).player1;
+                        return (player.firstName || player.lastName)
+                          ? `${player.firstName ?? ''} ${player.lastName ?? ''}`.trim()
+                          : (player.username || player.email);
+                      })()
+                    : 'Home'
                   }
                 </div>
               </div>
@@ -588,8 +652,13 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                 </div>
                 <div className="text-sm text-gray-600">
                   {matchType === 'singles'
-                    ? `${(match as IndividualSinglesMatch).player2.firstName} ${(match as IndividualSinglesMatch).player2.lastName}`
-                    : 'Team 2'
+                    ? (() => {
+                        const player = (match as IndividualSinglesMatch).player2;
+                        return (player.firstName || player.lastName)
+                          ? `${player.firstName ?? ''} ${player.lastName ?? ''}`.trim()
+                          : (player.username || player.email);
+                      })()
+                    : 'Away'
                   }
                 </div>
               </div>
