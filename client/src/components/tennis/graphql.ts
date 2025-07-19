@@ -311,12 +311,14 @@ export const GET_LINEUP = gql`
 `;
 
 export const GET_TEAM_MATCH_EVENT_RSVPS = gql`
-  query GetTeamMatchEventRsvps($teamMatchId: ID!, $groupId: ID!) {
+  query GetTeamMatchEventRsvps($teamMatchId: ID!) {
     teamMatch(id: $teamMatchId) {
       id
       associatedEvents {
         id
-        groupId
+        group {
+          id
+        }
         rsvps {
           id
           status

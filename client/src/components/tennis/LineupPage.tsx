@@ -95,15 +95,15 @@ const LineupPage: React.FC = () => {
   }
 
   const { data: rsvpData, loading: rsvpLoading } = useQuery(GET_TEAM_MATCH_EVENT_RSVPS, {
-    variables: { teamMatchId, groupId },
-    skip: !teamMatchId || !groupId,
+    variables: { teamMatchId },
+    skip: !teamMatchId,
   });
 
   const rsvps: RSVPPlayer[] = React.useMemo(() => {
     if (!rsvpData?.teamMatch?.associatedEvents || !groupId) return [];
 
     // Find the event for the user's team (matching groupId)
-    const teamEvent = rsvpData.teamMatch.associatedEvents.find((event: any) => event.groupId === groupId);
+    const teamEvent = rsvpData.teamMatch.associatedEvents.find((event: any) => event.group.id === groupId);
 
     if (!teamEvent?.rsvps) return [];
 
