@@ -722,6 +722,8 @@ const tennisResolvers = {
         },
       }),
     associatedEvents: async (parent: any, _: any, context: Context) => {
+      console.log('Debug - associatedEvents resolver called for team match:', parent.id);
+
       // Get the team match with team details to find associated events
       const teamMatch = await context.prisma.teamLeagueTeamMatch.findUnique({
         where: { id: parent.id },
@@ -731,7 +733,18 @@ const tennisResolvers = {
         }
       });
 
-      if (!teamMatch) return [];
+      console.log('Debug - Found team match:', {
+        id: teamMatch?.id,
+        homeTeamGroupId: teamMatch?.homeTeam?.Group?.id,
+        homeTeamGroupName: teamMatch?.homeTeam?.Group?.name,
+        awayTeamGroupId: teamMatch?.awayTeam?.Group?.id,
+        awayTeamGroupName: teamMatch?.awayTeam?.Group?.name
+      });
+
+      if (!teamMatch) {
+        console.log('Debug - No team match found');
+        return [];
+      }
 
       // Find events for both teams that match this team match
       const events = await context.prisma.event.findMany({
@@ -747,11 +760,36 @@ const tennisResolvers = {
         include: { group: true, createdBy: true, rsvps: { include: { user: true } } }
       });
 
+      console.log('Debug - Found events:', events.map(e => ({
+        id: e.id,
+        groupId: e.groupId,
+        groupName: e.group.name,
+        description: e.description,
+        rsvpCount: e.rsvps.length
+      })));
+
       // Filter events that match this specific team match
-      return events.filter(event =>
-        event.description.includes(teamMatch.homeTeam.Group.name) &&
-        event.description.includes(teamMatch.awayTeam.Group.name)
-      );
+      const filteredEvents = events.filter(event => {
+        const matches = event.description.includes(teamMatch.homeTeam.Group.name) &&
+          event.description.includes(teamMatch.awayTeam.Group.name);
+        console.log('Debug - Event filter check:', {
+          eventId: event.id,
+          description: event.description,
+          homeTeamName: teamMatch.homeTeam.Group.name,
+          awayTeamName: teamMatch.awayTeam.Group.name,
+          matches: matches
+        });
+        return matches;
+      });
+
+      console.log('Debug - Filtered events:', filteredEvents.map(e => ({
+        id: e.id,
+        groupId: e.groupId,
+        description: e.description,
+        rsvpCount: e.rsvps.length
+      })));
+
+      return filteredEvents;
     },
   },
   TeamLeagueIndividualSinglesMatch: {
