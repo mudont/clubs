@@ -997,7 +997,7 @@ export const resolvers = {
       });
 
       publishMemberJoined(membership);
-      return membership;
+      return membership.group;
     },
 
     leaveGroup: async (_: any, { groupId }: { groupId: string }, context: Context) => {

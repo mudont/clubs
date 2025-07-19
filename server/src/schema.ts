@@ -166,7 +166,7 @@ export const typeDefs = gql`
     # Group mutations
     createGroup(input: CreateGroupInput!): Group!
     updateGroup(id: ID!, input: UpdateGroupInput!): Group!
-    joinGroup(groupId: ID!): Membership!
+    joinGroup(groupId: ID!): Group!
     leaveGroup(groupId: ID!): Boolean!
     addMember(groupId: ID!, userId: ID!): Membership!
     addMemberByUsername(groupId: ID!, username: String!): Membership!
