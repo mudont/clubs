@@ -70,12 +70,21 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
   const handleBatchSave = async (matches: any[], matchType: 'singles' | 'doubles') => {
     const mutation = matchType === 'singles' ? updateSinglesMatch : updateDoublesMatch;
     await Promise.all(
-      matches.map(m =>
-        mutation({
-          variables: { id: m.id, input: {
-            ...m,
+      matches.map(m => {
+        let input;
+        if (matchType === 'singles') {
+          input = {
             player1Id: m.player1Id,
             player2Id: m.player2Id,
+            matchDate: m.matchDate,
+            teamMatchId: m.teamMatchId,
+            order: m.order,
+            score: m.score,
+            winner: m.winner,
+            resultType: m.resultType,
+          };
+        } else {
+          input = {
             team1Player1Id: m.team1Player1Id,
             team1Player2Id: m.team1Player2Id,
             team2Player1Id: m.team2Player1Id,
@@ -86,9 +95,10 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
             score: m.score,
             winner: m.winner,
             resultType: m.resultType,
-          } },
-        })
-      )
+          };
+        }
+        return mutation({ variables: { id: m.id, input } });
+      })
     );
     refetch();
   };
