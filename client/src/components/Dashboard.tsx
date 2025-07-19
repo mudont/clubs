@@ -206,9 +206,9 @@ const Dashboard: React.FC = () => {
   const hasMultipleLeagues = tennisLeagues.length > 1;
   const singleLeague = hasSingleLeague ? tennisLeagues[0] : null;
 
-  // Determine if user has pending RSVPs
+  // Determine if user has unexpired events
   const pendingEvents = pendingEventsData?.userPendingEvents || [];
-  const hasPendingRSVPs = pendingEvents.length > 0;
+  const hasUnexpiredEvents = pendingEvents.length > 0;
 
   const handleCreateGroup = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -274,7 +274,7 @@ const Dashboard: React.FC = () => {
           </Link>
         )}
         {/* Conditional RSVPs Navigation */}
-        {!pendingEventsLoading && hasPendingRSVPs && (
+        {!pendingEventsLoading && hasUnexpiredEvents && (
           <Link
             to="/events"
             className="btn-rsvps"

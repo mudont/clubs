@@ -898,13 +898,8 @@ export const resolvers = {
         orderBy: { date: 'asc' }
       });
 
-      // Filter to only events where user hasn't RSVP'd or has RSVP'd as MAYBE/ONLY_IF_NEEDED
-      return events.filter(event => {
-        const userRSVP = event.rsvps[0];
-        return !userRSVP ||
-          userRSVP.status === 'MAYBE' ||
-          userRSVP.status === 'ONLY_IF_NEEDED';
-      });
+      // Return all unexpired events (user can revise any RSVP)
+      return events;
     },
 
     // Message queries

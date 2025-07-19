@@ -180,10 +180,10 @@ const EventsPage: React.FC = () => {
     }
   };
 
-  if (loading) {
+    if (loading) {
     return (
       <div className="events-page">
-        <Header title="Pending Events" showBackButton backTo="/dashboard" />
+        <Header title="My Events" showBackButton backTo="/dashboard" />
         <div className="loading">Loading events...</div>
       </div>
     );
@@ -191,13 +191,13 @@ const EventsPage: React.FC = () => {
 
   return (
     <div className="events-page">
-      <Header title="Pending Events" showBackButton backTo="/dashboard" />
+      <Header title="My Events" showBackButton backTo="/dashboard" />
 
       <main className="events-content">
         {events.length === 0 ? (
           <div className="empty-state">
-            <h2>No Pending Events</h2>
-            <p>You're all caught up! No events require your RSVP.</p>
+            <h2>No Upcoming Events</h2>
+            <p>You don't have any upcoming events in your groups.</p>
             <Link to="/dashboard" className="btn-primary">
               Back to Dashboard
             </Link>
