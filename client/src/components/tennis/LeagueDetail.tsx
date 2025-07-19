@@ -179,7 +179,21 @@ const LeagueDetail: React.FC = () => {
         {/* Navigation Tabs */}
         <div className="bg-white rounded-lg shadow-md mb-6">
           <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6" aria-label="Tabs">
+            {/* Mobile: Dropdown */}
+            <div className="block sm:hidden px-6 py-2">
+              <select
+                value={activeTab}
+                onChange={e => setActiveTab(e.target.value)}
+                className="w-full border rounded p-2"
+                aria-label="Select tab"
+              >
+                {tabs.map(tab => (
+                  <option key={tab.id} value={tab.id}>{tab.icon} {tab.label}</option>
+                ))}
+              </select>
+            </div>
+            {/* Desktop: Horizontal Tabs */}
+            <nav className="hidden sm:flex space-x-8 px-6" aria-label="Tabs">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
