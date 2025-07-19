@@ -63,27 +63,15 @@ const StandingsTable: React.FC<StandingsTableProps> = ({ standings, loading = fa
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Pos
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Team
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  P
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  W
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  L
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  D
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Pts
-                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Points</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">MP</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">W</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">L</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">D</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">GW</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">GL</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -118,6 +106,9 @@ const StandingsTable: React.FC<StandingsTableProps> = ({ standings, loading = fa
                         {standing.teamName}
                       </div>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center font-bold text-lg text-gray-900">
+                      {standing.points}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <span className="text-sm text-gray-900 font-medium">
                         {standing.matchesPlayed}
@@ -129,18 +120,23 @@ const StandingsTable: React.FC<StandingsTableProps> = ({ standings, loading = fa
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <span className="text-sm text-red-600 font-medium">
+                      <span className="text-sm text-gray-500 font-medium">
                         {standing.losses}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <span className="text-sm text-gray-600 font-medium">
+                      <span className="text-sm text-gray-500 font-medium">
                         {standing.draws}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <span className="text-sm font-bold text-gray-900">
-                        {standing.points}
+                      <span className="text-sm text-gray-500 font-medium">
+                        {standing.gamesWon}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span className="text-sm text-gray-500 font-medium">
+                        {standing.gamesLost}
                       </span>
                     </td>
                   </tr>

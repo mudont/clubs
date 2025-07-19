@@ -250,6 +250,9 @@ const LeagueDetail: React.FC = () => {
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Team
                           </th>
+                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">
+                            Points
+                          </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             P
                           </th>
@@ -262,9 +265,6 @@ const LeagueDetail: React.FC = () => {
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             D
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Pts
-                          </th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
@@ -275,6 +275,9 @@ const LeagueDetail: React.FC = () => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                               {standing.teamName}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center font-bold text-lg text-gray-900">
+                              {standing.points}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {standing.matchesPlayed}
@@ -287,9 +290,6 @@ const LeagueDetail: React.FC = () => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {standing.draws}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {standing.points}
                             </td>
                           </tr>
                         ))}

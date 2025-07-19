@@ -371,7 +371,7 @@ const tennisResolvers = {
       });
 
       // Create events for both teams' groups
-      const matchDate = new Date(input.matchDate);
+      const matchDate = teamMatch.matchDate;
 
       // Create event for home team's group
       const homeEventDescription = `🎾 Tennis Match: ${homeTeam.Group.name} vs ${awayTeam.Group.name}\n\nHome match for ${homeTeam.Group.name}. Please RSVP your availability.`;
