@@ -5,8 +5,8 @@ import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { createClient } from 'graphql-ws';
 
-// Get the server URL - point directly to backend
-const SERVER_URL = 'http://localhost:4010';
+// Get the server URL from the current origin (same server serving the client)
+const SERVER_URL = window.location.origin;
 const GRAPHQL_ENDPOINT = `${SERVER_URL}/graphql`;
 const WS_ENDPOINT = SERVER_URL.replace(/^http/, 'ws') + '/graphql';
 
