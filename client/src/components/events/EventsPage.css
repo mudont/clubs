@@ -1,0 +1,275 @@
+.events-page {
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+.events-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #4a5568;
+  font-size: 16px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+.empty-state h2 {
+  color: #2d3748;
+  margin-bottom: 12px;
+  font-size: 24px;
+}
+
+.empty-state p {
+  color: #718096;
+  margin-bottom: 24px;
+  font-size: 16px;
+}
+
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.event-card {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.event-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.event-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.event-title {
+  margin: 0;
+  color: #2d3748;
+  font-size: 18px;
+  font-weight: 600;
+  flex: 1;
+}
+
+.event-status {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  margin-left: 8px;
+}
+
+.status-available {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.status-unavailable {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+.status-maybe {
+  background: #fef5e7;
+  color: #744210;
+}
+
+.status-needed {
+  background: #e6fffa;
+  color: #234e52;
+}
+
+.status-pending {
+  background: #e2e8f0;
+  color: #4a5568;
+}
+
+.event-details {
+  margin-bottom: 16px;
+}
+
+.event-description {
+  color: #4a5568;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 8px;
+  white-space: pre-line;
+}
+
+.event-date {
+  color: #718096;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.event-creator {
+  color: #718096;
+  font-size: 13px;
+  margin-bottom: 0;
+}
+
+.event-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.rsvp-form {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 16px;
+  margin-top: 16px;
+}
+
+.rsvp-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.rsvp-options label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #4a5568;
+  transition: background-color 0.2s ease;
+}
+
+.rsvp-options label:hover {
+  background: #f7fafc;
+}
+
+.rsvp-options input[type='radio'] {
+  margin: 0;
+  width: 14px;
+  height: 14px;
+}
+
+.rsvp-note {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 13px;
+  resize: vertical;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+
+.rsvp-note:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.rsvp-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.btn-primary {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  color: white;
+  text-decoration: none;
+}
+
+.btn-secondary {
+  padding: 8px 16px;
+  background: #e2e8f0;
+  color: #4a5568;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: #cbd5e0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .events-content {
+    padding: 8px;
+  }
+
+  .events-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .event-card {
+    padding: 12px;
+  }
+
+  .event-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .event-status {
+    margin-left: 0;
+  }
+
+  .rsvp-options {
+    grid-template-columns: 1fr;
+  }
+
+  .rsvp-actions {
+    flex-direction: column;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    text-align: center;
+  }
+}
