@@ -189,6 +189,28 @@ const EventsPage: React.FC = () => {
   const countRSVPs = (event: Event, status: string) =>
     event.rsvps.filter(rsvp => rsvp.status === status).length;
 
+  // Helper to extract home/away teams from event description
+  function parseTeamsFromDescription(description: string): { home: string; away: string } | null {
+    // Try to match: 'Tennis Match: HomeTeam vs AwayTeam'
+    const match = description.match(/Tennis Match: ([^\n]+) vs ([^\n]+)/);
+    if (match) {
+      return { home: match[1].trim(), away: match[2].trim() };
+    }
+    return null;
+  }
+
+  // Helper to check if event is within 7 days of today
+  function isWithinAWeek(dateString: string): boolean {
+    const eventDate = new Date(dateString);
+    const now = new Date();
+    const diffDays = (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+    return diffDays >= 0 && diffDays <= 7;
+  }
+
+  const visibleEvents = events.filter(e => isWithinAWeek(e.date));
+  const futureEvents = events.filter(e => !isWithinAWeek(e.date));
+  const [showFuture, setShowFuture] = useState(false);
+
   if (loading) {
     return (
       <div className="events-page">
@@ -212,145 +234,310 @@ const EventsPage: React.FC = () => {
             </Link>
           </div>
         ) : (
-          <div className="events-grid">
-            {events.map((event) => {
-              const currentStatus = getCurrentRSVPStatus(event);
-              const isSelected = selectedEvent?.id === event.id;
-              const isAccordionOpen = openAccordion === event.id;
+          <>
+            <div className="events-grid">
+              {(events.length === 1 ? events : visibleEvents).map((event) => {
+                const currentStatus = getCurrentRSVPStatus(event);
+                const isSelected = selectedEvent?.id === event.id;
+                const isAccordionOpen = openAccordion === event.id;
+                const teams = parseTeamsFromDescription(event.description);
 
-              return (
-                <div key={event.id} className="event-card">
-                  <div className="event-header">
-                    <h3 className="event-title">{event.group.name}</h3>
-                    <span className={`event-status ${getStatusColor(currentStatus)}`}>
-                      {getStatusText(currentStatus)}
-                    </span>
-                  </div>
-                  <div className="event-rsvp-counts">
-                    <span className="rsvp-count available">Available: {countRSVPs(event, 'AVAILABLE')}</span>
-                    <span className="rsvp-count not-available">Not Available: {countRSVPs(event, 'NOT_AVAILABLE')}</span>
-                    <span className="rsvp-count maybe">Maybe: {countRSVPs(event, 'MAYBE')}</span>
-                    <span className="rsvp-count only-if-needed">Only if Needed: {countRSVPs(event, 'ONLY_IF_NEEDED')}</span>
-                  </div>
-                  <div className="event-details">
-                    <p className="event-description">{event.description}</p>
-                    <p className="event-date">📅 {formatDate(event.date)}</p>
-                  </div>
-                  <button
-                    className="accordion-btn"
-                    onClick={() => setOpenAccordion(isAccordionOpen ? null : event.id)}
-                    aria-expanded={isAccordionOpen}
-                    aria-controls={`accordion-panel-${event.id}`}
-                  >
-                    {isAccordionOpen ? 'Hide RSVPs' : 'Show RSVPs'}
-                  </button>
-                  {isAccordionOpen && (
-                    <div className="accordion-panel" id={`accordion-panel-${event.id}`}>
-                      <table className="rsvp-table">
-                        <thead>
-                          <tr>
-                            <th>User</th>
-                            <th>Status</th>
-                            <th>Note</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {event.rsvps.map((rsvp) => (
-                            <tr key={rsvp.id}>
-                              <td>{rsvp.user.username}</td>
-                              <td><span className={`rsvp-status-badge ${getStatusColor(rsvp.status)}`}>{getStatusText(rsvp.status)}</span></td>
-                              <td>{rsvp.note || ''}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                return (
+                  <div key={event.id} className="event-card">
+                    <div className="event-header">
+                      <h3 className="event-title">{teams ? `${teams.home} vs ${teams.away}` : event.group.name}</h3>
+                      <span className={`event-status ${getStatusColor(currentStatus)}`}>
+                        {getStatusText(currentStatus)}
+                      </span>
                     </div>
-                  )}
-                  {isSelected ? (
-                    <div className="rsvp-form">
-                      <div className="rsvp-options">
-                        <label>
-                          <input
-                            type="radio"
-                            name={`rsvp-${event.id}`}
-                            value="AVAILABLE"
-                            checked={rsvpStatus === 'AVAILABLE'}
-                            onChange={(e) => setRsvpStatus(e.target.value)}
-                          />
-                          Available
-                        </label>
-                        <label>
-                          <input
-                            type="radio"
-                            name={`rsvp-${event.id}`}
-                            value="NOT_AVAILABLE"
-                            checked={rsvpStatus === 'NOT_AVAILABLE'}
-                            onChange={(e) => setRsvpStatus(e.target.value)}
-                          />
-                          Not Available
-                        </label>
-                        <label>
-                          <input
-                            type="radio"
-                            name={`rsvp-${event.id}`}
-                            value="MAYBE"
-                            checked={rsvpStatus === 'MAYBE'}
-                            onChange={(e) => setRsvpStatus(e.target.value)}
-                          />
-                          Maybe
-                        </label>
-                        <label>
-                          <input
-                            type="radio"
-                            name={`rsvp-${event.id}`}
-                            value="ONLY_IF_NEEDED"
-                            checked={rsvpStatus === 'ONLY_IF_NEEDED'}
-                            onChange={(e) => setRsvpStatus(e.target.value)}
-                          />
-                          Only if Needed
-                        </label>
+                    <div className="event-rsvp-counts">
+                      <span className="rsvp-count available">Available: {countRSVPs(event, 'AVAILABLE')}</span>
+                      <span className="rsvp-count not-available">Not Available: {countRSVPs(event, 'NOT_AVAILABLE')}</span>
+                      <span className="rsvp-count maybe">Maybe: {countRSVPs(event, 'MAYBE')}</span>
+                      <span className="rsvp-count only-if-needed">Only if Needed: {countRSVPs(event, 'ONLY_IF_NEEDED')}</span>
+                    </div>
+                    <div className="event-details">
+                      {teams && (
+                        <div className="event-teams mb-1 text-sm text-gray-700">
+                          <span className="font-semibold">Home:</span> {teams.home} &nbsp; <span className="font-semibold">Away:</span> {teams.away}
+                        </div>
+                      )}
+                      <p className="event-date font-semibold">📅 {formatDate(event.date)}</p>
+                      <p className="event-description">{event.description}</p>
+                    </div>
+                    <button
+                      className="accordion-btn"
+                      onClick={() => setOpenAccordion(isAccordionOpen ? null : event.id)}
+                      aria-expanded={isAccordionOpen}
+                      aria-controls={`accordion-panel-${event.id}`}
+                    >
+                      {isAccordionOpen ? 'Hide RSVPs' : 'Show RSVPs'}
+                    </button>
+                    {isAccordionOpen && (
+                      <div className="accordion-panel" id={`accordion-panel-${event.id}`}>
+                        <table className="rsvp-table">
+                          <thead>
+                            <tr>
+                              <th>User</th>
+                              <th>Status</th>
+                              <th>Note</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {event.rsvps.map((rsvp) => (
+                              <tr key={rsvp.id}>
+                                <td>{rsvp.user.username}</td>
+                                <td><span className={`rsvp-status-badge ${getStatusColor(rsvp.status)}`}>{getStatusText(rsvp.status)}</span></td>
+                                <td>{rsvp.note || ''}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
+                    )}
+                    {isSelected ? (
+                      <div className="rsvp-form">
+                        <div className="rsvp-options">
+                          <label>
+                            <input
+                              type="radio"
+                              name={`rsvp-${event.id}`}
+                              value="AVAILABLE"
+                              checked={rsvpStatus === 'AVAILABLE'}
+                              onChange={(e) => setRsvpStatus(e.target.value)}
+                            />
+                            Available
+                          </label>
+                          <label>
+                            <input
+                              type="radio"
+                              name={`rsvp-${event.id}`}
+                              value="NOT_AVAILABLE"
+                              checked={rsvpStatus === 'NOT_AVAILABLE'}
+                              onChange={(e) => setRsvpStatus(e.target.value)}
+                            />
+                            Not Available
+                          </label>
+                          <label>
+                            <input
+                              type="radio"
+                              name={`rsvp-${event.id}`}
+                              value="MAYBE"
+                              checked={rsvpStatus === 'MAYBE'}
+                              onChange={(e) => setRsvpStatus(e.target.value)}
+                            />
+                            Maybe
+                          </label>
+                          <label>
+                            <input
+                              type="radio"
+                              name={`rsvp-${event.id}`}
+                              value="ONLY_IF_NEEDED"
+                              checked={rsvpStatus === 'ONLY_IF_NEEDED'}
+                              onChange={(e) => setRsvpStatus(e.target.value)}
+                            />
+                            Only if Needed
+                          </label>
+                        </div>
 
-                      <textarea
-                        placeholder="Add a note (optional)"
-                        value={rsvpNote}
-                        onChange={(e) => setRsvpNote(e.target.value)}
-                        className="rsvp-note"
-                      />
+                        <textarea
+                          placeholder="Add a note (optional)"
+                          value={rsvpNote}
+                          onChange={(e) => setRsvpNote(e.target.value)}
+                          className="rsvp-note"
+                        />
 
-                      <div className="rsvp-actions">
+                        <div className="rsvp-actions">
+                          <button
+                            onClick={() => handleRSVP(event)}
+                            className="btn-primary"
+                          >
+                            Submit RSVP
+                          </button>
+                          <button
+                            onClick={() => setSelectedEvent(null)}
+                            className="btn-secondary"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="event-actions">
                         <button
-                          onClick={() => handleRSVP(event)}
+                          onClick={() => {
+                            setSelectedEvent(event);
+                            setRsvpStatus(currentStatus === 'NOT_RSVPED' ? 'AVAILABLE' : currentStatus);
+                            setRsvpNote(event.rsvps[0]?.note || '');
+                          }}
                           className="btn-primary"
                         >
-                          Submit RSVP
-                        </button>
-                        <button
-                          onClick={() => setSelectedEvent(null)}
-                          className="btn-secondary"
-                        >
-                          Cancel
+                          {currentStatus === 'NOT_RSVPED' ? 'RSVP Now' : 'Update RSVP'}
                         </button>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="event-actions">
-                      <button
-                        onClick={() => {
-                          setSelectedEvent(event);
-                          setRsvpStatus(currentStatus === 'NOT_RSVPED' ? 'AVAILABLE' : currentStatus);
-                          setRsvpNote(event.rsvps[0]?.note || '');
-                        }}
-                        className="btn-primary"
-                      >
-                        {currentStatus === 'NOT_RSVPED' ? 'RSVP Now' : 'Update RSVP'}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {futureEvents.length > 0 && events.length > 1 && (
+              <div className="mt-4">
+                <button
+                  className="accordion-btn"
+                  onClick={() => setShowFuture(v => !v)}
+                  aria-expanded={showFuture}
+                >
+                  {showFuture ? 'Hide future events' : `Show ${futureEvents.length} future event${futureEvents.length > 1 ? 's' : ''}`}
+                </button>
+                {showFuture && (
+                  <div className="events-grid mt-2">
+                    {futureEvents.map((event) => {
+                      const currentStatus = getCurrentRSVPStatus(event);
+                      const isSelected = selectedEvent?.id === event.id;
+                      const isAccordionOpen = openAccordion === event.id;
+                      const teams = parseTeamsFromDescription(event.description);
+                      return (
+                        <div key={event.id} className="event-card">
+                          <div className="event-header">
+                            <h3 className="event-title">{teams ? `${teams.home} vs ${teams.away}` : event.group.name}</h3>
+                            <span className={`event-status ${getStatusColor(currentStatus)}`}>
+                              {getStatusText(currentStatus)}
+                            </span>
+                          </div>
+                          <div className="event-rsvp-counts">
+                            <span className="rsvp-count available">Available: {countRSVPs(event, 'AVAILABLE')}</span>
+                            <span className="rsvp-count not-available">Not Available: {countRSVPs(event, 'NOT_AVAILABLE')}</span>
+                            <span className="rsvp-count maybe">Maybe: {countRSVPs(event, 'MAYBE')}</span>
+                            <span className="rsvp-count only-if-needed">Only if Needed: {countRSVPs(event, 'ONLY_IF_NEEDED')}</span>
+                          </div>
+                          <div className="event-details">
+                            {teams && (
+                              <div className="event-teams mb-1 text-sm text-gray-700">
+                                <span className="font-semibold">Home:</span> {teams.home} &nbsp; <span className="font-semibold">Away:</span> {teams.away}
+                              </div>
+                            )}
+                            <p className="event-date font-semibold">📅 {formatDate(event.date)}</p>
+                            <p className="event-description">{event.description}</p>
+                          </div>
+                          <button
+                            className="accordion-btn"
+                            onClick={() => setOpenAccordion(isAccordionOpen ? null : event.id)}
+                            aria-expanded={isAccordionOpen}
+                            aria-controls={`accordion-panel-${event.id}`}
+                          >
+                            {isAccordionOpen ? 'Hide RSVPs' : 'Show RSVPs'}
+                          </button>
+                          {isAccordionOpen && (
+                            <div className="accordion-panel" id={`accordion-panel-${event.id}`}>
+                              <table className="rsvp-table">
+                                <thead>
+                                  <tr>
+                                    <th>User</th>
+                                    <th>Status</th>
+                                    <th>Note</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {event.rsvps.map((rsvp) => (
+                                    <tr key={rsvp.id}>
+                                      <td>{rsvp.user.username}</td>
+                                      <td><span className={`rsvp-status-badge ${getStatusColor(rsvp.status)}`}>{getStatusText(rsvp.status)}</span></td>
+                                      <td>{rsvp.note || ''}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                          {isSelected ? (
+                            <div className="rsvp-form">
+                              <div className="rsvp-options">
+                                <label>
+                                  <input
+                                    type="radio"
+                                    name={`rsvp-${event.id}`}
+                                    value="AVAILABLE"
+                                    checked={rsvpStatus === 'AVAILABLE'}
+                                    onChange={(e) => setRsvpStatus(e.target.value)}
+                                  />
+                                  Available
+                                </label>
+                                <label>
+                                  <input
+                                    type="radio"
+                                    name={`rsvp-${event.id}`}
+                                    value="NOT_AVAILABLE"
+                                    checked={rsvpStatus === 'NOT_AVAILABLE'}
+                                    onChange={(e) => setRsvpStatus(e.target.value)}
+                                  />
+                                  Not Available
+                                </label>
+                                <label>
+                                  <input
+                                    type="radio"
+                                    name={`rsvp-${event.id}`}
+                                    value="MAYBE"
+                                    checked={rsvpStatus === 'MAYBE'}
+                                    onChange={(e) => setRsvpStatus(e.target.value)}
+                                  />
+                                  Maybe
+                                </label>
+                                <label>
+                                  <input
+                                    type="radio"
+                                    name={`rsvp-${event.id}`}
+                                    value="ONLY_IF_NEEDED"
+                                    checked={rsvpStatus === 'ONLY_IF_NEEDED'}
+                                    onChange={(e) => setRsvpStatus(e.target.value)}
+                                  />
+                                  Only if Needed
+                                </label>
+                              </div>
+
+                              <textarea
+                                placeholder="Add a note (optional)"
+                                value={rsvpNote}
+                                onChange={(e) => setRsvpNote(e.target.value)}
+                                className="rsvp-note"
+                              />
+
+                              <div className="rsvp-actions">
+                                <button
+                                  onClick={() => handleRSVP(event)}
+                                  className="btn-primary"
+                                >
+                                  Submit RSVP
+                                </button>
+                                <button
+                                  onClick={() => setSelectedEvent(null)}
+                                  className="btn-secondary"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="event-actions">
+                              <button
+                                onClick={() => {
+                                  setSelectedEvent(event);
+                                  setRsvpStatus(currentStatus === 'NOT_RSVPED' ? 'AVAILABLE' : currentStatus);
+                                  setRsvpNote(event.rsvps[0]?.note || '');
+                                }}
+                                className="btn-primary"
+                              >
+                                {currentStatus === 'NOT_RSVPED' ? 'RSVP Now' : 'Update RSVP'}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>
