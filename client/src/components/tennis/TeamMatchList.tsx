@@ -94,7 +94,7 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
             order: m.order,
             score: m.score,
             winner: m.winner,
-            // resultType: m.resultType, // Do NOT send this for doubles
+            resultType: m.resultType,
           };
         }
         return mutation({ variables: { id: m.id, input } });

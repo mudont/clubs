@@ -114,6 +114,7 @@ export const TEAM_LEAGUE_FRAGMENT = gql`
         order
         score
         winner
+        resultType
       }
     }
   }
@@ -215,6 +216,7 @@ export const MATCH_FRAGMENT = gql`
       order
       score
       winner
+      resultType
     }
   }
 `;
