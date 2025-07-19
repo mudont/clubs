@@ -284,6 +284,13 @@ export const typeDefs = gql`
     AWAY
   }
 
+  enum ResultType {
+    C
+    TM
+    D
+    NONE
+  }
+
   type TeamLeagueIndividualSinglesMatch {
     id: ID!
     player1Id: String!
@@ -297,6 +304,7 @@ export const typeDefs = gql`
     order: Int!
     score: String!
     winner: Winner
+    resultType: ResultType
   }
 
   type TeamLeagueIndividualDoublesMatch {
@@ -316,6 +324,7 @@ export const typeDefs = gql`
     order: Int!
     score: String!
     winner: Winner
+    resultType: ResultType
   }
 
   type TeamLeagueStandingsRow {
@@ -378,6 +387,7 @@ export const typeDefs = gql`
     order: Int!
     score: String!
     winner: Winner
+    resultType: ResultType
   }
 
   input UpdateIndividualSinglesMatchInput {
@@ -388,6 +398,7 @@ export const typeDefs = gql`
     order: Int
     score: String
     winner: Winner
+    resultType: ResultType
   }
 
   input CreateIndividualDoublesMatchInput {
@@ -400,6 +411,7 @@ export const typeDefs = gql`
     order: Int!
     score: String!
     winner: Winner
+    resultType: ResultType
   }
 
   input UpdateIndividualDoublesMatchInput {
@@ -412,6 +424,7 @@ export const typeDefs = gql`
     order: Int
     score: String
     winner: Winner
+    resultType: ResultType
   }
 
   input UpdatePointSystemInput {

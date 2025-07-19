@@ -233,6 +233,13 @@ enum Winner {
   AWAY
 }
 
+enum ResultType {
+  C
+  TM
+  D
+  NONE
+}
+
 model TeamLeagueIndividualSinglesMatch {
   id          String              @id @default(uuid())
   player1Id   String              @map("player1_id")
@@ -246,6 +253,7 @@ model TeamLeagueIndividualSinglesMatch {
   order       Int                 @map("order")
   score       String              @map("score") // Must be a valid Tennis score, validate in backend
   winner      Winner?             @map("winner") // HOME, AWAY, or null for incomplete
+  resultType  ResultType?         @default(NONE) @map("result_type")
 
   @@unique([teamMatchId, order])
   @@map("team_league_individual_singles_matches")
@@ -268,6 +276,7 @@ model TeamLeagueIndividualDoublesMatch {
   order          Int                 @map("order")
   score          String              @map("score") // Must be a valid Tennis score, validate in backend
   winner         Winner?             @map("winner") // HOME, AWAY, or null for incomplete
+  resultType     ResultType?         @default(NONE) @map("result_type")
 
   @@unique([teamMatchId, order])
   @@map("team_league_individual_doubles_matches")

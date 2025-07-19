@@ -528,6 +528,7 @@ const tennisResolvers = {
           order: input.order,
           score: input.score ?? '',
           winner: input.winner ?? null,
+          resultType: input.resultType ?? 'NONE',
         },
         include: {
           player1: true,
@@ -549,6 +550,7 @@ const tennisResolvers = {
       if (input.order !== undefined) updateData.order = input.order;
       if (input.score !== undefined) updateData.score = input.score;
       if (input.winner !== undefined) updateData.winner = input.winner;
+      if (input.resultType !== undefined) updateData.resultType = input.resultType;
       return context.prisma.teamLeagueIndividualSinglesMatch.update({
         where: { id },
         data: updateData,
@@ -580,6 +582,7 @@ const tennisResolvers = {
           order: input.order,
           score: input.score ?? '',
           winner: input.winner ?? null,
+          resultType: input.resultType ?? 'NONE',
         },
         include: {
           team1Player1: true,
@@ -605,6 +608,7 @@ const tennisResolvers = {
       if (input.order !== undefined) updateData.order = input.order;
       if (input.score !== undefined) updateData.score = input.score;
       if (input.winner !== undefined) updateData.winner = input.winner;
+      if (input.resultType !== undefined) updateData.resultType = input.resultType;
       return context.prisma.teamLeagueIndividualDoublesMatch.update({
         where: { id },
         data: updateData,

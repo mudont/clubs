@@ -1,8 +1,8 @@
 import { useMutation, useQuery } from '@apollo/client';
 import React, { useState } from 'react';
 
-import { CREATE_TEAM_MATCH, DELETE_TEAM_MATCH, GET_TENNIS_LEAGUE, UPDATE_TEAM_MATCH } from './graphql';
-import IndividualMatchList from './IndividualMatchList';
+import BatchMatchEditor from './BatchMatchEditor';
+import { CREATE_TEAM_MATCH, DELETE_TEAM_MATCH, GET_TENNIS_LEAGUE, UPDATE_INDIVIDUAL_DOUBLES_MATCH, UPDATE_INDIVIDUAL_SINGLES_MATCH, UPDATE_TEAM_MATCH } from './graphql';
 import { CreateTeamMatchData, CreateTeamMatchInput, DeleteTeamMatchData, TeamLeagueTeamMatch, UpdateTeamMatchData, UpdateTeamMatchInput } from './types';
 
 interface TeamMatchListProps {
@@ -62,6 +62,36 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
       alert('Failed to delete match. Please try again.');
     },
   });
+
+  const [updateSinglesMatch] = useMutation(UPDATE_INDIVIDUAL_SINGLES_MATCH);
+  const [updateDoublesMatch] = useMutation(UPDATE_INDIVIDUAL_DOUBLES_MATCH);
+
+  // Batch save handler for BatchMatchEditor
+  const handleBatchSave = async (matches: any[], matchType: 'singles' | 'doubles') => {
+    const mutation = matchType === 'singles' ? updateSinglesMatch : updateDoublesMatch;
+    await Promise.all(
+      matches.map(m =>
+        mutation({
+          variables: { id: m.id, input: {
+            ...m,
+            player1Id: m.player1Id,
+            player2Id: m.player2Id,
+            team1Player1Id: m.team1Player1Id,
+            team1Player2Id: m.team1Player2Id,
+            team2Player1Id: m.team2Player1Id,
+            team2Player2Id: m.team2Player2Id,
+            matchDate: m.matchDate,
+            teamMatchId: m.teamMatchId,
+            order: m.order,
+            score: m.score,
+            winner: m.winner,
+            resultType: m.resultType,
+          } },
+        })
+      )
+    );
+    refetch();
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -257,19 +287,10 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
             {/* Collapsible Individual Matches Table */}
             {expandedMatchId === match.id && (
               <div className="mt-6">
-                <div className="mb-2 text-lg font-semibold">Singles Matches</div>
-                <IndividualMatchList
-                  teamMatchId={match.id}
-                  leagueId={leagueId}
-                  matches={match.individualSinglesMatches || []}
-                  matchType="singles"
-                />
-                <div className="mt-4 mb-2 text-lg font-semibold">Doubles Matches</div>
-                <IndividualMatchList
-                  teamMatchId={match.id}
-                  leagueId={leagueId}
-                  matches={match.individualDoublesMatches || []}
-                  matchType="doubles"
+                <BatchMatchEditor
+                  singlesMatches={match.individualSinglesMatches || []}
+                  doublesMatches={match.individualDoublesMatches || []}
+                  onSave={handleBatchSave}
                 />
               </div>
             )}
