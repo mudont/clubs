@@ -22,7 +22,7 @@ const GET_TEAM_MATCH = gql`
         id
         group {
           id
-          members {
+          memberships {
             user {
               id
               username
@@ -37,7 +37,7 @@ const GET_TEAM_MATCH = gql`
         id
         group {
           id
-          members {
+          memberships {
             user {
               id
               username
@@ -65,15 +65,32 @@ const LineupPage: React.FC = () => {
   // Determine which team the user is on
   let teamId: string | undefined = undefined;
   let groupId: string | undefined = undefined;
+
   if (userId && teamMatch) {
-    const homeMembers = teamMatch.homeTeam?.group?.members?.map((m: any) => m.user.id) || [];
-    const awayMembers = teamMatch.awayTeam?.group?.members?.map((m: any) => m.user.id) || [];
-    if (homeMembers.includes(userId)) {
+    console.log('Debug - User ID:', userId, 'Type:', typeof userId);
+    console.log('Debug - Team Match:', teamMatch);
+
+    const homeMembers = teamMatch.homeTeam?.group?.memberships?.map((m: any) => m.user.id) || [];
+    const awayMembers = teamMatch.awayTeam?.group?.memberships?.map((m: any) => m.user.id) || [];
+
+    console.log('Debug - Home Members:', homeMembers);
+    console.log('Debug - Away Members:', awayMembers);
+    console.log('Debug - Home Members includes userId:', homeMembers.includes(userId));
+    console.log('Debug - Away Members includes userId:', awayMembers.includes(userId));
+
+    // Convert userId to string for comparison to handle potential type mismatches
+    const userIdStr = String(userId);
+
+    if (homeMembers.some((id: any) => String(id) === userIdStr)) {
       teamId = teamMatch.homeTeamId;
       groupId = teamMatch.homeTeam?.group?.id;
-    } else if (awayMembers.includes(userId)) {
+      console.log('Debug - User is on home team');
+    } else if (awayMembers.some((id: any) => String(id) === userIdStr)) {
       teamId = teamMatch.awayTeamId;
       groupId = teamMatch.awayTeam?.group?.id;
+      console.log('Debug - User is on away team');
+    } else {
+      console.log('Debug - User is not found in either team');
     }
   }
 
@@ -101,7 +118,23 @@ const LineupPage: React.FC = () => {
 
   if (matchLoading || rsvpLoading) return <div>Loading...</div>;
   if (!teamMatch) return <div>Team match not found</div>;
-  if (!teamId) return <div>You are not a member of either team for this match.</div>;
+  if (!userId) return <div>Please log in to access lineup editor.</div>;
+  if (!teamId) {
+    return (
+      <div>
+        <TennisNavbar />
+        <div className="container mx-auto px-4 py-8">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <strong>Access Denied:</strong> You are not a member of either team for this match.
+            <br />
+            <small>User ID: {userId}</small>
+            <br />
+            <small>Team Match ID: {teamMatchId}</small>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
