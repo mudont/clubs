@@ -310,12 +310,56 @@ export const GET_LINEUP = gql`
   }
 `;
 
+export const GET_TEAM_MATCH = gql`
+  query GetTeamMatch($id: ID!) {
+    teamMatch(id: $id) {
+      id
+      teamLeagueId
+      homeTeamId
+      awayTeamId
+      matchDate
+      homeTeam {
+        id
+        group {
+          id
+          memberships {
+            user {
+              id
+              username
+              firstName
+              lastName
+              email
+            }
+          }
+        }
+      }
+      awayTeam {
+        id
+        group {
+          id
+          memberships {
+            user {
+              id
+              username
+              firstName
+              lastName
+              email
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
 export const GET_TEAM_MATCH_EVENT_RSVPS = gql`
   query GetTeamMatchEventRsvps($teamMatchId: ID!) {
     teamMatch(id: $teamMatchId) {
       id
+      matchDate
       associatedEvents {
         id
+        date
         group {
           id
         }

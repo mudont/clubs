@@ -214,7 +214,13 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+    // Handle timezone issues by treating the date as UTC and formatting it safely
+    const date = new Date(dateString);
+    // Use UTC methods to avoid timezone conversion issues
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    return `${month}/${day}/${year}`;
   };
 
   const getMatchResult = (match: IndividualSinglesMatch | IndividualDoublesMatch) => {
