@@ -336,7 +336,24 @@ const tennisResolvers = {
     },
     createTeamMatch: async (_: any, { leagueId, input }: any, context: Context) => {
       requireAuth(context);
-      return context.prisma.teamLeagueTeamMatch.create({
+
+      // Get the teams with their groups to create events
+      const homeTeam = await context.prisma.teamLeagueTeam.findUnique({
+        where: { id: input.homeTeamId },
+        include: { Group: true }
+      });
+
+      const awayTeam = await context.prisma.teamLeagueTeam.findUnique({
+        where: { id: input.awayTeamId },
+        include: { Group: true }
+      });
+
+      if (!homeTeam || !awayTeam) {
+        throw new GraphQLError('One or both teams not found');
+      }
+
+      // Create the team match
+      const teamMatch = await context.prisma.teamLeagueTeamMatch.create({
         data: {
           homeTeamId: input.homeTeamId,
           awayTeamId: input.awayTeamId,
@@ -344,29 +361,156 @@ const tennisResolvers = {
           teamLeagueId: leagueId,
         },
         include: {
-          homeTeam: true,
-          awayTeam: true,
+          homeTeam: {
+            include: { Group: true }
+          },
+          awayTeam: {
+            include: { Group: true }
+          },
         },
       });
+
+      // Create events for both teams' groups
+      const matchDate = new Date(input.matchDate);
+
+      // Create event for home team's group
+      const homeEventDescription = `🎾 Tennis Match: ${homeTeam.Group.name} vs ${awayTeam.Group.name}\n\nHome match for ${homeTeam.Group.name}. Please RSVP your availability.`;
+
+      const homeEvent = await context.prisma.event.create({
+        data: {
+          groupId: homeTeam.Group.id,
+          createdById: context.user.id,
+          date: matchDate,
+          description: homeEventDescription,
+        },
+        include: { createdBy: true, group: true },
+      });
+
+      // Create event for away team's group
+      const awayEventDescription = `🎾 Tennis Match: ${awayTeam.Group.name} vs ${homeTeam.Group.name}\n\nAway match against ${homeTeam.Group.name}. Please RSVP your availability.`;
+
+      const awayEvent = await context.prisma.event.create({
+        data: {
+          groupId: awayTeam.Group.id,
+          createdById: context.user.id,
+          date: matchDate,
+          description: awayEventDescription,
+        },
+        include: { createdBy: true, group: true },
+      });
+
+      // Publish events for real-time updates
+      pubsub.publish(EVENTS.EVENT_CREATED, { eventCreated: homeEvent });
+      pubsub.publish(EVENTS.EVENT_CREATED, { eventCreated: awayEvent });
+
+      return teamMatch;
     },
     updateTeamMatch: async (_: any, { id, input }: any, context: Context) => {
       requireAuth(context);
+
+      // Get the current team match to find associated events
+      const currentMatch = await context.prisma.teamLeagueTeamMatch.findUnique({
+        where: { id },
+        include: {
+          homeTeam: { include: { Group: true } },
+          awayTeam: { include: { Group: true } }
+        }
+      });
+
+      if (!currentMatch) {
+        throw new GraphQLError('Team match not found');
+      }
+
       const updateData: any = {};
       if (input.homeTeamId !== undefined) updateData.homeTeamId = input.homeTeamId;
       if (input.awayTeamId !== undefined) updateData.awayTeamId = input.awayTeamId;
       if (input.matchDate !== undefined) updateData.matchDate = new Date(input.matchDate);
-      return context.prisma.teamLeagueTeamMatch.update({
+
+      const updatedMatch = await context.prisma.teamLeagueTeamMatch.update({
         where: { id },
         data: updateData,
         include: {
-          homeTeam: true,
-          awayTeam: true,
+          homeTeam: {
+            include: { Group: true }
+          },
+          awayTeam: {
+            include: { Group: true }
+          },
         },
       });
+
+      // Update associated events if date changed
+      if (input.matchDate !== undefined) {
+        const newMatchDate = new Date(input.matchDate);
+
+        // Find and update events for both teams
+        const events = await context.prisma.event.findMany({
+          where: {
+            OR: [
+              { groupId: currentMatch.homeTeam.Group.id },
+              { groupId: currentMatch.awayTeam.Group.id }
+            ],
+            description: {
+              contains: '🎾 Tennis Match'
+            }
+          }
+        });
+
+        // Update events that match this team match
+        for (const event of events) {
+          if (event.description.includes(currentMatch.homeTeam.Group.name) &&
+            event.description.includes(currentMatch.awayTeam.Group.name)) {
+            await context.prisma.event.update({
+              where: { id: event.id },
+              data: { date: newMatchDate }
+            });
+          }
+        }
+      }
+
+      return updatedMatch;
     },
     deleteTeamMatch: async (_: any, { id }: any, context: Context) => {
       requireAuth(context);
 
+      // Get the team match to find associated events
+      const teamMatch = await context.prisma.teamLeagueTeamMatch.findUnique({
+        where: { id },
+        include: {
+          homeTeam: { include: { Group: true } },
+          awayTeam: { include: { Group: true } }
+        }
+      });
+
+      if (!teamMatch) {
+        throw new GraphQLError('Team match not found');
+      }
+
+      // Find and delete associated events for both teams
+      const events = await context.prisma.event.findMany({
+        where: {
+          OR: [
+            { groupId: teamMatch.homeTeam.Group.id },
+            { groupId: teamMatch.awayTeam.Group.id }
+          ],
+          description: {
+            contains: '🎾 Tennis Match'
+          }
+        }
+      });
+
+      // Delete events that match this team match
+      for (const event of events) {
+        if (event.description.includes(teamMatch.homeTeam.Group.name) &&
+          event.description.includes(teamMatch.awayTeam.Group.name)) {
+          // Delete all RSVPs for this event first
+          await context.prisma.rSVP.deleteMany({ where: { eventId: event.id } });
+          // Delete the event
+          await context.prisma.event.delete({ where: { id: event.id } });
+        }
+      }
+
+      // Delete the team match
       await context.prisma.teamLeagueTeamMatch.delete({ where: { id } });
       return true;
     },
@@ -573,6 +717,38 @@ const tennisResolvers = {
           team2Player2: true,
         },
       }),
+    associatedEvents: async (parent: any, _: any, context: Context) => {
+      // Get the team match with team details to find associated events
+      const teamMatch = await context.prisma.teamLeagueTeamMatch.findUnique({
+        where: { id: parent.id },
+        include: {
+          homeTeam: { include: { Group: true } },
+          awayTeam: { include: { Group: true } }
+        }
+      });
+
+      if (!teamMatch) return [];
+
+      // Find events for both teams that match this team match
+      const events = await context.prisma.event.findMany({
+        where: {
+          OR: [
+            { groupId: teamMatch.homeTeam.Group.id },
+            { groupId: teamMatch.awayTeam.Group.id }
+          ],
+          description: {
+            contains: '🎾 Tennis Match'
+          }
+        },
+        include: { group: true, createdBy: true, rsvps: { include: { user: true } } }
+      });
+
+      // Filter events that match this specific team match
+      return events.filter(event =>
+        event.description.includes(teamMatch.homeTeam.Group.name) &&
+        event.description.includes(teamMatch.awayTeam.Group.name)
+      );
+    },
   },
   TeamLeagueIndividualSinglesMatch: {
     player1: (parent: any, _: any, context: Context) =>
@@ -690,6 +866,44 @@ export const resolvers = {
             }
           }
         },
+      });
+    },
+
+    userPendingEvents: async (_: any, __: any, context: Context) => {
+      const user = requireAuth(context);
+      const currentDate = new Date();
+
+      // Get all groups the user is a member of
+      const userMemberships = await context.prisma.membership.findMany({
+        where: { userId: user.id },
+        include: { group: true }
+      });
+
+      const userGroupIds = userMemberships.map(m => m.groupId);
+
+      // Get all events from user's groups that haven't expired yet
+      const events = await context.prisma.event.findMany({
+        where: {
+          groupId: { in: userGroupIds },
+          date: { gte: currentDate }
+        },
+        include: {
+          group: true,
+          createdBy: true,
+          rsvps: {
+            where: { userId: user.id },
+            include: { user: true }
+          }
+        },
+        orderBy: { date: 'asc' }
+      });
+
+      // Filter to only events where user hasn't RSVP'd or has RSVP'd as MAYBE/ONLY_IF_NEEDED
+      return events.filter(event => {
+        const userRSVP = event.rsvps[0];
+        return !userRSVP ||
+          userRSVP.status === 'MAYBE' ||
+          userRSVP.status === 'ONLY_IF_NEEDED';
       });
     },
 

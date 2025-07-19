@@ -22,6 +22,7 @@ import { setAuth } from './store/authSlice';
 const Dashboard = React.lazy(() => import('./components/Dashboard'));
 const GroupDetail = React.lazy(() => import('./components/groups/GroupDetail'));
 const UserProfile = React.lazy(() => import('./components/profile/UserProfile'));
+const EventsPage = React.lazy(() => import('./components/events/EventsPage'));
 
 interface UserData {
   me: {
@@ -114,6 +115,18 @@ function App() {
                           <ErrorBoundary>
                             <Suspense fallback={<LoadingSpinner message="Loading profile..." />}>
                               <UserProfile />
+                            </Suspense>
+                          </ErrorBoundary>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/events"
+                      element={
+                        <ProtectedRoute>
+                          <ErrorBoundary>
+                            <Suspense fallback={<LoadingSpinner message="Loading events..." />}>
+                              <EventsPage />
                             </Suspense>
                           </ErrorBoundary>
                         </ProtectedRoute>

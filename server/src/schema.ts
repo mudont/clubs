@@ -150,6 +150,7 @@ export const typeDefs = gql`
     # Event queries
     events(groupId: ID!): [Event!]!
     event(id: ID!): Event
+    userPendingEvents: [Event!]!
 
     # Message queries
     messages(groupId: ID!, limit: Int = 50): [Message!]!
@@ -275,6 +276,7 @@ export const typeDefs = gql`
     createdAt: DateTime!
     individualSinglesMatches: [TeamLeagueIndividualSinglesMatch!]!
     individualDoublesMatches: [TeamLeagueIndividualDoublesMatch!]!
+    associatedEvents: [Event!]!
   }
 
   enum Winner {

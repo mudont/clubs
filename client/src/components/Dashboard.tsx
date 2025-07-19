@@ -62,6 +62,27 @@ interface UserTennisLeaguesData {
   userTennisLeagues: TennisLeague[];
 }
 
+interface UserPendingEventsData {
+  userPendingEvents: {
+    id: string;
+    date: string;
+    description: string;
+    group: {
+      id: string;
+      name: string;
+    };
+    createdBy: {
+      id: string;
+      username: string;
+    };
+    rsvps: {
+      id: string;
+      status: string;
+      note?: string;
+    }[];
+  }[];
+}
+
 const GET_MY_GROUPS = gql`
   query GetMyGroups {
     myGroups {
@@ -117,6 +138,29 @@ const GET_USER_TENNIS_LEAGUES = gql`
   }
 `;
 
+const GET_USER_PENDING_EVENTS = gql`
+  query GetUserPendingEvents {
+    userPendingEvents {
+      id
+      date
+      description
+      group {
+        id
+        name
+      }
+      createdBy {
+        id
+        username
+      }
+      rsvps {
+        id
+        status
+        note
+      }
+    }
+  }
+`;
+
 const CREATE_GROUP = gql`
   mutation CreateGroup($input: CreateGroupInput!) {
     createGroup(input: $input) {
@@ -152,6 +196,7 @@ const Dashboard: React.FC = () => {
   const { data: myGroupsData, loading: myGroupsLoading, refetch: refetchMyGroups } = useQuery<MyGroupsData>(GET_MY_GROUPS);
   const { data: publicGroupsData, loading: publicGroupsLoading, refetch: refetchPublicGroups } = useQuery<PublicGroupsData>(GET_PUBLIC_GROUPS);
   const { data: tennisLeaguesData, loading: tennisLeaguesLoading } = useQuery<UserTennisLeaguesData>(GET_USER_TENNIS_LEAGUES);
+  const { data: pendingEventsData, loading: pendingEventsLoading } = useQuery<UserPendingEventsData>(GET_USER_PENDING_EVENTS);
   const [createGroup] = useMutation<CreateGroupData, CreateGroupInput>(CREATE_GROUP);
   const [joinGroup] = useMutation<JoinGroupData>(JOIN_GROUP);
 
@@ -160,6 +205,10 @@ const Dashboard: React.FC = () => {
   const hasSingleLeague = tennisLeagues.length === 1;
   const hasMultipleLeagues = tennisLeagues.length > 1;
   const singleLeague = hasSingleLeague ? tennisLeagues[0] : null;
+
+  // Determine if user has pending RSVPs
+  const pendingEvents = pendingEventsData?.userPendingEvents || [];
+  const hasPendingRSVPs = pendingEvents.length > 0;
 
   const handleCreateGroup = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -222,6 +271,15 @@ const Dashboard: React.FC = () => {
             className="btn-tennis-league"
           >
             🎾 {hasSingleLeague ? singleLeague?.name : 'Tennis Leagues'}
+          </Link>
+        )}
+        {/* Conditional RSVPs Navigation */}
+        {!pendingEventsLoading && hasPendingRSVPs && (
+          <Link
+            to="/events"
+            className="btn-rsvps"
+          >
+            📅 RSVPs ({pendingEvents.length})
           </Link>
         )}
       </Header>
