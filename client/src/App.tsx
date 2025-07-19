@@ -1,7 +1,7 @@
 import { ApolloProvider, gql, useQuery } from '@apollo/client';
 import React, { Suspense } from 'react';
 import { Provider, useDispatch, useSelector } from 'react-redux';
-import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 
 import { client } from './apollo';
 import AuthSuccess from './components/auth/AuthSuccess';
@@ -78,93 +78,90 @@ function App() {
       <ApolloProvider client={client}>
         <Provider store={store}>
           <AuthLoader>
-            <Router>
-              <div className="App">
-                <ErrorBoundary>
-                  <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/signup" element={<Signup />} />
-                    <Route
-                      path="/dashboard"
-                      element={
-                        <ProtectedRoute>
-                          <ErrorBoundary>
-                            <Suspense fallback={<LoadingSpinner message="Loading dashboard..." />}>
-                              <Dashboard />
-                            </Suspense>
-                          </ErrorBoundary>
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/group/:id"
-                      element={
-                        <ProtectedRoute>
-                          <ErrorBoundary>
-                            <Suspense fallback={<LoadingSpinner message="Loading group details..." />}>
-                              <GroupDetail />
-                            </Suspense>
-                          </ErrorBoundary>
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/profile"
-                      element={
-                        <ProtectedRoute>
-                          <ErrorBoundary>
-                            <Suspense fallback={<LoadingSpinner message="Loading profile..." />}>
-                              <UserProfile />
-                            </Suspense>
-                          </ErrorBoundary>
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/events"
-                      element={
-                        <ProtectedRoute>
-                          <ErrorBoundary>
-                            <Suspense fallback={<LoadingSpinner message="Loading events..." />}>
-                              <EventsPage />
-                            </Suspense>
-                          </ErrorBoundary>
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/tennis"
-                      element={<Navigate to="/tennis/leagues" replace />}
-                    />
-                    <Route
-                      path="/tennis/leagues"
-                      element={
-                        <ProtectedRoute>
-                          <ErrorBoundary>
-                            <LeagueList />
-                          </ErrorBoundary>
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/tennis/leagues/:id"
-                      element={
-                        <ProtectedRoute>
-                          <ErrorBoundary>
-                            <LeagueDetail />
-                          </ErrorBoundary>
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route path="/auth-success" element={<AuthSuccess />} />
-                    <Route path="/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/email-verification" element={<EmailVerification />} />
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                  </Routes>
-                </ErrorBoundary>
-              </div>
-            </Router>
+            <div className="App">
+              <ErrorBoundary>
+                <Routes>
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <ProtectedRoute>
+                        <ErrorBoundary>
+                          <Suspense fallback={<LoadingSpinner message="Loading dashboard..." />}>
+                            <Dashboard />
+                          </Suspense>
+                        </ErrorBoundary>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/group/:id"
+                    element={
+                      <ProtectedRoute>
+                        <ErrorBoundary>
+                          <Suspense fallback={<LoadingSpinner message="Loading group details..." />}>
+                            <GroupDetail />
+                          </Suspense>
+                        </ErrorBoundary>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProtectedRoute>
+                        <ErrorBoundary>
+                          <Suspense fallback={<LoadingSpinner message="Loading profile..." />}>
+                            <UserProfile />
+                          </Suspense>
+                        </ErrorBoundary>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/events"
+                    element={
+                      <ProtectedRoute>
+                        <ErrorBoundary>
+                          <Suspense fallback={<LoadingSpinner message="Loading events..." />}>
+                            <EventsPage />
+                          </Suspense>
+                        </ErrorBoundary>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/tennis"
+                    element={<Navigate to="/tennis/leagues" replace />} />
+                  <Route
+                    path="/tennis/leagues"
+                    element={
+                      <ProtectedRoute>
+                        <ErrorBoundary>
+                          <LeagueList />
+                        </ErrorBoundary>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/tennis/leagues/:id"
+                    element={
+                      <ProtectedRoute>
+                        <ErrorBoundary>
+                          <LeagueDetail />
+                        </ErrorBoundary>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="/auth-success" element={<AuthSuccess />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/email-verification" element={<EmailVerification />} />
+                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                </Routes>
+              </ErrorBoundary>
+            </div>
           </AuthLoader>
         </Provider>
       </ApolloProvider>

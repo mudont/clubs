@@ -287,6 +287,48 @@ export const GET_LEAGUE_POINT_SYSTEMS = gql`
   }
 `;
 
+export const GET_LINEUP = gql`
+  query GetLineup($teamMatchId: ID!, $teamId: ID!) {
+    lineup(teamMatchId: $teamMatchId, teamId: $teamId) {
+      id
+      teamMatchId
+      teamId
+      visibility
+      publishedAt
+      slots {
+        id
+        order
+        type
+        player1Id
+        player2Id
+        player1 { id username firstName lastName email }
+        player2 { id username firstName lastName email }
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const GET_GROUP_RSVPS = gql`
+  query GetGroupRsvps($groupId: ID!) {
+    group(id: $groupId) {
+      id
+      rsvps {
+        id
+        status
+        user {
+          id
+          username
+          firstName
+          lastName
+          email
+        }
+      }
+    }
+  }
+`;
+
 // Mutations
 export const CREATE_TENNIS_LEAGUE = gql`
   mutation CreateTennisLeague($input: CreateTennisLeagueInput!) {
@@ -560,6 +602,52 @@ export const UPDATE_POINT_SYSTEM = gql`
       defaultWinPoints
       defaultLossPoints
       defaultDrawPoints
+    }
+  }
+`;
+
+export const CREATE_OR_UPDATE_LINEUP = gql`
+  mutation CreateOrUpdateLineup($input: LineupInput!) {
+    createOrUpdateLineup(input: $input) {
+      id
+      teamMatchId
+      teamId
+      visibility
+      publishedAt
+      slots {
+        id
+        order
+        type
+        player1Id
+        player2Id
+        player1 { id username firstName lastName email }
+        player2 { id username firstName lastName email }
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const PUBLISH_LINEUP = gql`
+  mutation PublishLineup($lineupId: ID!, $visibility: LineupVisibility!) {
+    publishLineup(lineupId: $lineupId, visibility: $visibility) {
+      id
+      teamMatchId
+      teamId
+      visibility
+      publishedAt
+      slots {
+        id
+        order
+        type
+        player1Id
+        player2Id
+        player1 { id username firstName lastName email }
+        player2 { id username firstName lastName email }
+      }
+      createdAt
+      updatedAt
     }
   }
 `;

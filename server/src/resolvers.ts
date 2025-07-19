@@ -781,6 +781,141 @@ function isValidTennisScore(score: string): boolean {
   return pattern.test(score.trim());
 }
 
+const lineupResolvers = {
+  Query: {
+    async lineup(_: any, { teamMatchId, teamId }: { teamMatchId: string; teamId: string }, context: Context) {
+      const lineup = await context.prisma.teamMatchLineup.findUnique({
+        where: { teamMatchId_teamId: { teamMatchId, teamId } },
+        include: { slots: true },
+      });
+      return lineup;
+    },
+  },
+  Mutation: {
+    async createOrUpdateLineup(_: any, { input }: any, context: Context) {
+      // Upsert lineup
+      const { teamMatchId, teamId, slots, visibility } = input;
+      // Admin check: only admins of the team group can edit
+      const team = await context.prisma.teamLeagueTeam.findUnique({ where: { id: teamId }, include: { Group: true } });
+      if (!team) throw new GraphQLError('Team not found');
+      await requireGroupAdmin(context, team.groupId);
+      let lineup = await context.prisma.teamMatchLineup.findUnique({
+        where: { teamMatchId_teamId: { teamMatchId, teamId } },
+      });
+      if (!lineup) {
+        lineup = await context.prisma.teamMatchLineup.create({
+          data: {
+            teamMatchId,
+            teamId,
+            visibility: visibility || 'PRIVATE',
+            slots: {
+              create: slots.map((slot: any) => ({
+                order: slot.order,
+                type: slot.type,
+                player1Id: slot.player1Id,
+                player2Id: slot.player2Id || null,
+              })),
+            },
+          },
+          include: { slots: true },
+        });
+      } else {
+        // Update lineup: replace slots
+        await context.prisma.teamMatchLineupSlot.deleteMany({ where: { lineupId: lineup.id } });
+        lineup = await context.prisma.teamMatchLineup.update({
+          where: { id: lineup.id },
+          data: {
+            visibility: visibility || lineup.visibility,
+            slots: {
+              create: slots.map((slot: any) => ({
+                order: slot.order,
+                type: slot.type,
+                player1Id: slot.player1Id,
+                player2Id: slot.player2Id || null,
+              })),
+            },
+          },
+          include: { slots: true },
+        });
+      }
+      return lineup;
+    },
+    async publishLineup(_: any, { lineupId, visibility }: any, context: Context) {
+      // Admin check: only admins of the team group can publish
+      const lineup = await context.prisma.teamMatchLineup.findUnique({
+        where: { id: lineupId },
+        include: { slots: true },
+      });
+      if (!lineup) throw new GraphQLError('Lineup not found');
+      const team = await context.prisma.teamLeagueTeam.findUnique({ where: { id: lineup.teamId }, include: { Group: true } });
+      if (!team) throw new GraphQLError('Team not found');
+      await requireGroupAdmin(context, team.groupId);
+      const updatedLineup = await context.prisma.teamMatchLineup.update({
+        where: { id: lineupId },
+        data: { visibility, publishedAt: new Date() },
+        include: { slots: true },
+      });
+      // If both teams have published to ALL, trigger individual match creation
+      if (visibility === 'ALL') {
+        const allLineups = await context.prisma.teamMatchLineup.findMany({
+          where: { teamMatchId: lineup.teamMatchId, visibility: 'ALL' },
+          include: { slots: true },
+        });
+        if (allLineups.length === 2) {
+          // Check if individual matches already exist
+          const singlesCount = await context.prisma.teamLeagueIndividualSinglesMatch.count({ where: { teamMatchId: lineup.teamMatchId } });
+          const doublesCount = await context.prisma.teamLeagueIndividualDoublesMatch.count({ where: { teamMatchId: lineup.teamMatchId } });
+          if (singlesCount === 0 && doublesCount === 0) {
+            // Create singles and doubles matches from both lineups
+            for (const slot of allLineups.flatMap(l => l.slots)) {
+              if (slot.type === 'SINGLES' && slot.player1Id) {
+                await context.prisma.teamLeagueIndividualSinglesMatch.create({
+                  data: {
+                    player1Id: slot.player1Id,
+                    player2Id: slot.player2Id || slot.player1Id, // fallback
+                    matchDate: new Date(),
+                    teamMatchId: lineup.teamMatchId,
+                    order: slot.order,
+                    score: '',
+                    winner: null,
+                    resultType: 'NONE',
+                  },
+                });
+              } else if (slot.type === 'DOUBLES' && slot.player1Id && slot.player2Id) {
+                await context.prisma.teamLeagueIndividualDoublesMatch.create({
+                  data: {
+                    team1Player1Id: slot.player1Id,
+                    team1Player2Id: slot.player2Id,
+                    team2Player1Id: slot.player1Id, // fallback
+                    team2Player2Id: slot.player2Id, // fallback
+                    matchDate: new Date(),
+                    teamMatchId: lineup.teamMatchId,
+                    order: slot.order,
+                    score: '',
+                    winner: null,
+                    resultType: 'NONE',
+                  },
+                });
+              }
+            }
+          }
+        }
+      }
+      return updatedLineup;
+    },
+  },
+  TeamMatchLineup: {
+    slots: (parent: any, _: any, context: Context) =>
+      context.prisma.teamMatchLineupSlot.findMany({ where: { lineupId: parent.id } }),
+  },
+  TeamMatchLineupSlot: {
+    player1: (parent: any, _: any, context: Context) =>
+      context.prisma.user.findUnique({ where: { id: parent.player1Id } }),
+    player2: (parent: any, _: any, context: Context) =>
+      parent.player2Id ? context.prisma.user.findUnique({ where: { id: parent.player2Id } }) : null,
+  },
+};
+
 export const resolvers = {
   Query: {
     health: () => 'OK',
@@ -918,6 +1053,32 @@ export const resolvers = {
 
     // Tennis queries - merge from tennisResolvers
     ...tennisResolvers.Query,
+    ...lineupResolvers.Query,
+    teamMatch: async (_: any, { id }: { id: string }, context: Context) => {
+      return context.prisma.teamLeagueTeamMatch.findUnique({
+        where: { id },
+        include: {
+          homeTeam: {
+            include: {
+              Group: {
+                include: {
+                  memberships: { include: { user: true } }
+                }
+              }
+            }
+          },
+          awayTeam: {
+            include: {
+              Group: {
+                include: {
+                  memberships: { include: { user: true } }
+                }
+              }
+            }
+          }
+        }
+      });
+    },
   },
 
   Mutation: {
@@ -1558,6 +1719,7 @@ export const resolvers = {
       await context.prisma.teamLeaguePointSystem.delete({ where: { id } });
       return true;
     },
+    ...lineupResolvers.Mutation,
   },
 
   Subscription: {
@@ -1619,6 +1781,12 @@ export const resolvers = {
         include: { user: true, blockedBy: true },
       });
     },
+    rsvps: async (parent: any, _: any, context: Context) => {
+      return await context.prisma.rSVP.findMany({
+        where: { event: { groupId: parent.id } },
+        include: { user: true },
+      });
+    },
   },
 
   Membership: {
@@ -1633,6 +1801,8 @@ export const resolvers = {
   TeamLeagueTeamMatch: tennisResolvers.TeamLeagueTeamMatch,
   TeamLeagueIndividualSinglesMatch: tennisResolvers.TeamLeagueIndividualSinglesMatch,
   TeamLeagueIndividualDoublesMatch: tennisResolvers.TeamLeagueIndividualDoublesMatch,
+  TeamMatchLineup: lineupResolvers.TeamMatchLineup,
+  TeamMatchLineupSlot: lineupResolvers.TeamMatchLineupSlot,
 };
 
 

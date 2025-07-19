@@ -1,7 +1,9 @@
 import { gql, useMutation, useQuery } from '@apollo/client';
 import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 
+import { RootState } from '../../store';
 import Header from '../common/Header';
 import './EventsPage.css';
 
@@ -99,6 +101,9 @@ const EventsPage: React.FC = () => {
   const [createRSVP] = useMutation<CreateRSVPData>(CREATE_RSVP);
   const [updateRSVP] = useMutation<UpdateRSVPData>(UPDATE_RSVP);
 
+  // Get current user ID from Redux state
+  const currentUserId = useSelector((state: RootState) => state.auth.user?.id);
+
   const events = data?.userPendingEvents || [];
 
   const formatDate = (dateString: string) => {
@@ -114,15 +119,14 @@ const EventsPage: React.FC = () => {
   };
 
   const getCurrentRSVPStatus = (event: Event) => {
-    // Find the RSVP for the current user (assume only one per user)
-    // This assumes the backend returns the current user's RSVP first, or you can identify the user from context
-    // For now, fallback to the first RSVP if only one exists
-    return event.rsvps[0]?.status || 'NOT_RSVPED';
+    // Find the RSVP for the current user
+    const userRSVP = event.rsvps.find(r => r.user.id === currentUserId);
+    return userRSVP?.status || 'NOT_RSVPED';
   };
 
   const handleRSVP = async (event: Event) => {
     try {
-      const currentRSVP = event.rsvps.find(r => r.user.id === window.localStorage.getItem('userId')) || event.rsvps[0];
+      const currentRSVP = event.rsvps.find(r => r.user.id === currentUserId);
 
       if (currentRSVP) {
         // Update existing RSVP
@@ -368,7 +372,7 @@ const EventsPage: React.FC = () => {
                           onClick={() => {
                             setSelectedEvent(event);
                             setRsvpStatus(currentStatus === 'NOT_RSVPED' ? 'AVAILABLE' : currentStatus);
-                            setRsvpNote(event.rsvps[0]?.note || '');
+                            setRsvpNote(event.rsvps.find(r => r.user.id === currentUserId)?.note || '');
                           }}
                           className="btn-primary"
                         >
@@ -522,7 +526,7 @@ const EventsPage: React.FC = () => {
                                 onClick={() => {
                                   setSelectedEvent(event);
                                   setRsvpStatus(currentStatus === 'NOT_RSVPED' ? 'AVAILABLE' : currentStatus);
-                                  setRsvpNote(event.rsvps[0]?.note || '');
+                                  setRsvpNote(event.rsvps.find(r => r.user.id === currentUserId)?.note || '');
                                 }}
                                 className="btn-primary"
                               >

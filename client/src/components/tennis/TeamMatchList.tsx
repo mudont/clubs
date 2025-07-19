@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from '@apollo/client';
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import BatchMatchEditor from './BatchMatchEditor';
 import { CREATE_TEAM_MATCH, DELETE_TEAM_MATCH, GET_TENNIS_LEAGUE, UPDATE_INDIVIDUAL_DOUBLES_MATCH, UPDATE_INDIVIDUAL_SINGLES_MATCH, UPDATE_TEAM_MATCH } from './graphql';
@@ -149,6 +150,7 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
 
   const teams = leagueData?.tennisLeague?.teams || [];
   const sortedMatches = [...matches].sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
+  const navigate = useNavigate();
 
   return (
     <div>
@@ -276,6 +278,13 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
                   aria-expanded={expandedMatchId === match.id}
                 >
                   {expandedMatchId === match.id ? '▲' : '▼'}
+                </button>
+                <button
+                  onClick={() => navigate(`/tennis/lineup/${match.id}`)}
+                  className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded ml-2"
+                  title="Lineup"
+                >
+                  Lineup
                 </button>
               </div>
             </div>

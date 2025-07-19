@@ -1,6 +1,7 @@
 export { default as IndividualMatchList } from './IndividualMatchList';
 export { default as LeagueDetail } from './LeagueDetail';
 export { default as LeagueList } from './LeagueList';
+export { default as LineupPage } from './LineupPage';
 export { default as PointSystemEditor } from './PointSystemEditor';
 export { default as StandingsTable } from './StandingsTable';
 export { default as TeamList } from './TeamList';

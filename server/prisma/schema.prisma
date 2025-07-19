@@ -281,3 +281,41 @@ model TeamLeagueIndividualDoublesMatch {
   @@unique([teamMatchId, order])
   @@map("team_league_individual_doubles_matches")
 }
+
+enum LineupVisibility {
+  PRIVATE
+  TEAM
+  ALL
+}
+
+enum LineupSlotType {
+  SINGLES
+  DOUBLES
+}
+
+model TeamMatchLineup {
+  id          String                @id @default(uuid())
+  teamMatchId String                @map("team_match_id")
+  teamId      String                @map("team_id")
+  visibility  LineupVisibility      @default(PRIVATE)
+  publishedAt DateTime?             @map("published_at")
+  slots       TeamMatchLineupSlot[]
+  createdAt   DateTime              @default(now()) @map("created_at")
+  updatedAt   DateTime              @updatedAt @map("updated_at")
+
+  @@unique([teamMatchId, teamId])
+  @@map("team_match_lineups")
+}
+
+model TeamMatchLineupSlot {
+  id        String          @id @default(uuid())
+  lineupId  String          @map("lineup_id")
+  lineup    TeamMatchLineup @relation(fields: [lineupId], references: [id], onDelete: Cascade)
+  order     Int             @map("order")
+  type      LineupSlotType  @map("type")
+  player1Id String          @map("player1_id")
+  player2Id String?         @map("player2_id")
+  createdAt DateTime        @default(now()) @map("created_at")
+
+  @@map("team_match_lineup_slots")
+}

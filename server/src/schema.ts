@@ -30,6 +30,7 @@ export const typeDefs = gql`
     messages: [Message!]!
     members: [Membership!]!
     blockedUsers: [BlockedUser!]!
+    rsvps: [RSVP!]!
   }
 
   type Membership {
@@ -160,6 +161,8 @@ export const typeDefs = gql`
     tennisLeague(id: ID!): TeamLeague
     tennisLeagueStandings(id: ID!): [TeamLeagueStandingsRow!]!
     userTennisLeagues: [TeamLeague!]!
+    lineup(teamMatchId: ID!, teamId: ID!): TeamMatchLineup
+    teamMatch(id: ID!): TeamLeagueTeamMatch
   }
 
   type Mutation {
@@ -213,6 +216,8 @@ export const typeDefs = gql`
     createTeamLeaguePointSystem(leagueId: ID!, input: CreateTeamLeaguePointSystemInput!): TeamLeaguePointSystem!
     updateTeamLeaguePointSystem(id: ID!, input: UpdateTeamLeaguePointSystemInput!): TeamLeaguePointSystem!
     deleteTeamLeaguePointSystem(id: ID!): Boolean!
+    createOrUpdateLineup(input: LineupInput!): TeamMatchLineup!
+    publishLineup(lineupId: ID!, visibility: LineupVisibility!): TeamMatchLineup!
   }
 
   type Subscription {
@@ -268,6 +273,7 @@ export const typeDefs = gql`
 
   type TeamLeagueTeamMatch {
     id: ID!
+    teamLeagueId: String!
     homeTeamId: String!
     awayTeamId: String!
     homeTeam: TeamLeagueTeam!
@@ -450,5 +456,52 @@ export const typeDefs = gql`
     winPoints: Int
     lossPoints: Int
     drawPoints: Int
+  }
+
+  enum LineupVisibility {
+    PRIVATE
+    TEAM
+    ALL
+  }
+
+  enum LineupSlotType {
+    SINGLES
+    DOUBLES
+  }
+
+  type TeamMatchLineupSlot {
+    id: ID!
+    order: Int!
+    type: LineupSlotType!
+    player1Id: String!
+    player2Id: String
+    player1: User!
+    player2: User
+    createdAt: DateTime!
+  }
+
+  type TeamMatchLineup {
+    id: ID!
+    teamMatchId: String!
+    teamId: String!
+    visibility: LineupVisibility!
+    publishedAt: DateTime
+    slots: [TeamMatchLineupSlot!]!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+  }
+
+  input LineupSlotInput {
+    order: Int!
+    type: LineupSlotType!
+    player1Id: String!
+    player2Id: String
+  }
+
+  input LineupInput {
+    teamMatchId: String!
+    teamId: String!
+    slots: [LineupSlotInput!]!
+    visibility: LineupVisibility
   }
 `;
