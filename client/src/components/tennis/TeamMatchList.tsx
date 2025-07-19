@@ -108,6 +108,7 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
   };
 
   const teams = leagueData?.tennisLeague?.teams || [];
+  const sortedMatches = [...matches].sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
 
   return (
     <div>
@@ -200,7 +201,7 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
 
       {/* Matches List */}
       <div className="space-y-4">
-        {matches.map((match) => (
+        {sortedMatches.map((match) => (
           <div key={match.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">

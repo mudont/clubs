@@ -5,6 +5,16 @@ import { Link } from 'react-router-dom';
 import Header from '../common/Header';
 import './EventsPage.css';
 
+interface RSVP {
+  id: string;
+  status: string;
+  note?: string;
+  user: {
+    id: string;
+    username: string;
+  };
+}
+
 interface Event {
   id: string;
   date: string;
@@ -13,15 +23,7 @@ interface Event {
     id: string;
     name: string;
   };
-  createdBy: {
-    id: string;
-    username: string;
-  };
-  rsvps: {
-    id: string;
-    status: string;
-    note?: string;
-  }[];
+  rsvps: RSVP[];
 }
 
 interface UserPendingEventsData {
@@ -54,14 +56,14 @@ const GET_USER_PENDING_EVENTS = gql`
         id
         name
       }
-      createdBy {
-        id
-        username
-      }
       rsvps {
         id
         status
         note
+        user {
+          id
+          username
+        }
       }
     }
   }
@@ -91,6 +93,7 @@ const EventsPage: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [rsvpStatus, setRsvpStatus] = useState<string>('AVAILABLE');
   const [rsvpNote, setRsvpNote] = useState<string>('');
+  const [openAccordion, setOpenAccordion] = useState<string | null>(null);
 
   const { data, loading, refetch } = useQuery<UserPendingEventsData>(GET_USER_PENDING_EVENTS);
   const [createRSVP] = useMutation<CreateRSVPData>(CREATE_RSVP);
@@ -111,12 +114,15 @@ const EventsPage: React.FC = () => {
   };
 
   const getCurrentRSVPStatus = (event: Event) => {
+    // Find the RSVP for the current user (assume only one per user)
+    // This assumes the backend returns the current user's RSVP first, or you can identify the user from context
+    // For now, fallback to the first RSVP if only one exists
     return event.rsvps[0]?.status || 'NOT_RSVPED';
   };
 
   const handleRSVP = async (event: Event) => {
     try {
-      const currentRSVP = event.rsvps[0];
+      const currentRSVP = event.rsvps.find(r => r.user.id === window.localStorage.getItem('userId')) || event.rsvps[0];
 
       if (currentRSVP) {
         // Update existing RSVP
@@ -180,7 +186,10 @@ const EventsPage: React.FC = () => {
     }
   };
 
-    if (loading) {
+  const countRSVPs = (event: Event, status: string) =>
+    event.rsvps.filter(rsvp => rsvp.status === status).length;
+
+  if (loading) {
     return (
       <div className="events-page">
         <Header title="My Events" showBackButton backTo="/dashboard" />
@@ -207,6 +216,7 @@ const EventsPage: React.FC = () => {
             {events.map((event) => {
               const currentStatus = getCurrentRSVPStatus(event);
               const isSelected = selectedEvent?.id === event.id;
+              const isAccordionOpen = openAccordion === event.id;
 
               return (
                 <div key={event.id} className="event-card">
@@ -216,13 +226,46 @@ const EventsPage: React.FC = () => {
                       {getStatusText(currentStatus)}
                     </span>
                   </div>
-
+                  <div className="event-rsvp-counts">
+                    <span className="rsvp-count available">Available: {countRSVPs(event, 'AVAILABLE')}</span>
+                    <span className="rsvp-count not-available">Not Available: {countRSVPs(event, 'NOT_AVAILABLE')}</span>
+                    <span className="rsvp-count maybe">Maybe: {countRSVPs(event, 'MAYBE')}</span>
+                    <span className="rsvp-count only-if-needed">Only if Needed: {countRSVPs(event, 'ONLY_IF_NEEDED')}</span>
+                  </div>
                   <div className="event-details">
                     <p className="event-description">{event.description}</p>
                     <p className="event-date">📅 {formatDate(event.date)}</p>
-                    <p className="event-creator">👤 Created by {event.createdBy.username}</p>
                   </div>
-
+                  <button
+                    className="accordion-btn"
+                    onClick={() => setOpenAccordion(isAccordionOpen ? null : event.id)}
+                    aria-expanded={isAccordionOpen}
+                    aria-controls={`accordion-panel-${event.id}`}
+                  >
+                    {isAccordionOpen ? 'Hide RSVPs' : 'Show RSVPs'}
+                  </button>
+                  {isAccordionOpen && (
+                    <div className="accordion-panel" id={`accordion-panel-${event.id}`}>
+                      <table className="rsvp-table">
+                        <thead>
+                          <tr>
+                            <th>User</th>
+                            <th>Status</th>
+                            <th>Note</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {event.rsvps.map((rsvp) => (
+                            <tr key={rsvp.id}>
+                              <td>{rsvp.user.username}</td>
+                              <td><span className={`rsvp-status-badge ${getStatusColor(rsvp.status)}`}>{getStatusText(rsvp.status)}</span></td>
+                              <td>{rsvp.note || ''}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                   {isSelected ? (
                     <div className="rsvp-form">
                       <div className="rsvp-options">

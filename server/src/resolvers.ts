@@ -891,7 +891,6 @@ export const resolvers = {
           group: true,
           createdBy: true,
           rsvps: {
-            where: { userId: user.id },
             include: { user: true }
           }
         },
