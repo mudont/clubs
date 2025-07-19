@@ -310,19 +310,23 @@ export const GET_LINEUP = gql`
   }
 `;
 
-export const GET_GROUP_RSVPS = gql`
-  query GetGroupRsvps($groupId: ID!) {
-    group(id: $groupId) {
+export const GET_TEAM_MATCH_EVENT_RSVPS = gql`
+  query GetTeamMatchEventRsvps($teamMatchId: ID!, $groupId: ID!) {
+    teamMatch(id: $teamMatchId) {
       id
-      rsvps {
+      associatedEvents {
         id
-        status
-        user {
+        groupId
+        rsvps {
           id
-          username
-          firstName
-          lastName
-          email
+          status
+          user {
+            id
+            username
+            firstName
+            lastName
+            email
+          }
         }
       }
     }

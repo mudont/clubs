@@ -5,7 +5,7 @@ import { useParams } from 'react-router-dom';
 
 import { RootState } from '../../store';
 
-import { GET_GROUP_RSVPS } from './graphql';
+import { GET_TEAM_MATCH_EVENT_RSVPS } from './graphql';
 import { RSVPPlayer } from './LineupEditor';
 import LineupEditorContainer from './LineupEditorContainer';
 import TennisNavbar from './TennisNavbar';
@@ -25,6 +25,10 @@ const GET_TEAM_MATCH = gql`
           members {
             user {
               id
+              username
+              firstName
+              lastName
+              email
             }
           }
         }
@@ -36,6 +40,10 @@ const GET_TEAM_MATCH = gql`
           members {
             user {
               id
+              username
+              firstName
+              lastName
+              email
             }
           }
         }
@@ -69,21 +77,27 @@ const LineupPage: React.FC = () => {
     }
   }
 
-  const { data: rsvpData, loading: rsvpLoading } = useQuery(GET_GROUP_RSVPS, {
-    variables: { groupId },
-    skip: !groupId,
+  const { data: rsvpData, loading: rsvpLoading } = useQuery(GET_TEAM_MATCH_EVENT_RSVPS, {
+    variables: { teamMatchId, groupId },
+    skip: !teamMatchId || !groupId,
   });
 
   const rsvps: RSVPPlayer[] = React.useMemo(() => {
-    if (!rsvpData?.group?.rsvps) return [];
-    return rsvpData.group.rsvps.map((r: any) => ({
+    if (!rsvpData?.teamMatch?.associatedEvents || !groupId) return [];
+
+    // Find the event for the user's team (matching groupId)
+    const teamEvent = rsvpData.teamMatch.associatedEvents.find((event: any) => event.groupId === groupId);
+
+    if (!teamEvent?.rsvps) return [];
+
+    return teamEvent.rsvps.map((r: any) => ({
       id: r.user.id,
       name: r.user.firstName || r.user.lastName
         ? `${r.user.firstName ?? ''} ${r.user.lastName ?? ''}`.trim()
         : r.user.username || r.user.email,
       status: r.status,
     }));
-  }, [rsvpData]);
+  }, [rsvpData, groupId]);
 
   if (matchLoading || rsvpLoading) return <div>Loading...</div>;
   if (!teamMatch) return <div>Team match not found</div>;
@@ -92,8 +106,8 @@ const LineupPage: React.FC = () => {
   return (
     <div>
       <TennisNavbar />
-      <div className="max-w-4xl mx-auto mt-8">
-        <h2 className="text-2xl font-bold mb-4">Lineup Editor</h2>
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold mb-6">Lineup Editor</h1>
         <LineupEditorContainer
           teamMatchId={teamMatchId!}
           teamId={teamId}
