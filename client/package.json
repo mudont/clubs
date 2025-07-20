@@ -42,7 +42,9 @@
     "format": "prettier --write src/**/*.{ts,tsx,css,md}",
     "format:check": "prettier --check src/**/*.{ts,tsx,css,md}",
     "type-check": "tsc --noEmit",
-    "prepare": "cd .. && husky install client/.husky"
+    "prepare": "cd .. && husky install client/.husky",
+    "codegen": "graphql-codegen --config codegen.yml",
+    "codegen:check": "graphql-codegen --config codegen.yml --check"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx}": [
@@ -67,6 +69,10 @@
   },
   "devDependencies": {
     "@axe-core/react": "^4.8.2",
+    "@graphql-codegen/cli": "^4.0.0",
+    "@graphql-codegen/typescript": "^4.0.0",
+    "@graphql-codegen/typescript-operations": "^4.0.0",
+    "@graphql-codegen/typescript-react-apollo": "^4.0.0",
     "@playwright/test": "^1.40.0",
     "eslint-plugin-functional": "^6.6.3",
     "eslint-plugin-import": "^2.29.1",

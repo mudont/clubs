@@ -1,16 +1,11 @@
-import { gql, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client';
+import { LEAVE_GROUP } from 'graphql/Group';
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { RootState } from '../../store';
 import './GroupCard.css';
-
-const LEAVE_GROUP = gql`
-  mutation LeaveGroup($groupId: ID!) {
-    leaveGroup(groupId: $groupId)
-  }
-`;
 
 interface GroupMembership {
   id: string;

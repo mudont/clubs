@@ -5,6 +5,7 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import cors from 'cors';
+import 'dotenv/config';
 import type { NextFunction, Request, Response } from 'express';
 import express from 'express';
 import session from 'express-session';

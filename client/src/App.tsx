@@ -1,4 +1,4 @@
-import { ApolloProvider, gql, useQuery } from '@apollo/client';
+import { ApolloProvider, useQuery } from '@apollo/client';
 import React, { Suspense } from 'react';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import { Navigate, Route, Routes } from 'react-router-dom';
@@ -14,6 +14,7 @@ import Signup from './components/auth/Signup';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import { LeagueDetail, LeagueList } from './components/tennis';
+import { ME_QUERY } from './graphql/User';
 import { RootState, store } from './store';
 import { setAuth } from './store/authSlice';
 
@@ -36,21 +37,6 @@ interface UserData {
     lastName?: string;
   };
 }
-
-const ME_QUERY = gql`
-  query Me {
-    me {
-      id
-      username
-      email
-      emailVerified
-      phone
-      photoUrl
-      firstName
-      lastName
-    }
-  }
-`;
 
 function AuthLoader({ children }: { children: React.ReactNode }) {
   const dispatch = useDispatch();

@@ -1,4 +1,7 @@
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
+import { GET_USER_PENDING_EVENTS } from 'graphql/Event';
+import { CREATE_GROUP, GET_MY_GROUPS, GET_PUBLIC_GROUPS, JOIN_GROUP } from 'graphql/Group';
+import { GET_USER_TENNIS_LEAGUES } from 'graphql/TennisLeague';
 import React, { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -82,108 +85,6 @@ interface UserPendingEventsData {
     }[];
   }[];
 }
-
-const GET_MY_GROUPS = gql`
-  query GetMyGroups {
-    myGroups {
-      id
-      name
-      description
-      isPublic
-      createdAt
-      memberships {
-        id
-        isAdmin
-        memberId
-        user {
-          id
-          username
-          email
-        }
-      }
-    }
-  }
-`;
-
-const GET_PUBLIC_GROUPS = gql`
-  query GetPublicGroups {
-    publicGroups {
-      id
-      name
-      description
-      isPublic
-      createdAt
-      memberships {
-        id
-        isAdmin
-        memberId
-        user {
-          id
-          username
-          email
-        }
-      }
-    }
-  }
-`;
-
-const GET_USER_TENNIS_LEAGUES = gql`
-  query GetUserTennisLeagues {
-    userTennisLeagues {
-      id
-      name
-      description
-      isActive
-    }
-  }
-`;
-
-const GET_USER_PENDING_EVENTS = gql`
-  query GetUserPendingEvents {
-    userPendingEvents {
-      id
-      date
-      description
-      group {
-        id
-        name
-      }
-      createdBy {
-        id
-        username
-      }
-      rsvps {
-        id
-        status
-        note
-      }
-    }
-  }
-`;
-
-const CREATE_GROUP = gql`
-  mutation CreateGroup($input: CreateGroupInput!) {
-    createGroup(input: $input) {
-      id
-      name
-      description
-      isPublic
-      createdAt
-    }
-  }
-`;
-
-const JOIN_GROUP = gql`
-  mutation JoinGroup($groupId: ID!) {
-    joinGroup(groupId: $groupId) {
-      id
-      name
-      description
-      isPublic
-      createdAt
-    }
-  }
-`;
 
 const Dashboard: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);

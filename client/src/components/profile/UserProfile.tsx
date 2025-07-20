@@ -1,4 +1,5 @@
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
+import { CHANGE_PASSWORD, DELETE_USER, GET_USER_PROFILE, UPDATE_PROFILE } from 'graphql/User';
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -6,51 +7,6 @@ import { RootState } from '../../store';
 import { updateUser } from '../../store/authSlice';
 import Header from '../common/Header';
 import './UserProfile.css';
-
-const GET_USER_PROFILE = gql`
-  query GetUserProfile {
-    me {
-      id
-      username
-      email
-      firstName
-      lastName
-      bio
-      avatar
-      createdAt
-      emailVerified
-    }
-  }
-`;
-
-const UPDATE_PROFILE = gql`
-  mutation UpdateProfile($input: UpdateUserInput!) {
-    updateProfile(input: $input) {
-      id
-      username
-      email
-      firstName
-      lastName
-      bio
-      avatar
-    }
-  }
-`;
-
-const CHANGE_PASSWORD = gql`
-  mutation ChangePassword($input: ChangePasswordInput!) {
-    changePassword(input: $input) {
-      success
-      message
-    }
-  }
-`;
-
-const DELETE_USER = gql`
-  mutation DeleteUser($userId: ID!) {
-    deleteUser(userId: $userId)
-  }
-`;
 
 const UserProfile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);

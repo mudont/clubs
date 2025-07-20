@@ -1,10 +1,12 @@
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
+import { CREATE_RSVP, GET_USER_PENDING_EVENTS, UPDATE_RSVP } from 'graphql/Event';
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 
 import { RootState } from '../../store';
 import Header from '../common/Header';
+
 import './EventsPage.css';
 
 interface RSVP {
@@ -47,49 +49,6 @@ interface UpdateRSVPData {
     note?: string;
   };
 }
-
-const GET_USER_PENDING_EVENTS = gql`
-  query GetUserPendingEvents {
-    userPendingEvents {
-      id
-      date
-      description
-      group {
-        id
-        name
-      }
-      rsvps {
-        id
-        status
-        note
-        user {
-          id
-          username
-        }
-      }
-    }
-  }
-`;
-
-const CREATE_RSVP = gql`
-  mutation CreateRSVP($input: CreateRSVPInput!) {
-    createRSVP(input: $input) {
-      id
-      status
-      note
-    }
-  }
-`;
-
-const UPDATE_RSVP = gql`
-  mutation UpdateRSVP($id: ID!, $status: RSVPStatus!, $note: String) {
-    updateRSVP(id: $id, status: $status, note: $note) {
-      id
-      status
-      note
-    }
-  }
-`;
 
 const EventsPage: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);

@@ -1,56 +1,15 @@
-import { gql, useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
 import { RootState } from '../../store';
 
-import { GET_TEAM_MATCH_EVENT_RSVPS } from './graphql';
+import { GET_TEAM_MATCH, GET_TEAM_MATCH_EVENT_RSVPS } from './graphql';
 import { RSVPPlayer } from './LineupEditor';
 import LineupEditorContainer from './LineupEditorContainer';
 import TennisNavbar from './TennisNavbar';
 
-
-const GET_TEAM_MATCH = gql`
-  query GetTeamMatch($id: ID!) {
-    teamMatch(id: $id) {
-      id
-      teamLeagueId
-      homeTeamId
-      awayTeamId
-      homeTeam {
-        id
-        group {
-          id
-          memberships {
-            user {
-              id
-              username
-              firstName
-              lastName
-              email
-            }
-          }
-        }
-      }
-      awayTeam {
-        id
-        group {
-          id
-          memberships {
-            user {
-              id
-              username
-              firstName
-              lastName
-              email
-            }
-          }
-        }
-      }
-    }
-  }
-`;
 
 const LineupPage: React.FC = () => {
   const { teamMatchId } = useParams<{ teamMatchId: string }>();

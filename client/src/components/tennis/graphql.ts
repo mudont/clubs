@@ -379,6 +379,28 @@ export const GET_TEAM_MATCH_EVENT_RSVPS = gql`
   }
 `;
 
+export const USER_SEARCH = gql`
+  query UserSearch($query: String!) {
+    userSearch(query: $query) {
+      id
+      username
+      email
+      firstName
+      lastName
+    }
+  }
+`;
+
+export const GROUP_SEARCH = gql`
+  query GroupSearch($query: String!) {
+    publicGroups(query: $query) {
+      id
+      name
+      description
+    }
+  }
+`;
+
 // Mutations
 export const CREATE_TENNIS_LEAGUE = gql`
   mutation CreateTennisLeague($input: CreateTennisLeagueInput!) {

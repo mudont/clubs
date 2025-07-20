@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcrypt';
 import { GraphQLError } from 'graphql';
 import { withFilter } from 'graphql-subscriptions';
+import { generateToken } from './auth/jwt';
 import { pubsub } from './pubsub';
 
 const EVENTS = {
@@ -1097,6 +1099,107 @@ export const resolvers = {
   },
 
   Mutation: {
+    // Auth mutations
+    login: async (_: any, { input }: { input: { username: string; password: string } }, context: Context) => {
+      const { username, password } = input;
+
+      // Find user by username
+      const user = await context.prisma.user.findUnique({
+        where: { username },
+      });
+
+      if (!user) {
+        throw new GraphQLError('Invalid username or password', { extensions: { code: 'UNAUTHENTICATED' } });
+      }
+
+      // Verify password
+      const isValidPassword = await bcrypt.compare(password, user.passwordHash || '');
+      if (!isValidPassword) {
+        throw new GraphQLError('Invalid username or password', { extensions: { code: 'UNAUTHENTICATED' } });
+      }
+
+      // Generate JWT token
+      const token = generateToken(user);
+
+      return {
+        token,
+        user,
+      };
+    },
+
+    signup: async (_: any, { input }: { input: { username: string; email: string; password: string; firstName?: string; lastName?: string } }, context: Context) => {
+      const { username, email, password, firstName, lastName } = input;
+
+      // Check if user already exists
+      const existingUser = await context.prisma.user.findFirst({
+        where: {
+          OR: [
+            { username },
+            { email },
+          ],
+        },
+      });
+
+      if (existingUser) {
+        throw new GraphQLError('Username or email already exists', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 12);
+
+      // Create user
+      const user = await context.prisma.user.create({
+        data: {
+          username,
+          email,
+          passwordHash: hashedPassword,
+          firstName,
+          lastName,
+        },
+      });
+
+      // Generate JWT token
+      const token = generateToken(user);
+
+      return {
+        token,
+        user,
+      };
+    },
+
+    changePassword: async (_: any, { input }: { input: { currentPassword: string; newPassword: string } }, context: Context) => {
+      const user = requireAuth(context);
+      const { currentPassword, newPassword } = input;
+
+      // Verify current password
+      const currentUser = await context.prisma.user.findUnique({
+        where: { id: user.id },
+      });
+
+      if (!currentUser) {
+        throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+      }
+
+      const isValidPassword = await bcrypt.compare(currentPassword, currentUser.passwordHash || '');
+      if (!isValidPassword) {
+        throw new GraphQLError('Current password is incorrect', { extensions: { code: 'UNAUTHENTICATED' } });
+      }
+
+      // Hash new password
+      const hashedNewPassword = await bcrypt.hash(newPassword, 12);
+
+      // Update password
+      await context.prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash: hashedNewPassword },
+      });
+
+      return {
+        success: true,
+        message: 'Password changed successfully',
+      };
+    },
+
     // Group mutations
     createGroup: async (_: any, { input }: { input: { name: string; description?: string; isPublic?: boolean } }, context: Context) => {
       const user = requireAuth(context);

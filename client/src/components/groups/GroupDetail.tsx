@@ -1,4 +1,5 @@
-import { gql, useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client';
+import { GET_GROUP } from 'graphql/Group';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
@@ -10,27 +11,6 @@ import EventList from '../events/EventList';
 
 import './GroupDetail.css';
 import GroupManagement from './GroupManagement';
-
-const GET_GROUP = gql`
-  query GetGroup($id: ID!) {
-    group(id: $id) {
-      id
-      name
-      description
-      createdAt
-      memberships {
-        id
-        isAdmin
-        memberId
-        user {
-          id
-          username
-          email
-        }
-      }
-    }
-  }
-`;
 
 const GroupDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();

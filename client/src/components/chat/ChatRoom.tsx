@@ -1,54 +1,10 @@
-import { gql, useMutation, useQuery, useSubscription } from '@apollo/client';
+import { useMutation, useQuery, useSubscription } from '@apollo/client';
+import { GET_MESSAGES, MESSAGE_SUBSCRIPTION, SEND_MESSAGE } from 'graphql/Message';
 import React, { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { RootState } from '../../store';
 import './ChatRoom.css';
-
-const GET_MESSAGES = gql`
-  query GetMessages($groupId: ID!) {
-    messages(groupId: $groupId) {
-      id
-      content
-      createdAt
-      user {
-        id
-        username
-        email
-      }
-    }
-  }
-`;
-
-const SEND_MESSAGE = gql`
-  mutation SendMessage($input: SendMessageInput!) {
-    sendMessage(input: $input) {
-      id
-      content
-      createdAt
-      user {
-        id
-        username
-        email
-      }
-    }
-  }
-`;
-
-const MESSAGE_SUBSCRIPTION = gql`
-  subscription OnMessageAdded($groupId: ID!) {
-    messageAdded(groupId: $groupId) {
-      id
-      content
-      createdAt
-      user {
-        id
-        username
-        email
-      }
-    }
-  }
-`;
 
 interface ChatRoomProps {
   groupId: string;

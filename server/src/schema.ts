@@ -90,6 +90,11 @@ export const typeDefs = gql`
     user: User!
   }
 
+  type ChangePasswordResponse {
+    success: Boolean!
+    message: String!
+  }
+
   input CreateGroupInput {
     name: String!
     description: String
@@ -134,6 +139,24 @@ export const typeDefs = gql`
     reason: String
   }
 
+  input LoginInput {
+    username: String!
+    password: String!
+  }
+
+  input SignupInput {
+    username: String!
+    email: String!
+    password: String!
+    firstName: String
+    lastName: String
+  }
+
+  input ChangePasswordInput {
+    currentPassword: String!
+    newPassword: String!
+  }
+
   type Query {
     health: String!
 
@@ -166,6 +189,11 @@ export const typeDefs = gql`
   }
 
   type Mutation {
+    # Auth mutations
+    login(input: LoginInput!): AuthPayload!
+    signup(input: SignupInput!): AuthPayload!
+    changePassword(input: ChangePasswordInput!): ChangePasswordResponse!
+
     # Group mutations
     createGroup(input: CreateGroupInput!): Group!
     updateGroup(id: ID!, input: UpdateGroupInput!): Group!

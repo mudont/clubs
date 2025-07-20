@@ -1,17 +1,8 @@
-import { gql, useLazyQuery } from '@apollo/client';
+import { useLazyQuery } from '@apollo/client';
 import React, { useEffect, useRef, useState } from 'react';
 
-const USER_SEARCH = gql`
-  query UserSearch($query: String!) {
-    userSearch(query: $query) {
-      id
-      username
-      email
-      firstName
-      lastName
-    }
-  }
-`;
+import { USER_SEARCH } from './graphql';
+
 
 interface User {
   id: string;

@@ -1,15 +1,8 @@
-import { gql, useLazyQuery } from '@apollo/client';
+import { useLazyQuery } from '@apollo/client';
 import React, { useEffect, useRef, useState } from 'react';
 
-const GROUP_SEARCH = gql`
-  query GroupSearch($query: String!) {
-    publicGroups(query: $query) {
-      id
-      name
-      description
-    }
-  }
-`;
+import { GROUP_SEARCH } from './graphql';
+
 
 interface Group {
   id: string;

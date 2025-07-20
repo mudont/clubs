@@ -12,11 +12,11 @@ module.exports = {
     // TypeScript specific rules (using react-app's built-in @typescript-eslint rules)
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     '@typescript-eslint/no-explicit-any': 'warn',
-    
+
     // React specific rules
     'react/react-in-jsx-scope': 'off', // Not needed in React 17+
     'react-hooks/exhaustive-deps': 'warn',
-    
+
     // Accessibility rules
     'jsx-a11y/anchor-is-valid': 'warn',
     'jsx-a11y/click-events-have-key-events': 'warn',
@@ -24,7 +24,7 @@ module.exports = {
     'jsx-a11y/alt-text': 'error',
     'jsx-a11y/aria-role': 'error',
     'jsx-a11y/img-redundant-alt': 'warn',
-    
+
     // Import rules
     'import/order': [
       'error',
@@ -46,7 +46,7 @@ module.exports = {
     ],
     'import/no-unused-modules': 'warn',
     'import/no-duplicates': 'error',
-    
+
     // General code quality
     'no-console': ['warn', { allow: ['warn', 'error'] }],
     'prefer-const': 'error',
@@ -54,4 +54,18 @@ module.exports = {
     'no-debugger': 'error',
     'no-alert': 'warn',
   },
-}; 
+  overrides: [
+    {
+      files: ['*.tsx'],
+      rules: {
+        'no-restricted-syntax': [
+          'error',
+          {
+            selector: "TaggedTemplateExpression[tag.name='gql']",
+            message: 'Do not use gql template literals in .tsx files. Import GraphQL operations from client/src/graphql.'
+          }
+        ],
+      },
+    },
+  ],
+};

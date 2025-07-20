@@ -1,26 +1,11 @@
 import { useQuery } from '@apollo/client';
-import gql from 'graphql-tag';
+import { ME_QUERY } from 'graphql/User';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { updateAuthToken } from '../../apollo';
 import { setAuth } from '../../store/authSlice';
-
-const ME_QUERY = gql`
-  query Me {
-    me {
-      id
-      username
-      email
-      emailVerified
-      phone
-      photoUrl
-      firstName
-      lastName
-    }
-  }
-`;
 
 const AuthSuccess = () => {
   const navigate = useNavigate();
@@ -55,4 +40,4 @@ const AuthSuccess = () => {
   return <div>Signing you in...</div>;
 };
 
-export default AuthSuccess; 
+export default AuthSuccess;

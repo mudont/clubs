@@ -1,96 +1,10 @@
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
+import { CREATE_EVENT, CREATE_RSVP, DELETE_EVENT, GET_EVENTS, UPDATE_EVENT, UPDATE_RSVP } from 'graphql/Event';
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { RootState } from '../../store';
 import './EventList.css';
-
-const GET_EVENTS = gql`
-  query GetEvents($groupId: ID!) {
-    events(groupId: $groupId) {
-      id
-      date
-      description
-      createdBy {
-        id
-        username
-      }
-      rsvps {
-        id
-        status
-        note
-        createdAt
-        user {
-          id
-          username
-          email
-        }
-      }
-    }
-  }
-`;
-
-const CREATE_EVENT = gql`
-  mutation CreateEvent($input: CreateEventInput!) {
-    createEvent(input: $input) {
-      id
-      date
-      description
-      createdBy {
-        id
-        username
-      }
-    }
-  }
-`;
-
-const CREATE_RSVP = gql`
-  mutation CreateRSVP($input: CreateRSVPInput!) {
-    createRSVP(input: $input) {
-      id
-      status
-      note
-      createdAt
-      event {
-        id
-      }
-    }
-  }
-`;
-
-const UPDATE_RSVP = gql`
-  mutation UpdateRSVP($id: ID!, $status: RSVPStatus!, $note: String) {
-    updateRSVP(id: $id, status: $status, note: $note) {
-      id
-      status
-      note
-      createdAt
-      event {
-        id
-      }
-    }
-  }
-`;
-
-const DELETE_EVENT = gql`
-  mutation DeleteEvent($id: ID!) {
-    deleteEvent(id: $id)
-  }
-`;
-
-const UPDATE_EVENT = gql`
-  mutation UpdateEvent($id: ID!, $input: CreateEventInput!) {
-    updateEvent(id: $id, input: $input) {
-      id
-      date
-      description
-      createdBy {
-        id
-        username
-      }
-    }
-  }
-`;
 
 interface EventListProps {
   groupId: string;
