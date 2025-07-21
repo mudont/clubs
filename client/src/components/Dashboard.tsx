@@ -153,6 +153,14 @@ const Dashboard: React.FC = () => {
     skip: !meData?.me?.id || !myGroupsData?.myGroups?.length
   });
 
+  // Get a set of the user's group IDs for efficient lookup
+  const myGroupIds = new Set(myGroupsData?.myGroups?.map(g => g.id));
+
+  // Filter public groups to exclude ones the user is already in
+  const availablePublicGroups = publicGroupsData?.publicGroups?.filter(
+    (publicGroup) => !myGroupIds.has(publicGroup.id)
+  );
+
   const [createGroup] = useMutation<CreateGroupData, CreateGroupInput>(CREATE_GROUP);
   const [joinGroup] = useMutation<JoinGroupData>(JOIN_GROUP);
 
@@ -168,7 +176,6 @@ const Dashboard: React.FC = () => {
 
   // Expenses data processing
   const userExpenses = userExpensesData?.userExpenses || [];
-  const recentExpenses = userExpenses.slice(0, 5); // Show last 5 expenses
   const totalExpenses = userExpenses.length;
   const totalAmount = userExpenses.reduce((sum, expense) => sum + expense.amount, 0);
 
@@ -344,190 +351,120 @@ const Dashboard: React.FC = () => {
       <main className="dashboard-content">
         {myGroupsLoading || publicGroupsLoading ? (
           <div className="loading" aria-live="polite">
-            <span className="sr-only">Loading groups, please wait...</span>
-            Loading groups...
+            <span className="sr-only">Loading dashboard content, please wait...</span>
+            Loading...
           </div>
         ) : (
-          <>
-            {/* My Groups Section */}
-            <section className="groups-section" aria-labelledby="my-groups-heading">
-              <h2 id="my-groups-heading">My Groups</h2>
-              {myGroupsData?.myGroups?.length === 0 ? (
-                <div className="empty-state" role="status">
-                  <h3 id="empty-state-heading">No groups yet</h3>
-                  <p>Create your first group to get started!</p>
-                </div>
-              ) : (
-                <div className="groups-grid" role="list">
-                  {myGroupsData?.myGroups?.map((group) => (
-                    <GroupCard
-                      key={group.id}
-                      group={group}
-                      onGroupLeft={refetchMyGroups}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-
-            {/* Public Groups Section */}
-            {publicGroupsData?.publicGroups && publicGroupsData.publicGroups.length > 0 && (
-              <section className="groups-section" aria-labelledby="public-groups-heading">
-                <h2 id="public-groups-heading">Public Groups</h2>
-                <p className="section-description">
-                  Join these public groups to connect with others
-                </p>
-                <div className="groups-grid" role="list">
-                  {publicGroupsData.publicGroups.map((group) => (
-                    <div key={group.id} className="group-card public-group">
-                      <div className="group-info">
-                        <h3>{group.name}</h3>
-                        <p className="group-description">
-                          {group.description || 'No description available.'}
-                        </p>
-                        <div className="group-meta">
-                          <span className="member-count">
-                            {group.memberships?.length || 0} members
-                          </span>
-                          <span className="group-type">Public Group</span>
-                        </div>
-                      </div>
-                      <div className="group-actions">
-                        <button
-                          onClick={() => handleJoinGroup(group.id)}
-                          className="btn-join-group"
-                        >
-                          Join Group
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* Tennis Section */}
-            <section className="groups-section" aria-labelledby="tennis-heading">
-              <h2 id="tennis-heading">Tennis Leagues</h2>
-              <p className="section-description">
-                Manage tennis leagues, teams, and matches
-              </p>
-              <div className="tennis-actions">
-                <Link to="/tennis/leagues" className="btn-primary">
-                  🎾 View Tennis Leagues
-                </Link>
-                <div className="tennis-info">
-                  <p>Create and manage tennis leagues with:</p>
-                  <ul>
-                    <li>Team management and player rosters</li>
-                    <li>Match scheduling and results tracking</li>
-                    <li>Singles and doubles competitions</li>
-                    <li>League standings and point systems</li>
-                  </ul>
-                </div>
-              </div>
-            </section>
-
-            {/* Expenses Section */}
-            {!userExpensesLoading && (
-              <section className="groups-section" aria-labelledby="expenses-heading">
-                <h2 id="expenses-heading">Expenses</h2>
-                <p className="section-description">
-                  Track shared expenses and settlements across your groups
-                </p>
-
-                {totalExpenses === 0 ? (
-                  /* Empty State */
-                  <div className="expenses-empty-state">
-                    <div className="empty-state-content">
-                      <h3>No expenses yet</h3>
-                      <p>Start tracking shared expenses with your groups</p>
-                      <div className="empty-state-actions">
-                        <Link to="/expenses/add" className="btn-primary">
-                          💰 Add Your First Expense
-                        </Link>
-                        <Link to="/expenses" className="btn-secondary">
-                          View Expenses
-                        </Link>
-                      </div>
-                    </div>
+          <div className="dashboard-grid">
+            <div className="main-column">
+              {/* My Groups Section */}
+              <section className="groups-section" aria-labelledby="my-groups-heading">
+                <h2 id="my-groups-heading">My Groups</h2>
+                {myGroupsData?.myGroups?.length === 0 ? (
+                  <div className="empty-state" role="status">
+                    <h3 id="empty-state-heading">No groups yet</h3>
+                    <p>Create your first group to get started!</p>
                   </div>
                 ) : (
-                  <>
-                    {/* Expenses Summary */}
-                    <div className="expenses-summary">
-                      <div className="expense-stats">
-                        <div className="stat-item">
-                          <span className="stat-label">Total Expenses</span>
-                          <span className="stat-value">{totalExpenses}</span>
+                  <div className="groups-grid" role="list">
+                    {myGroupsData?.myGroups?.map((group) => (
+                      <GroupCard key={group.id} group={group} onGroupLeft={refetchMyGroups} />
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              {/* Public Groups Section */}
+              {availablePublicGroups && availablePublicGroups.length > 0 && (
+                <section className="groups-section" aria-labelledby="public-groups-heading">
+                  <h2 id="public-groups-heading">Public Groups</h2>
+                  <p className="section-description">Join these public groups to connect with others</p>
+                  <div className="groups-grid" role="list">
+                    {availablePublicGroups.map((group) => (
+                      <div key={group.id} className="group-card public-group">
+                        <div className="group-info">
+                          <div className="group-title-row">
+                            <h3>{group.name}</h3>
+                            <span className="member-count">👥 {group.memberships?.length || 0}</span>
+                          </div>
+                          <p className="group-description">{group.description || 'No description available.'}</p>
+                          <div className="group-meta">
+                            <button onClick={() => handleJoinGroup(group.id)} className="btn-join-group">
+                              Join Group
+                            </button>
+                          </div>
                         </div>
-                        <div className="stat-item">
-                          <span className="stat-label">Total Amount</span>
-                          <span className="stat-value">${totalAmount.toFixed(2)}</span>
-                        </div>
-                        <div className="stat-item">
-                          <span className="stat-label">Groups with Expenses</span>
-                          <span className="stat-value">{Object.keys(expensesByGroup).length}</span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </div>
+
+            <div className="sidebar-column">
+              {/* Tennis Section */}
+              <section className="groups-section" aria-labelledby="tennis-heading">
+                <h2 id="tennis-heading">Tennis Leagues</h2>
+                <p className="section-description">Manage tennis leagues, teams, and matches</p>
+                <div className="tennis-actions">
+                  <Link to="/tennis/leagues" className="btn-primary">
+                    🎾 View Tennis Leagues
+                  </Link>
+                </div>
+              </section>
+
+              {/* Expenses Section */}
+              {!userExpensesLoading && (
+                <section className="groups-section" aria-labelledby="expenses-heading">
+                  <h2 id="expenses-heading">Expenses</h2>
+                  <p className="section-description">Track shared expenses and settlements across your groups</p>
+                  {totalExpenses === 0 ? (
+                    <div className="expenses-empty-state">
+                      <div className="empty-state-content">
+                        <h3>No expenses yet</h3>
+                        <p>Start tracking shared expenses with your groups</p>
+                        <div className="empty-state-actions">
+                          <Link to="/expenses/add" className="btn-primary">
+                            💰 Add Your First Expense
+                          </Link>
+                          <Link to="/expenses" className="btn-secondary">
+                            View Expenses
+                          </Link>
                         </div>
                       </div>
                     </div>
-
-                    {/* Recent Expenses List */}
-                    <div className="recent-expenses">
-                      <h3>Recent Activity</h3>
-                      <div className="expenses-list">
-                        {recentExpenses.map((expense) => (
-                          <div key={expense.id} className="expense-item">
-                            <div className="expense-info">
-                              <h4>{expense.description}</h4>
-                              <p className="expense-meta">
-                                {expense.group.name} • {expense.category} • {new Date(expense.date).toLocaleDateString()}
-                              </p>
-                              <p className="expense-amount">
-                                ${expense.amount.toFixed(2)} {expense.currency}
-                              </p>
-                            </div>
-                            <div className="expense-details">
-                              <span className="paid-by">Paid by {expense.paidBy.firstName || expense.paidBy.username}</span>
-                              <span className="split-type">{expense.splitType}</span>
-                            </div>
+                  ) : (
+                    <>
+                      <div className="expenses-summary">
+                        <div className="expense-stats">
+                          <div className="stat-item">
+                            <span className="stat-label">Total Expenses</span>
+                            <span className="stat-value">{totalExpenses}</span>
                           </div>
-                        ))}
+                          <div className="stat-item">
+                            <span className="stat-label">Total Amount</span>
+                            <span className="stat-value">${totalAmount.toFixed(2)}</span>
+                          </div>
+                          <div className="stat-item">
+                            <span className="stat-label">Groups with Expenses</span>
+                            <span className="stat-value">{Object.keys(expensesByGroup).length}</span>
+                          </div>
+                        </div>
                       </div>
-
                       <div className="expenses-actions">
                         <Link to="/expenses" className="btn-primary">
-                          View All Expenses
+                          💰 View All Expenses
                         </Link>
                         <Link to="/expenses/add" className="btn-secondary">
                           Add New Expense
                         </Link>
                       </div>
-                    </div>
-
-                    {/* Group Expenses Breakdown */}
-                    <div className="group-expenses">
-                      <h3>Expenses by Group</h3>
-                      <div className="group-expenses-grid">
-                        {Object.values(expensesByGroup).map(({ group, expenses, totalAmount }) => (
-                          <div key={group.id} className="group-expense-card">
-                            <h4>{group.name}</h4>
-                            <div className="group-expense-stats">
-                              <span>{expenses.length} expenses</span>
-                              <span className="total-amount">${totalAmount.toFixed(2)}</span>
-                            </div>
-                            <Link to={`/expenses/group/${group.id}`} className="btn-link">
-                              View Group Expenses
-                            </Link>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </section>
-            )}
-          </>
+                    </>
+                  )}
+                </section>
+              )}
+            </div>
+          </div>
         )}
       </main>
     </div>

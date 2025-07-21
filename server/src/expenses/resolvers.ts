@@ -257,8 +257,8 @@ export const expensesResolvers = {
   Mutation: {
     // Expense mutations
     createExpense: async (_: any, { input }: { input: any }, context: Context) => {
-      const user = requireAuth(context);
-      return expensesService.createExpense(input, user.id);
+      requireAuth(context);
+      return expensesService.createExpense(input);
     },
 
     updateExpense: async (_: any, { id, input }: { id: string; input: any }, context: Context) => {
@@ -431,5 +431,8 @@ export const expensesResolvers = {
 
       return settlements;
     },
+  },
+  Expense: {
+    paidBy: (parent: any) => parent.paidByUser,
   },
 };

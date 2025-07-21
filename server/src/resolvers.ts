@@ -1927,7 +1927,11 @@ export const resolvers = {
   TeamLeagueIndividualSinglesMatch: tennisResolvers.TeamLeagueIndividualSinglesMatch,
   TeamLeagueIndividualDoublesMatch: tennisResolvers.TeamLeagueIndividualDoublesMatch,
   TeamMatchLineup: lineupResolvers.TeamMatchLineup,
+
   TeamMatchLineupSlot: lineupResolvers.TeamMatchLineupSlot,
+  Expense: {
+    ...expensesResolvers.Expense,
+  },
 };
 
 

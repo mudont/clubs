@@ -1,5 +1,4 @@
-import { gql } from '@apollo/client';
-
+import { gql } from "@apollo/client";
 export const GET_GROUP_MEMBERS = gql`
   query GetGroupMembers($groupId: ID!) {
     group(id: $groupId) {
@@ -116,10 +115,13 @@ export const ADD_MEMBER_BY_EMAIL = gql`
   mutation AddMemberByEmail($groupId: ID!, $email: String!) {
     addMemberByEmail(groupId: $groupId, email: $email) {
       id
-      username
-      email
-      firstName
-      lastName
+      user {
+        id
+        username
+        email
+        firstName
+        lastName
+      }
     }
   }
 `;

@@ -13,6 +13,7 @@ export interface CreateExpenseInput {
   receiptUrl?: string;
   splitType: SplitType;
   splits: ExpenseSplitInput[];
+  paidBy: string;
 }
 
 export interface ExpenseSplitInput {
@@ -50,25 +51,28 @@ export class ExpensesService {
   /**
    * Create a new expense with splits
    */
-  async createExpense(input: CreateExpenseInput, paidByUserId: string) {
+  async createExpense(input: CreateExpenseInput) {
     // Validate total splits equal expense amount
     const totalSplit = input.splits.reduce((sum, split) => sum + (split.amount || 0), 0);
     if (Math.abs(totalSplit - input.amount) > 0.01) {
       throw new Error('Split amounts must equal expense amount');
     }
 
-    // Check if user is member of the group
+    // Debug: Log the paidBy user
+    const paidByUser = await prisma.user.findUnique({ where: { id: input.paidBy } });
+    console.log('PaidBy user:', paidByUser);
+
+    // Check if paidBy is member of the group
     const membership = await prisma.membership.findUnique({
       where: {
         userId_groupId: {
-          userId: paidByUserId,
+          userId: input.paidBy,
           groupId: input.groupId,
         },
       },
     });
-
     if (!membership) {
-      throw new Error('User is not a member of this group');
+      throw new Error('Paid by user is not a member of this group');
     }
 
     // Create expense and splits in a transaction
@@ -76,7 +80,7 @@ export class ExpensesService {
       const expense = await tx.expense.create({
         data: {
           groupId: input.groupId,
-          paidBy: paidByUserId,
+          paidBy: input.paidBy,
           description: input.description,
           amount: new Decimal(input.amount),
           currency: input.currency,
@@ -117,6 +121,9 @@ export class ExpensesService {
           group: true,
         },
       });
+
+      // Debug: Log the created expense object
+      console.log('Created expense:', JSON.stringify(expense, null, 2));
 
       // Auto-generate settlements if enabled
       const settings = await tx.groupSettings.findUnique({
