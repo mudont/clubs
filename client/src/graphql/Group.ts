@@ -52,6 +52,7 @@ export const MAKE_ADMIN = gql`
   }
 `;
 
+
 export const REMOVE_ADMIN = gql`
   mutation RemoveAdmin($groupId: ID!, $userId: ID!) {
     removeAdmin(groupId: $groupId, userId: $userId) {

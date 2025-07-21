@@ -50,6 +50,11 @@ model User {
   doublesMatchesTeam1Player2 TeamLeagueIndividualDoublesMatch[] @relation("DoublesTeam1Player2")
   doublesMatchesTeam2Player1 TeamLeagueIndividualDoublesMatch[] @relation("DoublesTeam2Player1")
   doublesMatchesTeam2Player2 TeamLeagueIndividualDoublesMatch[] @relation("DoublesTeam2Player2")
+  // Expense relations
+  expensesPaid               Expense[]                          @relation("ExpensePaidBy")
+  expenseSplits              ExpenseSplit[]
+  settlementsFrom            Settlement[]                       @relation("SettlementFrom")
+  settlementsTo              Settlement[]                       @relation("SettlementTo")
 
   @@map("users")
 }
@@ -77,6 +82,9 @@ model Group {
   events         Event[]
   messages       Message[]
   TeamLeagueTeam TeamLeagueTeam[]
+  Expense        Expense[]
+  Settlement     Settlement[]
+  GroupSettings  GroupSettings?
 
   @@map("groups")
 }
@@ -318,4 +326,103 @@ model TeamMatchLineupSlot {
   createdAt DateTime        @default(now()) @map("created_at")
 
   @@map("team_match_lineup_slots")
+}
+
+// ===== EXPENSES MODULE =====
+
+enum SplitType {
+  EQUAL
+  PERCENTAGE
+  CUSTOM
+  SHARES
+}
+
+enum SettlementStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  PAYPAL
+  VENMO
+  CASH_APP
+  OTHER
+}
+
+model Expense {
+  id          String    @id @default(uuid())
+  groupId     String    @map("group_id")
+  group       Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  paidBy      String    @map("paid_by")
+  paidByUser  User      @relation("ExpensePaidBy", fields: [paidBy], references: [id])
+  description String
+  amount      Decimal   @db.Decimal(10, 2)
+  currency    String    @default("USD")
+  category    String    @default("General")
+  date        DateTime
+  receiptUrl  String?   @map("receipt_url")
+  splitType   SplitType
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  splits      ExpenseSplit[]
+  settlements Settlement[]
+
+  @@map("expenses")
+}
+
+model ExpenseSplit {
+  id         String   @id @default(uuid())
+  expenseId  String   @map("expense_id")
+  expense    Expense  @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  userId     String   @map("user_id")
+  user       User     @relation(fields: [userId], references: [id])
+  amount     Decimal  @db.Decimal(10, 2)
+  percentage Decimal? @db.Decimal(5, 2)
+  shares     Int?     @default(1)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@unique([expenseId, userId])
+  @@map("expense_splits")
+}
+
+model Settlement {
+  id            String           @id @default(uuid())
+  groupId       String           @map("group_id")
+  group         Group            @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  fromUserId    String           @map("from_user_id")
+  fromUser      User             @relation("SettlementFrom", fields: [fromUserId], references: [id])
+  toUserId      String           @map("to_user_id")
+  toUser        User             @relation("SettlementTo", fields: [toUserId], references: [id])
+  amount        Decimal          @db.Decimal(10, 2)
+  currency      String           @default("USD")
+  status        SettlementStatus @default(PENDING)
+  paymentMethod PaymentMethod?
+  notes         String?
+  paidAt        DateTime?        @map("paid_at")
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+  Expense       Expense?         @relation(fields: [expenseId], references: [id])
+  expenseId     String?
+
+  @@map("settlements")
+}
+
+model GroupSettings {
+  id              String   @id @default(uuid())
+  groupId         String   @unique @map("group_id")
+  group           Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  defaultCurrency String   @default("USD") @map("default_currency")
+  allowExpenses   Boolean  @default(true) @map("allow_expenses")
+  expenseLimit    Decimal? @map("expense_limit") @db.Decimal(10, 2)
+  requireApproval Boolean  @default(false) @map("require_approval")
+  autoSettle      Boolean  @default(false) @map("auto_settle")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("group_settings")
 }

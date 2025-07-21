@@ -32,7 +32,7 @@ import {
 } from './middleware/security';
 import { pubsub } from './pubsub';
 import { resolvers } from './resolvers';
-import { typeDefs } from './schema';
+import { mergedTypeDefs } from './schema';
 import { logError, logInfo, logRequest } from './utils/logger';
 
 const prisma = new PrismaClient();
@@ -109,7 +109,7 @@ async function startServer() {
   });
 
   // Create GraphQL schema
-  const schema = makeExecutableSchema({ typeDefs, resolvers });
+  const schema = makeExecutableSchema({ typeDefs: mergedTypeDefs, resolvers });
 
   // Set up WebSocket server for subscriptions
   const serverCleanup = useServer({ schema }, wsServer);

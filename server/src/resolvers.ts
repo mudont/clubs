@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import { GraphQLError } from 'graphql';
 import { withFilter } from 'graphql-subscriptions';
 import { generateToken } from './auth/jwt';
+import { expensesResolvers } from './expenses';
 import { pubsub } from './pubsub';
 
 const EVENTS = {
@@ -1096,6 +1097,9 @@ export const resolvers = {
         }
       });
     },
+
+    // Expenses queries
+    ...expensesResolvers.Query,
   },
 
   Mutation: {
@@ -1838,6 +1842,9 @@ export const resolvers = {
       return true;
     },
     ...lineupResolvers.Mutation,
+
+    // Expenses mutations
+    ...expensesResolvers.Mutation,
   },
 
   Subscription: {

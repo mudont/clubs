@@ -147,27 +147,54 @@ def restore_database(env_vars, dump_file, format=None, drop_existing=False):
 
     try:
         if drop_existing:
-            print(f"{Fore.YELLOW}🗑️  Dropping existing database...")
+            print(f"{Fore.YELLOW}🗑️  Dropping all existing tables...")
 
-            # Drop database command
-            drop_cmd = [
+            # Get list of all tables in the database
+            list_tables_cmd = [
                 "psql",
                 f"--host={db_config['host']}",
                 f"--port={db_config['port']}",
                 f"--username={db_config['username']}",
+                f"--dbname={db_config['database']}",
                 "--no-password",
+                "--tuples-only",  # Only output the tuples
                 "--command",
-                f'DROP DATABASE IF EXISTS "{db_config["database"]}";',
+                "SELECT tablename FROM pg_tables WHERE schemaname = 'public';",
             ]
 
-            # Connect to postgres database to drop the target database
-            drop_env = env.copy()
-            drop_env["PGDATABASE"] = "postgres"
-
-            subprocess.run(
-                drop_cmd, env=drop_env, capture_output=True, text=True, check=True
+            # Get list of tables
+            tables_result = subprocess.run(
+                list_tables_cmd, env=env, capture_output=True, text=True, check=True
             )
-            print(f"{Fore.GREEN}✅ Existing database dropped")
+
+            tables = [
+                table.strip()
+                for table in tables_result.stdout.strip().split("\n")
+                if table.strip()
+            ]
+
+            if tables:
+                print(f"{Fore.BLUE}📋 Found {len(tables)} tables to drop")
+
+                # Drop all tables
+                table_list = ", ".join([f'"{table}"' for table in tables])
+                drop_tables_cmd = [
+                    "psql",
+                    f"--host={db_config['host']}",
+                    f"--port={db_config['port']}",
+                    f"--username={db_config['username']}",
+                    f"--dbname={db_config['database']}",
+                    "--no-password",
+                    "--command",
+                    f"DROP TABLE IF EXISTS {table_list} CASCADE;",
+                ]
+
+                subprocess.run(
+                    drop_tables_cmd, env=env, capture_output=True, text=True, check=True
+                )
+                print(f"{Fore.GREEN}✅ All tables dropped")
+            else:
+                print(f"{Fore.BLUE}ℹ️  No existing tables found")
 
         # Build restore command based on format
         if format == "custom":
@@ -178,9 +205,7 @@ def restore_database(env_vars, dump_file, format=None, drop_existing=False):
                 f"--username={db_config['username']}",
                 f"--dbname={db_config['database']}",
                 "--no-password",
-                "--verbose",
-                "--clean",  # Clean (drop) database objects before recreating
-                "--if-exists",  # Use IF EXISTS when dropping
+                "--echo-all",  # Show all commands being executed
                 "--no-owner",  # Don't set ownership
                 "--no-privileges",  # Don't restore privileges
                 dump_file,
@@ -193,7 +218,7 @@ def restore_database(env_vars, dump_file, format=None, drop_existing=False):
                 f"--username={db_config['username']}",
                 f"--dbname={db_config['database']}",
                 "--no-password",
-                "--verbose",
+                "--echo-all",  # Show all commands being executed
                 "--file",
                 dump_file,
             ]
@@ -205,9 +230,7 @@ def restore_database(env_vars, dump_file, format=None, drop_existing=False):
                 f"--username={db_config['username']}",
                 f"--dbname={db_config['database']}",
                 "--no-password",
-                "--verbose",
-                "--clean",
-                "--if-exists",
+                "--echo-all",  # Show all commands being executed
                 "--no-owner",
                 "--no-privileges",
                 dump_file,

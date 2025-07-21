@@ -1,7 +1,9 @@
 import { useMutation, useQuery } from '@apollo/client';
 import { GET_USER_PENDING_EVENTS } from 'graphql/Event';
+import { GET_USER_EXPENSES } from 'graphql/Expenses';
 import { CREATE_GROUP, GET_MY_GROUPS, GET_PUBLIC_GROUPS, JOIN_GROUP } from 'graphql/Group';
 import { GET_USER_TENNIS_LEAGUES } from 'graphql/TennisLeague';
+import { ME_QUERY } from 'graphql/User';
 import React, { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -86,6 +88,51 @@ interface UserPendingEventsData {
   }[];
 }
 
+// Expenses interfaces
+interface Expense {
+  id: string;
+  description: string;
+  amount: number;
+  currency: string;
+  category: string;
+  date: string;
+  splitType: string;
+  paidBy: {
+    id: string;
+    username: string;
+    firstName: string;
+    lastName: string;
+  };
+  group: {
+    id: string;
+    name: string;
+  };
+  splits: {
+    id: string;
+    amount: number;
+    user: {
+      id: string;
+      username: string;
+      firstName: string;
+      lastName: string;
+    };
+  }[];
+}
+
+interface UserExpensesData {
+  userExpenses: Expense[];
+}
+
+interface MeData {
+  me: {
+    id: string;
+    username: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+  };
+}
+
 const Dashboard: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [groupName, setGroupName] = useState('');
@@ -98,6 +145,14 @@ const Dashboard: React.FC = () => {
   const { data: publicGroupsData, loading: publicGroupsLoading, refetch: refetchPublicGroups } = useQuery<PublicGroupsData>(GET_PUBLIC_GROUPS);
   const { data: tennisLeaguesData, loading: tennisLeaguesLoading } = useQuery<UserTennisLeaguesData>(GET_USER_TENNIS_LEAGUES);
   const { data: pendingEventsData, loading: pendingEventsLoading } = useQuery<UserPendingEventsData>(GET_USER_PENDING_EVENTS);
+  const { data: meData } = useQuery<MeData>(ME_QUERY);
+
+  // Expenses queries
+  const { data: userExpensesData, loading: userExpensesLoading } = useQuery<UserExpensesData>(GET_USER_EXPENSES, {
+    variables: { userId: meData?.me?.id || '' },
+    skip: !meData?.me?.id || !myGroupsData?.myGroups?.length
+  });
+
   const [createGroup] = useMutation<CreateGroupData, CreateGroupInput>(CREATE_GROUP);
   const [joinGroup] = useMutation<JoinGroupData>(JOIN_GROUP);
 
@@ -110,6 +165,27 @@ const Dashboard: React.FC = () => {
   // Determine if user has unexpired events
   const pendingEvents = pendingEventsData?.userPendingEvents || [];
   const hasUnexpiredEvents = pendingEvents.length > 0;
+
+  // Expenses data processing
+  const userExpenses = userExpensesData?.userExpenses || [];
+  const recentExpenses = userExpenses.slice(0, 5); // Show last 5 expenses
+  const totalExpenses = userExpenses.length;
+  const totalAmount = userExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+
+  // Group expenses by group
+  const expensesByGroup = userExpenses.reduce((acc, expense) => {
+    const groupId = expense.group.id;
+    if (!acc[groupId]) {
+      acc[groupId] = {
+        group: expense.group,
+        expenses: [],
+        totalAmount: 0
+      };
+    }
+    acc[groupId].expenses.push(expense);
+    acc[groupId].totalAmount += expense.amount;
+    return acc;
+  }, {} as Record<string, { group: { id: string; name: string }; expenses: Expense[]; totalAmount: number }>);
 
   const handleCreateGroup = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -181,6 +257,15 @@ const Dashboard: React.FC = () => {
             className="btn-rsvps"
           >
             📅 RSVPs ({pendingEvents.length})
+          </Link>
+        )}
+        {/* Expenses Navigation */}
+        {totalExpenses > 0 && (
+          <Link
+            to="/expenses"
+            className="btn-expenses"
+          >
+            💰 Expenses ({totalExpenses})
           </Link>
         )}
       </Header>
@@ -273,15 +358,15 @@ const Dashboard: React.FC = () => {
                   <p>Create your first group to get started!</p>
                 </div>
               ) : (
-                              <div className="groups-grid" role="list">
-                {myGroupsData?.myGroups?.map((group) => (
-                  <GroupCard
-                    key={group.id}
-                    group={group}
-                    onGroupLeft={refetchMyGroups}
-                  />
-                ))}
-              </div>
+                <div className="groups-grid" role="list">
+                  {myGroupsData?.myGroups?.map((group) => (
+                    <GroupCard
+                      key={group.id}
+                      group={group}
+                      onGroupLeft={refetchMyGroups}
+                    />
+                  ))}
+                </div>
               )}
             </section>
 
@@ -342,6 +427,106 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
             </section>
+
+            {/* Expenses Section */}
+            {!userExpensesLoading && (
+              <section className="groups-section" aria-labelledby="expenses-heading">
+                <h2 id="expenses-heading">Expenses</h2>
+                <p className="section-description">
+                  Track shared expenses and settlements across your groups
+                </p>
+
+                {totalExpenses === 0 ? (
+                  /* Empty State */
+                  <div className="expenses-empty-state">
+                    <div className="empty-state-content">
+                      <h3>No expenses yet</h3>
+                      <p>Start tracking shared expenses with your groups</p>
+                      <div className="empty-state-actions">
+                        <Link to="/expenses/add" className="btn-primary">
+                          💰 Add Your First Expense
+                        </Link>
+                        <Link to="/expenses" className="btn-secondary">
+                          View Expenses
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Expenses Summary */}
+                    <div className="expenses-summary">
+                      <div className="expense-stats">
+                        <div className="stat-item">
+                          <span className="stat-label">Total Expenses</span>
+                          <span className="stat-value">{totalExpenses}</span>
+                        </div>
+                        <div className="stat-item">
+                          <span className="stat-label">Total Amount</span>
+                          <span className="stat-value">${totalAmount.toFixed(2)}</span>
+                        </div>
+                        <div className="stat-item">
+                          <span className="stat-label">Groups with Expenses</span>
+                          <span className="stat-value">{Object.keys(expensesByGroup).length}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Recent Expenses List */}
+                    <div className="recent-expenses">
+                      <h3>Recent Activity</h3>
+                      <div className="expenses-list">
+                        {recentExpenses.map((expense) => (
+                          <div key={expense.id} className="expense-item">
+                            <div className="expense-info">
+                              <h4>{expense.description}</h4>
+                              <p className="expense-meta">
+                                {expense.group.name} • {expense.category} • {new Date(expense.date).toLocaleDateString()}
+                              </p>
+                              <p className="expense-amount">
+                                ${expense.amount.toFixed(2)} {expense.currency}
+                              </p>
+                            </div>
+                            <div className="expense-details">
+                              <span className="paid-by">Paid by {expense.paidBy.firstName || expense.paidBy.username}</span>
+                              <span className="split-type">{expense.splitType}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="expenses-actions">
+                        <Link to="/expenses" className="btn-primary">
+                          View All Expenses
+                        </Link>
+                        <Link to="/expenses/add" className="btn-secondary">
+                          Add New Expense
+                        </Link>
+                      </div>
+                    </div>
+
+                    {/* Group Expenses Breakdown */}
+                    <div className="group-expenses">
+                      <h3>Expenses by Group</h3>
+                      <div className="group-expenses-grid">
+                        {Object.values(expensesByGroup).map(({ group, expenses, totalAmount }) => (
+                          <div key={group.id} className="group-expense-card">
+                            <h4>{group.name}</h4>
+                            <div className="group-expense-stats">
+                              <span>{expenses.length} expenses</span>
+                              <span className="total-amount">${totalAmount.toFixed(2)}</span>
+                            </div>
+                            <Link to={`/expenses/group/${group.id}`} className="btn-link">
+                              View Group Expenses
+                            </Link>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </section>
+            )}
           </>
         )}
       </main>

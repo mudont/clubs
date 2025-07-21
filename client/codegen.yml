@@ -1,5 +1,7 @@
-schema: ../server/src/schema.ts
-documents: ./src/**/*.ts*
+schema: http://localhost:4010/graphql
+documents:
+  - ./src/**/*.ts
+  - ./src/**/*.tsx
 generates:
   ./src/__generated__/types.ts:
     plugins:

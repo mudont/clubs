@@ -24,6 +24,8 @@ const Dashboard = React.lazy(() => import('./components/Dashboard'));
 const GroupDetail = React.lazy(() => import('./components/groups/GroupDetail'));
 const UserProfile = React.lazy(() => import('./components/profile/UserProfile'));
 const EventsPage = React.lazy(() => import('./components/events/EventsPage'));
+const ExpensesPage = React.lazy(() => import('./components/expenses/ExpensesPage'));
+const AddExpensePage = React.lazy(() => import('./components/expenses/AddExpensePage'));
 
 interface UserData {
   me: {
@@ -112,6 +114,30 @@ function App() {
                         <ErrorBoundary>
                           <Suspense fallback={<LoadingSpinner message="Loading events..." />}>
                             <EventsPage />
+                          </Suspense>
+                        </ErrorBoundary>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/expenses"
+                    element={
+                      <ProtectedRoute>
+                        <ErrorBoundary>
+                          <Suspense fallback={<LoadingSpinner message="Loading expenses..." />}>
+                            <ExpensesPage />
+                          </Suspense>
+                        </ErrorBoundary>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/expenses/add"
+                    element={
+                      <ProtectedRoute>
+                        <ErrorBoundary>
+                          <Suspense fallback={<LoadingSpinner message="Loading add expense..." />}>
+                            <AddExpensePage />
                           </Suspense>
                         </ErrorBoundary>
                       </ProtectedRoute>

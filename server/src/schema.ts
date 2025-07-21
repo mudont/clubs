@@ -1,4 +1,5 @@
 import gql from 'graphql-tag';
+import { expensesTypeDefs } from './expenses/schema';
 
 export const typeDefs = gql`
   type User {
@@ -533,3 +534,6 @@ export const typeDefs = gql`
     visibility: LineupVisibility
   }
 `;
+
+// Merge the expenses schema with the main schema
+export const mergedTypeDefs = [typeDefs, expensesTypeDefs];
