@@ -185,3 +185,12 @@ docker-compose up -d
 - Review security advisories
 - Optimize database queries
 - Clean up unused code and dependencies
+
+- When adding new modules (e.g., Expenses), update GraphQL schema and run codegen to sync frontend types.
+- Use schema merging for modular GraphQL type definitions and resolvers.
+- Ensure all new features are reflected in documentation/specs before release.
+
+- CI/CD: Automated testing, security scanning, code coverage, and multi-environment deployments.
+- Backup & Recovery: Automated DB/file backups, verification, and documented recovery procedures.
+- Monitoring: Health checks, metrics, alerting, and log aggregation.
+- Developer Experience: Hot reloading, GraphQL Playground, Prisma Studio, and pre-commit hooks.

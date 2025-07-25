@@ -670,4 +670,55 @@ jobs:
         run: docker-compose up -d
 ```
 
-This design document provides a comprehensive blueprint for implementing the Groups platform with strict functional programming principles, modern architecture patterns, and production-ready deployment strategies.
+## Tennis Module (Expanded)
+
+### Entities
+- TeamLeague: Multiple teams (groups) participate, identified by name, year, season.
+- TeamLeaguePointSystem: Per-league, per-type (singles/doubles), order, win points.
+- TeamLeagueTeamMatch: By league, date, home/away teams.
+- TeamLeagueIndividualSinglesMatch: By team match, order, home/away player, score, winner.
+- TeamLeagueIndividualDoublesMatch: By team match, order, home/away players, score, winner.
+
+### Lineup Management
+- Team captains (admins) create lineups for each team match.
+- Lineup describes who plays each singles/doubles slot (S1, S2, D1, D2, ...).
+- Lineup visibility: enum ("Private", "Team", "All").
+- Only admins see until "Published to Team"; then all team members can see.
+- Once both teams publish to "All", individual matches are created by backend trigger.
+- UI: Drag-and-drop from RSVP list (left) to lineup slots (right). Singles slots take one player, doubles two. Higher slots locked until lower filled.
+
+### UI/UX
+- League standings page: points per team.
+- Management UI for all entities.
+
+## Expenses Module (Expanded)
+
+### Features
+- Create expenses with description, amount, date, category, receipt upload.
+- Split options: equal, percentage, custom, shares; exclude members.
+- Multi-currency support, group default currency.
+- Debt calculation, simplified settlements, payment status/history.
+- Group settings: permissions, limits, budgets.
+
+### Database (additions from PAYMENTS_PLAN.md)
+- Settlement, GroupSettings models (see PAYMENTS_PLAN.md for schema).
+- Enums: SplitType, SettlementStatus, PaymentMethod.
+
+### GraphQL (additions from PAYMENTS_PLAN.md)
+- Types: Settlement, GroupSettings, DebtSummary, DebtDetail.
+- Queries: groupSettlements, userSettlements, groupDebtSummary, userDebtSummary, optimalSettlements, groupSettings.
+- Mutations: createSettlement, updateSettlement, markSettlementPaid, deleteSettlement, updateGroupSettings, generateOptimalSettlements, bulkCreateSettlements.
+
+### Business Logic
+- Debt calculation and optimal settlement generation (see PAYMENTS_PLAN.md for algorithms).
+- Validation: splits must sum to total, only group members as payer/participants.
+- Auto-generate settlements if enabled.
+
+### UI/UX
+- Expenses page: list, group breakdown, add expense, debt summary, settlements.
+- Add Expense: select group, details, payer, split, receipt upload.
+- Settlement list: mark paid, payment methods.
+- Responsive, compact dashboard integration.
+
+## Architecture & Security (from FEATURES.md/PROJECT_OVERVIEW.md)
+- Add/expand sections on session management, security middleware, performance, monitoring, backup, scalability, and developer experience as described in FEATURES.md.

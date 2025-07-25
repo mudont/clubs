@@ -12,6 +12,7 @@ A modern, full-stack web application for managing social and sports groups with 
 - **Event Management**: Event scheduling with RSVP system (Available, Not Available, Maybe, Only if Needed)
 - **Tennis Module**: Complete tennis league management with teams, matches, and standings
 - **Progressive Web App**: Installable with offline capabilities
+- **Expenses Module**: Track shared group expenses, assign payer, split costs, and view settlements (Splitwise-style).
 
 ## Key Modules
 
@@ -35,6 +36,13 @@ A modern, full-stack web application for managing social and sports groups with 
 - Configurable point systems
 - Real-time standings calculation
 
+### Expenses Module
+
+- Create and track group expenses
+- Assign payer and split among members
+- View balances and settlements per group
+- Integrated with Dashboard and dedicated Expenses page
+
 ## Target Users
 
 - Sports clubs and recreational leagues
@@ -48,3 +56,9 @@ A modern, full-stack web application for managing social and sports groups with 
 - Enhances member engagement through real-time features
 - Provides comprehensive sports league management
 - Reduces administrative overhead for organizers
+- Simplifies shared expense tracking for clubs and groups
+- Increases transparency and reduces disputes
+
+- **Settlements & Group Settings**: Track and settle group debts, configure group-level payment and permission settings.
+- **Tennis Lineup Management**: Drag-and-drop lineup creation, slot validation, and visibility controls for team matches.
+- **Advanced Monitoring & Backup**: Real-time health checks, backup, and alerting for reliability.

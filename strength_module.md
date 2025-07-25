@@ -1,6 +1,7 @@
 # Strength Training Module
 
 A separate module like the Tennis module
+This one is an attempt to emulate the Strong App.
 
 ## Entities of importance
 
@@ -22,8 +23,12 @@ A separate module like the Tennis module
 - *Name
 - *user id
 - zero or more WorkoutTemplateSet
+- isPublic
 
 ### Workout
 - *user_id
 - *start_date_time
 - end_date_time
+
+User story:
+Start a workout by choosing a template or an empty template.

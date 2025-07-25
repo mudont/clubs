@@ -65,6 +65,25 @@ Develop a modern, full-stack social and sports club management platform that ena
 - **FR-033**: Standings must show wins, losses, draws, and total points
 - **FR-034**: System must support multiple concurrent leagues
 
+### 2.6 Expenses Management
+
+- **FR-035**: Users must be able to create expenses for a group, specifying payer and split details.
+- **FR-036**: Each expense must support equal or custom splits among group members.
+- **FR-037**: Users must be able to view all expenses for their groups.
+- **FR-038**: System must display per-user balances and settlements within each group.
+- **FR-039**: Only group members can be selected as payer or split participants.
+- **FR-040**: Expenses must be visible in the Dashboard and on a dedicated Expenses page.
+
+### 2.7 Tennis League & Lineup Management
+- **FR-041**: System must support creation and management of tennis leagues, teams, matches, and point systems.
+- **FR-042**: Team captains must be able to create and publish lineups for each team match, with drag-and-drop UI and slot validation.
+- **FR-043**: Lineup visibility must be controlled (Private, Team, All) and individual matches auto-created when both teams publish.
+- **FR-044**: League standings must be calculated and displayed in real time.
+
+### 2.8 Settlements & Group Settings
+- **FR-045**: System must support settlements for group expenses, with payment status, methods, and history.
+- **FR-046**: Group settings must allow configuration of default currency, permissions, limits, and auto-settlement options.
+
 ## 3. Non-Functional Requirements
 
 ### 3.1 Performance
@@ -113,6 +132,10 @@ Develop a modern, full-stack social and sports club management platform that ena
 - **NFR-027**: Test coverage must be ≥80% for critical business logic
 - **NFR-028**: API must be documented with GraphQL schema
 - **NFR-029**: Database schema must use snake_case with Prisma mapping
+
+### 3.5 Expenses Performance
+
+- **NFR-021**: Expense calculations must be accurate and performant for groups up to 100 members.
 
 ## 4. Technical Constraints
 

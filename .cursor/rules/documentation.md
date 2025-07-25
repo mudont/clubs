@@ -34,3 +34,8 @@ When making code changes, automatically check and update:
 - **For bug fixes**: Update troubleshooting sections if relevant
 - **For refactoring**: Update affected documentation sections
 - **For configuration changes**: Update setup and deployment docs
+
+# .kiro Documentation Synchronization Rule
+- Whenever software is modified (code, schema, configuration, or features), update the relevant documentation in the .kiro/ directory (including all subfolders) as well as the toplevel README.md file to ensure all documentation is current and consistent with the codebase.
+- This includes, but is not limited to: architectural changes, new features, API/schema updates, configuration/environment changes, UI/UX changes, and any breaking or significant modifications.
+- Documentation updates must be performed before code is considered complete or ready for commit/merge.

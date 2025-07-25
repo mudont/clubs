@@ -76,6 +76,18 @@
 - [ ] **TASK-053**: Create file upload handling for avatars
 - [ ] **TASK-054**: Implement search functionality for users and groups
 
+### 2.4 Expenses Module (Backend)
+
+- [x] **TASK-070**: Design and implement Expense and ExpenseSplit models in Prisma
+- [x] **TASK-071**: Create GraphQL schema and resolvers for expenses
+- [x] **TASK-072**: Implement business logic for split validation and settlements
+- [x] **TASK-073**: Add input validation for expense creation
+
+### 2.5 Settlements & Group Settings (Backend)
+- [ ] **TASK-080**: Implement Settlement and GroupSettings models, resolvers, and business logic
+- [ ] **TASK-081**: Add payment status tracking and history
+- [ ] **TASK-082**: Implement group settings UI and backend
+
 ## Phase 3: Frontend Development
 
 ### 3.1 React Application Setup
@@ -144,6 +156,18 @@
 - [ ] **TASK-101**: Create player statistics and rankings
 - [ ] **TASK-102**: Add match history and results archive
 
+### 3.4 Expenses Module (Frontend)
+
+- [x] **TASK-074**: Integrate Expenses summary into Dashboard UI
+- [x] **TASK-075**: Create Expenses page with list and group breakdown
+- [x] **TASK-076**: Implement Add Expense form with "Paid By" and split selection
+- [x] **TASK-077**: Make Dashboard and Expenses UI responsive and compact
+
+### 3.5 Tennis League & Lineup (Frontend)
+- [ ] **TASK-083**: Create UI for league, team, match, and point system management
+- [ ] **TASK-084**: Implement drag-and-drop lineup UI with slot validation and visibility controls
+- [ ] **TASK-085**: League standings page and real-time updates
+
 ## Phase 4: Testing & Quality Assurance
 
 ### 4.1 Backend Testing
@@ -167,6 +191,15 @@
 - [ ] **TASK-116**: Write tests for real-time features
 - [ ] **TASK-117**: Implement mobile responsiveness tests
 - [ ] **TASK-118**: Add PWA functionality tests
+
+### 4.1 Testing & Documentation
+
+- [x] **TASK-078**: Write unit and integration tests for expenses
+- [x] **TASK-079**: Update documentation/specs for Expenses module
+
+### 4.2 Advanced Features & Monitoring
+- [ ] **TASK-086**: Add multi-currency, receipt upload, and budget tracking to expenses
+- [ ] **TASK-087**: Implement monitoring, backup, and alerting infrastructure
 
 ### 4.3 Code Quality & Functional Programming
 

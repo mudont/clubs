@@ -60,6 +60,12 @@
 - bcrypt password hashing
 - HTTP-only secure cookies
 
+### Expenses Module
+
+- **Expenses Module**:
+  - Backend: Integrated into GraphQL schema and resolvers, uses Prisma for transactional expense creation and split logic.
+  - Frontend: React components for Dashboard, Expenses page, and Add Expense form; responsive design with CSS Grid/Flexbox.
+
 ## Development Standards
 
 - **Zero ESLint Errors**: Maintain 0 errors, warnings acceptable for TypeScript `any` types only
@@ -67,3 +73,7 @@
 - **Import Organization**: Follow ESLint import/order rules strictly
 - **Error Boundaries**: React error boundaries with retry mechanisms
 - **Accessibility**: WCAG compliance with Testing Library best practices
+
+- **Session Management**: Redis-backed sessions, HTTP-only cookies, secure flags, and multi-instance support.
+- **Security Middleware**: Helmet.js, rate limiting, input validation, and security logging.
+- **Monitoring & Backup**: Health endpoints, metrics, backup verification, and alerting.
