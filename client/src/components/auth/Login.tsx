@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { updateAuthToken } from '../../apollo';
 import { setAuth } from '../../store/authSlice';
+
 import './Auth.css';
+import { FacebookIcon, GoogleIcon } from './OAuthIcons';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -101,6 +103,7 @@ const Login: React.FC = () => {
             className="btn-oauth btn-google"
             onClick={() => handleOAuth('google')}
           >
+            <GoogleIcon />
             Continue with Google
           </button>
           {/*
@@ -117,6 +120,7 @@ const Login: React.FC = () => {
             className="btn-oauth btn-facebook"
             onClick={() => handleOAuth('facebook')}
           >
+            <FacebookIcon />
             Continue with Facebook
           </button>
         </div>
@@ -131,4 +135,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login; 
+export default Login;

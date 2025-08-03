@@ -12,9 +12,7 @@ COPY server/package*.json ./server/
 COPY client/package*.json ./client/
 
 # Install dependencies
-RUN npm ci && \
-    cd server && npm ci && \
-    cd ../client && npm ci
+RUN cd server && npm install && cd ../client && npm install
 
 # Build stage for server
 FROM base AS server-builder
@@ -51,7 +49,7 @@ RUN adduser -S clubs -u 1001
 
 WORKDIR /app
 
-# Copy built server
+# Copy built server with all dependencies
 COPY --from=server-builder --chown=clubs:nodejs /app/server/dist ./server/dist
 COPY --from=server-builder --chown=clubs:nodejs /app/server/node_modules ./server/node_modules
 COPY --from=server-builder --chown=clubs:nodejs /app/server/package.json ./server/package.json
@@ -83,4 +81,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 # Start application with dumb-init
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "server/dist/index.js"] 
+CMD ["node", "server/dist/index.js"]

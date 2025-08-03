@@ -127,7 +127,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
+}
+
+.btn-oauth svg {
+  flex-shrink: 0;
 }
 
 .btn-oauth:hover {
@@ -239,6 +243,12 @@
   .btn-oauth {
     font-size: 13px;
     padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .btn-oauth svg {
+    width: 16px;
+    height: 16px;
   }
 }
 

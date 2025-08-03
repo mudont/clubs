@@ -8,11 +8,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
-generator erd {
-  provider = "prisma-erd-generator"
-  output   = "./ERD.svg"
-  title    = "Clubs Database ERD"
-}
+// generator erd {
+//   provider = "prisma-erd-generator"
+//   output   = "./ERD.svg"
+//   title    = "Clubs Database ERD"
+// }
 
 datasource db {
   provider = "postgresql"
@@ -129,6 +129,10 @@ model Event {
   description String   @map("description")
   rsvps       RSVP[]
 
+  // Reverse relations for tennis match events
+  homeTeamMatch TeamLeagueTeamMatch? @relation("HomeTeamEvent")
+  awayTeamMatch TeamLeagueTeamMatch? @relation("AwayTeamEvent")
+
   @@map("events")
 }
 
@@ -231,6 +235,12 @@ model TeamLeagueTeamMatch {
   teamLeagueId   String                             @map("team_league_id")
   singlesMatches TeamLeagueIndividualSinglesMatch[]
   doublesMatches TeamLeagueIndividualDoublesMatch[]
+
+  // Event references for tennis match events
+  homeTeamEventId String? @unique @map("home_team_event_id")
+  awayTeamEventId String? @unique @map("away_team_event_id")
+  homeTeamEvent   Event?  @relation("HomeTeamEvent", fields: [homeTeamEventId], references: [id])
+  awayTeamEvent   Event?  @relation("AwayTeamEvent", fields: [awayTeamEventId], references: [id])
 
   @@map("team_league_team_matches")
 }

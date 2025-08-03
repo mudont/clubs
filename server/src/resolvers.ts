@@ -25,7 +25,9 @@ async function requireGroupAdmin(context: Context, groupId: string): Promise<voi
     where: { userId_groupId: { userId: user.id, groupId } },
   });
   if (!membership || !membership.isAdmin) {
-    throw new GraphQLError('You must be an admin of this group', { extensions: { code: 'FORBIDDEN' } });
+    throw new GraphQLError('You must be an admin of this group', {
+      extensions: { code: 'FORBIDDEN' },
+    });
   }
 }
 
@@ -36,7 +38,9 @@ async function requireGroupMember(context: Context, groupId: string): Promise<vo
     where: { userId_groupId: { userId: user.id, groupId } },
   });
   if (!membership) {
-    throw new GraphQLError('You must be a member of this group', { extensions: { code: 'FORBIDDEN' } });
+    throw new GraphQLError('You must be a member of this group', {
+      extensions: { code: 'FORBIDDEN' },
+    });
   }
 }
 
@@ -182,14 +186,14 @@ const tennisResolvers = {
           Group: {
             memberships: {
               some: {
-                userId: user.id
-              }
-            }
-          }
+                userId: user.id,
+              },
+            },
+          },
         },
         include: {
-          teamLeague: true
-        }
+          teamLeague: true,
+        },
       });
 
       // Extract unique leagues from the teams
@@ -199,16 +203,16 @@ const tennisResolvers = {
       const leagues = await context.prisma.teamLeague.findMany({
         where: {
           id: {
-            in: leagueIds
+            in: leagueIds,
           },
           isActive: true,
           startDate: {
-            lte: currentDate
+            lte: currentDate,
           },
           endDate: {
-            gte: currentDate
-          }
-        }
+            gte: currentDate,
+          },
+        },
       });
 
       return leagues;
@@ -232,10 +236,14 @@ const tennisResolvers = {
       if (Array.isArray(pointSystems) && pointSystems.length > 0) {
         // Validate order/winPoints
         for (const matchType of ['SINGLES', 'DOUBLES']) {
-          const systems = pointSystems.filter(ps => ps.matchType === matchType).sort((a, b) => a.order - b.order);
+          const systems = pointSystems
+            .filter(ps => ps.matchType === matchType)
+            .sort((a, b) => a.order - b.order);
           for (let i = 1; i < systems.length; ++i) {
             if (systems[i].winPoints > systems[i - 1].winPoints) {
-              throw new GraphQLError(`For matchType ${matchType}, lower order must have higher or equal winPoints`);
+              throw new GraphQLError(
+                `For matchType ${matchType}, lower order must have higher or equal winPoints`
+              );
             }
           }
         }
@@ -340,73 +348,101 @@ const tennisResolvers = {
     createTeamMatch: async (_: any, { leagueId, input }: any, context: Context) => {
       requireAuth(context);
 
-      // Get the teams with their groups to create events
-      const homeTeam = await context.prisma.teamLeagueTeam.findUnique({
-        where: { id: input.homeTeamId },
-        include: { Group: true }
-      });
+      try {
+        // Use a transaction to ensure atomicity
+        const result = await context.prisma.$transaction(async tx => {
+          // Get the teams with their groups to create events
+          const homeTeam = await tx.teamLeagueTeam.findUnique({
+            where: { id: input.homeTeamId },
+            include: { Group: true },
+          });
 
-      const awayTeam = await context.prisma.teamLeagueTeam.findUnique({
-        where: { id: input.awayTeamId },
-        include: { Group: true }
-      });
+          const awayTeam = await tx.teamLeagueTeam.findUnique({
+            where: { id: input.awayTeamId },
+            include: { Group: true },
+          });
 
-      if (!homeTeam || !awayTeam) {
-        throw new GraphQLError('One or both teams not found');
+          if (!homeTeam || !awayTeam) {
+            throw new GraphQLError('One or both teams not found');
+          }
+
+          // Create the team match first (without event references)
+          const teamMatch = await tx.teamLeagueTeamMatch.create({
+            data: {
+              homeTeamId: input.homeTeamId,
+              awayTeamId: input.awayTeamId,
+              matchDate: new Date(input.matchDate),
+              teamLeagueId: leagueId,
+            },
+          });
+
+          const matchDate = teamMatch.matchDate;
+
+          // Create event for home team's group
+          const homeEventDescription = `🎾 Tennis Match: ${homeTeam.Group.name} vs ${awayTeam.Group.name}\n\nHome match for ${homeTeam.Group.name}. Please RSVP your availability.`;
+
+          const homeEvent = await tx.event.create({
+            data: {
+              groupId: homeTeam.Group.id,
+              createdById: context.user.id,
+              date: matchDate,
+              description: homeEventDescription,
+            },
+            include: { createdBy: true, group: true },
+          });
+
+          // Create event for away team's group
+          const awayEventDescription = `🎾 Tennis Match: ${awayTeam.Group.name} vs ${homeTeam.Group.name}\n\nAway match against ${homeTeam.Group.name}. Please RSVP your availability.`;
+
+          const awayEvent = await tx.event.create({
+            data: {
+              groupId: awayTeam.Group.id,
+              createdById: context.user.id,
+              date: matchDate,
+              description: awayEventDescription,
+            },
+            include: { createdBy: true, group: true },
+          });
+
+          // Update the team match with event references
+          const updatedTeamMatch = await tx.teamLeagueTeamMatch.update({
+            where: { id: teamMatch.id },
+            data: {
+              homeTeamEventId: homeEvent.id,
+              awayTeamEventId: awayEvent.id,
+            },
+            include: {
+              homeTeam: { include: { Group: true } },
+              awayTeam: { include: { Group: true } },
+              homeTeamEvent: { include: { createdBy: true, group: true } },
+              awayTeamEvent: { include: { createdBy: true, group: true } },
+            },
+          });
+
+          return {
+            teamMatch: updatedTeamMatch,
+            homeEvent,
+            awayEvent,
+          };
+        });
+
+        // Publish events for real-time updates (outside transaction)
+        pubsub.publish(EVENTS.EVENT_CREATED, { eventCreated: result.homeEvent });
+        pubsub.publish(EVENTS.EVENT_CREATED, { eventCreated: result.awayEvent });
+
+        return result.teamMatch;
+      } catch (error) {
+        console.error('Error creating team match with events:', error);
+        throw new GraphQLError(
+          `Failed to create team match: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          {
+            extensions: {
+              code: 'TEAM_MATCH_CREATION_FAILED',
+              originalError: error instanceof Error ? error.message : String(error),
+            },
+          }
+        );
       }
-
-      // Create the team match
-      const teamMatch = await context.prisma.teamLeagueTeamMatch.create({
-        data: {
-          homeTeamId: input.homeTeamId,
-          awayTeamId: input.awayTeamId,
-          matchDate: new Date(input.matchDate),
-          teamLeagueId: leagueId,
-        },
-        include: {
-          homeTeam: {
-            include: { Group: true }
-          },
-          awayTeam: {
-            include: { Group: true }
-          },
-        },
-      });
-
-      // Create events for both teams' groups
-      const matchDate = teamMatch.matchDate;
-
-      // Create event for home team's group
-      const homeEventDescription = `🎾 Tennis Match: ${homeTeam.Group.name} vs ${awayTeam.Group.name}\n\nHome match for ${homeTeam.Group.name}. Please RSVP your availability.`;
-
-      const homeEvent = await context.prisma.event.create({
-        data: {
-          groupId: homeTeam.Group.id,
-          createdById: context.user.id,
-          date: matchDate,
-          description: homeEventDescription,
-        },
-        include: { createdBy: true, group: true },
-      });
-
-      // Create event for away team's group
-      const awayEventDescription = `🎾 Tennis Match: ${awayTeam.Group.name} vs ${homeTeam.Group.name}\n\nAway match against ${homeTeam.Group.name}. Please RSVP your availability.`;
-
-      const awayEvent = await context.prisma.event.create({
-        data: {
-          groupId: awayTeam.Group.id,
-          createdById: context.user.id,
-          date: matchDate,
-          description: awayEventDescription,
-        },
-        include: { createdBy: true, group: true },
-      });
-
-      // Publish events for real-time updates
-      pubsub.publish(EVENTS.EVENT_CREATED, { eventCreated: homeEvent });
-      pubsub.publish(EVENTS.EVENT_CREATED, { eventCreated: awayEvent });
-
-      return teamMatch;
     },
     updateTeamMatch: async (_: any, { id, input }: any, context: Context) => {
       requireAuth(context);
@@ -416,8 +452,8 @@ const tennisResolvers = {
         where: { id },
         include: {
           homeTeam: { include: { Group: true } },
-          awayTeam: { include: { Group: true } }
-        }
+          awayTeam: { include: { Group: true } },
+        },
       });
 
       if (!currentMatch) {
@@ -434,10 +470,10 @@ const tennisResolvers = {
         data: updateData,
         include: {
           homeTeam: {
-            include: { Group: true }
+            include: { Group: true },
           },
           awayTeam: {
-            include: { Group: true }
+            include: { Group: true },
           },
         },
       });
@@ -451,21 +487,23 @@ const tennisResolvers = {
           where: {
             OR: [
               { groupId: currentMatch.homeTeam.Group.id },
-              { groupId: currentMatch.awayTeam.Group.id }
+              { groupId: currentMatch.awayTeam.Group.id },
             ],
             description: {
-              contains: '🎾 Tennis Match'
-            }
-          }
+              contains: '🎾 Tennis Match',
+            },
+          },
         });
 
         // Update events that match this team match
         for (const event of events) {
-          if (event.description.includes(currentMatch.homeTeam.Group.name) &&
-            event.description.includes(currentMatch.awayTeam.Group.name)) {
+          if (
+            event.description.includes(currentMatch.homeTeam.Group.name) &&
+            event.description.includes(currentMatch.awayTeam.Group.name)
+          ) {
             await context.prisma.event.update({
               where: { id: event.id },
-              data: { date: newMatchDate }
+              data: { date: newMatchDate },
             });
           }
         }
@@ -476,50 +514,121 @@ const tennisResolvers = {
     deleteTeamMatch: async (_: any, { id }: any, context: Context) => {
       requireAuth(context);
 
-      // Get the team match to find associated events
-      const teamMatch = await context.prisma.teamLeagueTeamMatch.findUnique({
-        where: { id },
-        include: {
-          homeTeam: { include: { Group: true } },
-          awayTeam: { include: { Group: true } }
+      try {
+        // Use a transaction to ensure atomicity
+        const result = await context.prisma.$transaction(async tx => {
+          // Get the team match with event references
+          const teamMatch = await tx.teamLeagueTeamMatch.findUnique({
+            where: { id },
+            select: {
+              id: true,
+              homeTeamEventId: true,
+              awayTeamEventId: true,
+              homeTeam: { include: { Group: true } },
+              awayTeam: { include: { Group: true } },
+            },
+          });
+
+          if (!teamMatch) {
+            throw new GraphQLError('Team match not found');
+          }
+
+          // Delete home team event if it exists
+          if (teamMatch.homeTeamEventId) {
+            // Delete all RSVPs for the home team event first
+            await tx.rSVP.deleteMany({
+              where: { eventId: teamMatch.homeTeamEventId },
+            });
+
+            // Delete the home team event
+            await tx.event.delete({
+              where: { id: teamMatch.homeTeamEventId },
+            });
+
+            console.log(`Deleted home team event ${teamMatch.homeTeamEventId} for match ${id}`);
+          }
+
+          // Delete away team event if it exists
+          if (teamMatch.awayTeamEventId) {
+            // Delete all RSVPs for the away team event first
+            await tx.rSVP.deleteMany({
+              where: { eventId: teamMatch.awayTeamEventId },
+            });
+
+            // Delete the away team event
+            await tx.event.delete({
+              where: { id: teamMatch.awayTeamEventId },
+            });
+
+            console.log(`Deleted away team event ${teamMatch.awayTeamEventId} for match ${id}`);
+          }
+
+          // Delete the team match itself
+          await tx.teamLeagueTeamMatch.delete({ where: { id } });
+
+          console.log(
+            `Deleted team match ${id}: ${teamMatch.homeTeam.Group.name} vs ${teamMatch.awayTeam.Group.name}`
+          );
+
+          return {
+            deletedMatchId: id,
+            deletedHomeEventId: teamMatch.homeTeamEventId,
+            deletedAwayEventId: teamMatch.awayTeamEventId,
+          };
+        });
+
+        return true;
+      } catch (error) {
+        console.error('Error deleting team match:', error);
+
+        // Provide specific error messages for common issues
+        if (error instanceof GraphQLError) {
+          throw error; // Re-throw GraphQL errors as-is
         }
-      });
 
-      if (!teamMatch) {
-        throw new GraphQLError('Team match not found');
-      }
+        // Handle Prisma foreign key constraint errors
+        if (error && typeof error === 'object' && 'code' in error) {
+          if (error.code === 'P2003') {
+            throw new GraphQLError(
+              'Cannot delete team match: it has dependent records that must be removed first',
+              {
+                extensions: {
+                  code: 'FOREIGN_KEY_CONSTRAINT',
+                  originalError: error,
+                },
+              }
+            );
+          }
 
-      // Find and delete associated events for both teams
-      const events = await context.prisma.event.findMany({
-        where: {
-          OR: [
-            { groupId: teamMatch.homeTeam.Group.id },
-            { groupId: teamMatch.awayTeam.Group.id }
-          ],
-          description: {
-            contains: '🎾 Tennis Match'
+          if (error.code === 'P2025') {
+            throw new GraphQLError('Team match not found or already deleted', {
+              extensions: {
+                code: 'RECORD_NOT_FOUND',
+                originalError: error,
+              },
+            });
           }
         }
-      });
 
-      // Delete events that match this team match
-      for (const event of events) {
-        if (event.description.includes(teamMatch.homeTeam.Group.name) &&
-          event.description.includes(teamMatch.awayTeam.Group.name)) {
-          // Delete all RSVPs for this event first
-          await context.prisma.rSVP.deleteMany({ where: { eventId: event.id } });
-          // Delete the event
-          await context.prisma.event.delete({ where: { id: event.id } });
-        }
+        throw new GraphQLError(
+          `Failed to delete team match: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          {
+            extensions: {
+              code: 'TEAM_MATCH_DELETION_FAILED',
+              originalError: error instanceof Error ? error.message : String(error),
+            },
+          }
+        );
       }
-
-      // Delete the team match
-      await context.prisma.teamLeagueTeamMatch.delete({ where: { id } });
-      return true;
     },
     createIndividualSinglesMatch: async (_: any, { input }: any, context: Context) => {
       requireAuth(context);
-      if (input.score !== undefined && input.score !== null && input.score !== '' && !isValidTennisScore(input.score)) {
+      if (
+        input.score !== undefined &&
+        input.score !== null &&
+        input.score !== '' &&
+        !isValidTennisScore(input.score)
+      ) {
         throw new GraphQLError('Invalid tennis score format');
       }
       return context.prisma.teamLeagueIndividualSinglesMatch.create({
@@ -571,7 +680,12 @@ const tennisResolvers = {
     },
     createIndividualDoublesMatch: async (_: any, { input }: any, context: Context) => {
       requireAuth(context);
-      if (input.score !== undefined && input.score !== null && input.score !== '' && !isValidTennisScore(input.score)) {
+      if (
+        input.score !== undefined &&
+        input.score !== null &&
+        input.score !== '' &&
+        !isValidTennisScore(input.score)
+      ) {
         throw new GraphQLError('Invalid tennis score format');
       }
       return context.prisma.teamLeagueIndividualDoublesMatch.create({
@@ -636,9 +750,12 @@ const tennisResolvers = {
       if (input.winPoints !== undefined) updateData.winPoints = input.winPoints;
       if (input.lossPoints !== undefined) updateData.lossPoints = input.lossPoints;
       if (input.drawPoints !== undefined) updateData.drawPoints = input.drawPoints;
-      if (input.defaultWinPoints !== undefined) updateData.defaultWinPoints = input.defaultWinPoints;
-      if (input.defaultLossPoints !== undefined) updateData.defaultLossPoints = input.defaultLossPoints;
-      if (input.defaultDrawPoints !== undefined) updateData.defaultDrawPoints = input.defaultDrawPoints;
+      if (input.defaultWinPoints !== undefined)
+        updateData.defaultWinPoints = input.defaultWinPoints;
+      if (input.defaultLossPoints !== undefined)
+        updateData.defaultLossPoints = input.defaultLossPoints;
+      if (input.defaultDrawPoints !== undefined)
+        updateData.defaultDrawPoints = input.defaultDrawPoints;
 
       // Use the compound unique key for update
       if (!input.matchType || input.order === undefined) {
@@ -730,8 +847,8 @@ const tennisResolvers = {
         where: { id: parent.id },
         include: {
           homeTeam: { include: { Group: true } },
-          awayTeam: { include: { Group: true } }
-        }
+          awayTeam: { include: { Group: true } },
+        },
       });
 
       if (!teamMatch) {
@@ -748,22 +865,20 @@ const tennisResolvers = {
       // Find events for both teams that match this team match by date and description
       const events = await context.prisma.event.findMany({
         where: {
-          OR: [
-            { groupId: teamMatch.homeTeam.Group.id },
-            { groupId: teamMatch.awayTeam.Group.id }
-          ],
+          OR: [{ groupId: teamMatch.homeTeam.Group.id }, { groupId: teamMatch.awayTeam.Group.id }],
           description: {
-            contains: '🎾 Tennis Match'
-          }
+            contains: '🎾 Tennis Match',
+          },
         },
-        include: { group: true, createdBy: true, rsvps: { include: { user: true } } }
+        include: { group: true, createdBy: true, rsvps: { include: { user: true } } },
       });
 
       // Filter events that match this specific team match by date AND description
       const filteredEvents = events.filter(event => {
         const eventDateString = getDateString(event.date);
         const dateMatches = eventDateString === teamMatchDateString;
-        const descriptionMatches = event.description.includes(teamMatch.homeTeam.Group.name) &&
+        const descriptionMatches =
+          event.description.includes(teamMatch.homeTeam.Group.name) &&
           event.description.includes(teamMatch.awayTeam.Group.name);
 
         return dateMatches && descriptionMatches;
@@ -771,6 +886,20 @@ const tennisResolvers = {
 
       return filteredEvents;
     },
+    homeTeamEvent: (parent: any, _: any, context: Context) =>
+      parent.homeTeamEventId
+        ? context.prisma.event.findUnique({
+            where: { id: parent.homeTeamEventId },
+            include: { group: true, createdBy: true, rsvps: { include: { user: true } } },
+          })
+        : null,
+    awayTeamEvent: (parent: any, _: any, context: Context) =>
+      parent.awayTeamEventId
+        ? context.prisma.event.findUnique({
+            where: { id: parent.awayTeamEventId },
+            include: { group: true, createdBy: true, rsvps: { include: { user: true } } },
+          })
+        : null,
   },
   TeamLeagueIndividualSinglesMatch: {
     player1: (parent: any, _: any, context: Context) =>
@@ -801,7 +930,11 @@ function isValidTennisScore(score: string): boolean {
 
 const lineupResolvers = {
   Query: {
-    async lineup(_: any, { teamMatchId, teamId }: { teamMatchId: string; teamId: string }, context: Context) {
+    async lineup(
+      _: any,
+      { teamMatchId, teamId }: { teamMatchId: string; teamId: string },
+      context: Context
+    ) {
       const lineup = await context.prisma.teamMatchLineup.findUnique({
         where: { teamMatchId_teamId: { teamMatchId, teamId } },
         include: { slots: true },
@@ -814,7 +947,10 @@ const lineupResolvers = {
       // Upsert lineup
       const { teamMatchId, teamId, slots, visibility } = input;
       // Admin check: only admins of the team group can edit
-      const team = await context.prisma.teamLeagueTeam.findUnique({ where: { id: teamId }, include: { Group: true } });
+      const team = await context.prisma.teamLeagueTeam.findUnique({
+        where: { id: teamId },
+        include: { Group: true },
+      });
       if (!team) throw new GraphQLError('Team not found');
       await requireGroupAdmin(context, team.groupId);
       let lineup = await context.prisma.teamMatchLineup.findUnique({
@@ -865,7 +1001,10 @@ const lineupResolvers = {
         include: { slots: true },
       });
       if (!lineup) throw new GraphQLError('Lineup not found');
-      const team = await context.prisma.teamLeagueTeam.findUnique({ where: { id: lineup.teamId }, include: { Group: true } });
+      const team = await context.prisma.teamLeagueTeam.findUnique({
+        where: { id: lineup.teamId },
+        include: { Group: true },
+      });
       if (!team) throw new GraphQLError('Team not found');
       await requireGroupAdmin(context, team.groupId);
       const updatedLineup = await context.prisma.teamMatchLineup.update({
@@ -881,8 +1020,12 @@ const lineupResolvers = {
         });
         if (allLineups.length === 2) {
           // Check if individual matches already exist
-          const singlesCount = await context.prisma.teamLeagueIndividualSinglesMatch.count({ where: { teamMatchId: lineup.teamMatchId } });
-          const doublesCount = await context.prisma.teamLeagueIndividualDoublesMatch.count({ where: { teamMatchId: lineup.teamMatchId } });
+          const singlesCount = await context.prisma.teamLeagueIndividualSinglesMatch.count({
+            where: { teamMatchId: lineup.teamMatchId },
+          });
+          const doublesCount = await context.prisma.teamLeagueIndividualDoublesMatch.count({
+            where: { teamMatchId: lineup.teamMatchId },
+          });
           if (singlesCount === 0 && doublesCount === 0) {
             // Create singles and doubles matches from both lineups
             for (const slot of allLineups.flatMap(l => l.slots)) {
@@ -986,7 +1129,7 @@ export const resolvers = {
       if (args.query) {
         where.OR = [
           { name: { contains: args.query, mode: 'insensitive' } },
-          { description: { contains: args.query, mode: 'insensitive' } }
+          { description: { contains: args.query, mode: 'insensitive' } },
         ];
       }
       return await context.prisma.group.findMany({
@@ -1005,9 +1148,9 @@ export const resolvers = {
           createdBy: true,
           rsvps: {
             include: {
-              user: true
-            }
-          }
+              user: true,
+            },
+          },
         },
       });
     },
@@ -1019,9 +1162,9 @@ export const resolvers = {
           createdBy: true,
           rsvps: {
             include: {
-              user: true
-            }
-          }
+              user: true,
+            },
+          },
         },
       });
     },
@@ -1033,7 +1176,7 @@ export const resolvers = {
       // Get all groups the user is a member of
       const userMemberships = await context.prisma.membership.findMany({
         where: { userId: user.id },
-        include: { group: true }
+        include: { group: true },
       });
 
       const userGroupIds = userMemberships.map(m => m.groupId);
@@ -1042,16 +1185,16 @@ export const resolvers = {
       const events = await context.prisma.event.findMany({
         where: {
           groupId: { in: userGroupIds },
-          date: { gte: currentDate }
+          date: { gte: currentDate },
         },
         include: {
           group: true,
           createdBy: true,
           rsvps: {
-            include: { user: true }
-          }
+            include: { user: true },
+          },
         },
-        orderBy: { date: 'asc' }
+        orderBy: { date: 'asc' },
       });
 
       // Return all unexpired events (user can revise any RSVP)
@@ -1059,7 +1202,11 @@ export const resolvers = {
     },
 
     // Message queries
-    messages: async (_: any, { groupId, limit }: { groupId: string; limit: number }, context: Context) => {
+    messages: async (
+      _: any,
+      { groupId, limit }: { groupId: string; limit: number },
+      context: Context
+    ) => {
       await requireGroupMember(context, groupId);
       return await context.prisma.message.findMany({
         where: { groupId },
@@ -1080,21 +1227,21 @@ export const resolvers = {
             include: {
               Group: {
                 include: {
-                  memberships: { include: { user: true } }
-                }
-              }
-            }
+                  memberships: { include: { user: true } },
+                },
+              },
+            },
           },
           awayTeam: {
             include: {
               Group: {
                 include: {
-                  memberships: { include: { user: true } }
-                }
-              }
-            }
-          }
-        }
+                  memberships: { include: { user: true } },
+                },
+              },
+            },
+          },
+        },
       });
     },
 
@@ -1104,7 +1251,11 @@ export const resolvers = {
 
   Mutation: {
     // Auth mutations
-    login: async (_: any, { input }: { input: { username: string; password: string } }, context: Context) => {
+    login: async (
+      _: any,
+      { input }: { input: { username: string; password: string } },
+      context: Context
+    ) => {
       const { username, password } = input;
 
       // Find user by username
@@ -1113,13 +1264,17 @@ export const resolvers = {
       });
 
       if (!user) {
-        throw new GraphQLError('Invalid username or password', { extensions: { code: 'UNAUTHENTICATED' } });
+        throw new GraphQLError('Invalid username or password', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
       }
 
       // Verify password
       const isValidPassword = await bcrypt.compare(password, user.passwordHash || '');
       if (!isValidPassword) {
-        throw new GraphQLError('Invalid username or password', { extensions: { code: 'UNAUTHENTICATED' } });
+        throw new GraphQLError('Invalid username or password', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
       }
 
       // Generate JWT token
@@ -1131,21 +1286,34 @@ export const resolvers = {
       };
     },
 
-    signup: async (_: any, { input }: { input: { username: string; email: string; password: string; firstName?: string; lastName?: string } }, context: Context) => {
+    signup: async (
+      _: any,
+      {
+        input,
+      }: {
+        input: {
+          username: string;
+          email: string;
+          password: string;
+          firstName?: string;
+          lastName?: string;
+        };
+      },
+      context: Context
+    ) => {
       const { username, email, password, firstName, lastName } = input;
 
       // Check if user already exists
       const existingUser = await context.prisma.user.findFirst({
         where: {
-          OR: [
-            { username },
-            { email },
-          ],
+          OR: [{ username }, { email }],
         },
       });
 
       if (existingUser) {
-        throw new GraphQLError('Username or email already exists', { extensions: { code: 'BAD_USER_INPUT' } });
+        throw new GraphQLError('Username or email already exists', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
       }
 
       // Hash password
@@ -1171,7 +1339,11 @@ export const resolvers = {
       };
     },
 
-    changePassword: async (_: any, { input }: { input: { currentPassword: string; newPassword: string } }, context: Context) => {
+    changePassword: async (
+      _: any,
+      { input }: { input: { currentPassword: string; newPassword: string } },
+      context: Context
+    ) => {
       const user = requireAuth(context);
       const { currentPassword, newPassword } = input;
 
@@ -1186,7 +1358,9 @@ export const resolvers = {
 
       const isValidPassword = await bcrypt.compare(currentPassword, currentUser.passwordHash || '');
       if (!isValidPassword) {
-        throw new GraphQLError('Current password is incorrect', { extensions: { code: 'UNAUTHENTICATED' } });
+        throw new GraphQLError('Current password is incorrect', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
       }
 
       // Hash new password
@@ -1205,7 +1379,11 @@ export const resolvers = {
     },
 
     // Group mutations
-    createGroup: async (_: any, { input }: { input: { name: string; description?: string; isPublic?: boolean } }, context: Context) => {
+    createGroup: async (
+      _: any,
+      { input }: { input: { name: string; description?: string; isPublic?: boolean } },
+      context: Context
+    ) => {
       const user = requireAuth(context);
 
       const group = await context.prisma.group.create({
@@ -1226,7 +1404,14 @@ export const resolvers = {
       return group;
     },
 
-    updateGroup: async (_: any, { id, input }: { id: string; input: { name?: string; description?: string; isPublic?: boolean } }, context: Context) => {
+    updateGroup: async (
+      _: any,
+      {
+        id,
+        input,
+      }: { id: string; input: { name?: string; description?: string; isPublic?: boolean } },
+      context: Context
+    ) => {
       await requireGroupAdmin(context, id);
 
       const updatedGroup = await context.prisma.group.update({
@@ -1250,7 +1435,9 @@ export const resolvers = {
         include: { group: true },
       });
       if (memberships.some(m => m.groupId === groupId)) {
-        throw new GraphQLError('You are already a member of this group', { extensions: { code: 'BAD_USER_INPUT' } });
+        throw new GraphQLError('You are already a member of this group', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
       }
 
       // Check if group is public or user is being added by admin
@@ -1295,7 +1482,9 @@ export const resolvers = {
       });
 
       if (!membership) {
-        throw new GraphQLError('You are not a member of this group', { extensions: { code: 'BAD_USER_INPUT' } });
+        throw new GraphQLError('You are not a member of this group', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
       }
 
       if (membership.isAdmin) {
@@ -1305,7 +1494,10 @@ export const resolvers = {
         });
 
         if (adminCount <= 1) {
-          throw new GraphQLError('Cannot leave group: you are the last admin. Transfer admin role or delete the group.', { extensions: { code: 'BAD_USER_INPUT' } });
+          throw new GraphQLError(
+            'Cannot leave group: you are the last admin. Transfer admin role or delete the group.',
+            { extensions: { code: 'BAD_USER_INPUT' } }
+          );
         }
       }
 
@@ -1316,7 +1508,11 @@ export const resolvers = {
       return true;
     },
 
-    addMember: async (_: any, { groupId, userId }: { groupId: string; userId: string }, context: Context) => {
+    addMember: async (
+      _: any,
+      { groupId, userId }: { groupId: string; userId: string },
+      context: Context
+    ) => {
       await requireGroupAdmin(context, groupId);
 
       // Check if user is already a member
@@ -1325,7 +1521,9 @@ export const resolvers = {
       });
 
       if (existing) {
-        throw new GraphQLError('User is already a member of this group', { extensions: { code: 'BAD_USER_INPUT' } });
+        throw new GraphQLError('User is already a member of this group', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
       }
 
       // Get the next member ID for this group
@@ -1349,7 +1547,11 @@ export const resolvers = {
       return membership;
     },
 
-    addMemberByUsername: async (_: any, { groupId, username }: { groupId: string; username: string }, context: Context) => {
+    addMemberByUsername: async (
+      _: any,
+      { groupId, username }: { groupId: string; username: string },
+      context: Context
+    ) => {
       await requireGroupAdmin(context, groupId);
 
       const user = await context.prisma.user.findUnique({
@@ -1366,7 +1568,9 @@ export const resolvers = {
       });
 
       if (existing) {
-        throw new GraphQLError('User is already a member of this group', { extensions: { code: 'BAD_USER_INPUT' } });
+        throw new GraphQLError('User is already a member of this group', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
       }
 
       // Get the next member ID for this group
@@ -1390,7 +1594,11 @@ export const resolvers = {
       return membership;
     },
 
-    addMemberByEmail: async (_: any, { groupId, email }: { groupId: string; email: string }, context: Context) => {
+    addMemberByEmail: async (
+      _: any,
+      { groupId, email }: { groupId: string; email: string },
+      context: Context
+    ) => {
       await requireGroupAdmin(context, groupId);
 
       const user = await context.prisma.user.findUnique({
@@ -1407,7 +1615,9 @@ export const resolvers = {
       });
 
       if (existing) {
-        throw new GraphQLError('User is already a member of this group', { extensions: { code: 'BAD_USER_INPUT' } });
+        throw new GraphQLError('User is already a member of this group', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
       }
 
       // Get the next member ID for this group
@@ -1431,7 +1641,11 @@ export const resolvers = {
       return membership;
     },
 
-    removeMember: async (_: any, { groupId, userId }: { groupId: string; userId: string }, context: Context) => {
+    removeMember: async (
+      _: any,
+      { groupId, userId }: { groupId: string; userId: string },
+      context: Context
+    ) => {
       await requireGroupAdmin(context, groupId);
 
       const membership = await context.prisma.membership.findUnique({
@@ -1439,11 +1653,15 @@ export const resolvers = {
       });
 
       if (!membership) {
-        throw new GraphQLError('User is not a member of this group', { extensions: { code: 'BAD_USER_INPUT' } });
+        throw new GraphQLError('User is not a member of this group', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
       }
 
       if (membership.isAdmin) {
-        throw new GraphQLError('Cannot remove an admin. Remove admin role first.', { extensions: { code: 'BAD_USER_INPUT' } });
+        throw new GraphQLError('Cannot remove an admin. Remove admin role first.', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
       }
 
       await context.prisma.membership.delete({
@@ -1453,7 +1671,11 @@ export const resolvers = {
       return true;
     },
 
-    makeAdmin: async (_: any, { groupId, userId }: { groupId: string; userId: string }, context: Context) => {
+    makeAdmin: async (
+      _: any,
+      { groupId, userId }: { groupId: string; userId: string },
+      context: Context
+    ) => {
       await requireGroupAdmin(context, groupId);
 
       const membership = await context.prisma.membership.findUnique({
@@ -1461,7 +1683,9 @@ export const resolvers = {
       });
 
       if (!membership) {
-        throw new GraphQLError('User is not a member of this group', { extensions: { code: 'BAD_USER_INPUT' } });
+        throw new GraphQLError('User is not a member of this group', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
       }
 
       const updatedMembership = await context.prisma.membership.update({
@@ -1473,7 +1697,11 @@ export const resolvers = {
       return updatedMembership;
     },
 
-    removeAdmin: async (_: any, { groupId, userId }: { groupId: string; userId: string }, context: Context) => {
+    removeAdmin: async (
+      _: any,
+      { groupId, userId }: { groupId: string; userId: string },
+      context: Context
+    ) => {
       await requireGroupAdmin(context, groupId);
 
       const membership = await context.prisma.membership.findUnique({
@@ -1481,7 +1709,9 @@ export const resolvers = {
       });
 
       if (!membership) {
-        throw new GraphQLError('User is not a member of this group', { extensions: { code: 'BAD_USER_INPUT' } });
+        throw new GraphQLError('User is not a member of this group', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
       }
 
       if (!membership.isAdmin) {
@@ -1494,7 +1724,9 @@ export const resolvers = {
       });
 
       if (adminCount <= 1) {
-        throw new GraphQLError('Cannot remove the last admin', { extensions: { code: 'BAD_USER_INPUT' } });
+        throw new GraphQLError('Cannot remove the last admin', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
       }
 
       const updatedMembership = await context.prisma.membership.update({
@@ -1506,7 +1738,11 @@ export const resolvers = {
       return updatedMembership;
     },
 
-    blockUser: async (_: any, { input }: { input: { groupId: string; userId: string; reason?: string } }, context: Context) => {
+    blockUser: async (
+      _: any,
+      { input }: { input: { groupId: string; userId: string; reason?: string } },
+      context: Context
+    ) => {
       await requireGroupAdmin(context, input.groupId);
 
       // Check if user is already blocked
@@ -1515,7 +1751,9 @@ export const resolvers = {
       });
 
       if (existing) {
-        throw new GraphQLError('User is already blocked from this group', { extensions: { code: 'BAD_USER_INPUT' } });
+        throw new GraphQLError('User is already blocked from this group', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
       }
 
       const blockedUser = await context.prisma.blockedUser.create({
@@ -1531,7 +1769,11 @@ export const resolvers = {
       return true;
     },
 
-    unblockUser: async (_: any, { groupId, userId }: { groupId: string; userId: string }, context: Context) => {
+    unblockUser: async (
+      _: any,
+      { groupId, userId }: { groupId: string; userId: string },
+      context: Context
+    ) => {
       await requireGroupAdmin(context, groupId);
 
       const blockedUser = await context.prisma.blockedUser.findUnique({
@@ -1539,7 +1781,9 @@ export const resolvers = {
       });
 
       if (!blockedUser) {
-        throw new GraphQLError('User is not blocked from this group', { extensions: { code: 'BAD_USER_INPUT' } });
+        throw new GraphQLError('User is not blocked from this group', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
       }
 
       await context.prisma.blockedUser.delete({
@@ -1550,7 +1794,11 @@ export const resolvers = {
     },
 
     // Event mutations
-    createEvent: async (_: any, { input }: { input: { groupId: string; date: string; description: string } }, context: Context) => {
+    createEvent: async (
+      _: any,
+      { input }: { input: { groupId: string; date: string; description: string } },
+      context: Context
+    ) => {
       const user = requireAuth(context);
       await requireGroupMember(context, input.groupId);
 
@@ -1568,7 +1816,11 @@ export const resolvers = {
       return event;
     },
 
-    updateEvent: async (_: any, { id, input }: { id: string; input: { groupId: string; date: string; description: string } }, context: Context) => {
+    updateEvent: async (
+      _: any,
+      { id, input }: { id: string; input: { groupId: string; date: string; description: string } },
+      context: Context
+    ) => {
       const user = requireAuth(context);
 
       const event = await context.prisma.event.findUnique({
@@ -1646,7 +1898,11 @@ export const resolvers = {
       return true;
     },
 
-    createRSVP: async (_: any, { input }: { input: { eventId: string; status: string; note?: string } }, context: Context) => {
+    createRSVP: async (
+      _: any,
+      { input }: { input: { eventId: string; status: string; note?: string } },
+      context: Context
+    ) => {
       const user = requireAuth(context);
 
       const event = await context.prisma.event.findUnique({
@@ -1680,7 +1936,11 @@ export const resolvers = {
       return rsvp;
     },
 
-    updateRSVP: async (_: any, { id, status, note }: { id: string; status: string; note?: string }, context: Context) => {
+    updateRSVP: async (
+      _: any,
+      { id, status, note }: { id: string; status: string; note?: string },
+      context: Context
+    ) => {
       const user = requireAuth(context);
 
       const rsvp = await context.prisma.rSVP.findUnique({
@@ -1693,7 +1953,9 @@ export const resolvers = {
       }
 
       if (rsvp.userId !== user.id) {
-        throw new GraphQLError('You can only update your own RSVP', { extensions: { code: 'FORBIDDEN' } });
+        throw new GraphQLError('You can only update your own RSVP', {
+          extensions: { code: 'FORBIDDEN' },
+        });
       }
 
       const updatedRSVP = await context.prisma.rSVP.update({
@@ -1721,7 +1983,9 @@ export const resolvers = {
       }
 
       if (rsvp.userId !== user.id) {
-        throw new GraphQLError('You can only delete your own RSVP', { extensions: { code: 'FORBIDDEN' } });
+        throw new GraphQLError('You can only delete your own RSVP', {
+          extensions: { code: 'FORBIDDEN' },
+        });
       }
 
       await context.prisma.rSVP.delete({ where: { id } });
@@ -1729,7 +1993,11 @@ export const resolvers = {
     },
 
     // Message mutations
-    sendMessage: async (_: any, { input }: { input: { groupId: string; content: string } }, context: Context) => {
+    sendMessage: async (
+      _: any,
+      { input }: { input: { groupId: string; content: string } },
+      context: Context
+    ) => {
       const user = requireAuth(context);
       await requireGroupMember(context, input.groupId);
 
@@ -1763,7 +2031,9 @@ export const resolvers = {
 
       // For now, users can only delete themselves
       if (user.id !== userId) {
-        throw new GraphQLError('You can only delete your own account', { extensions: { code: 'FORBIDDEN' } });
+        throw new GraphQLError('You can only delete your own account', {
+          extensions: { code: 'FORBIDDEN' },
+        });
       }
 
       await context.prisma.user.delete({
@@ -1915,7 +2185,7 @@ export const resolvers = {
   },
 
   Membership: {
-    role: (parent: any) => {
+    role: (parent: unknown) => {
       return parent.isAdmin ? 'ADMIN' : 'MEMBER';
     },
   },
@@ -1933,5 +2203,3 @@ export const resolvers = {
     ...expensesResolvers.Expense,
   },
 };
-
-

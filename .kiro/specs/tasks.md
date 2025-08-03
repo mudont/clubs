@@ -84,6 +84,7 @@
 - [x] **TASK-073**: Add input validation for expense creation
 
 ### 2.5 Settlements & Group Settings (Backend)
+
 - [ ] **TASK-080**: Implement Settlement and GroupSettings models, resolvers, and business logic
 - [ ] **TASK-081**: Add payment status tracking and history
 - [ ] **TASK-082**: Implement group settings UI and backend
@@ -164,6 +165,7 @@
 - [x] **TASK-077**: Make Dashboard and Expenses UI responsive and compact
 
 ### 3.5 Tennis League & Lineup (Frontend)
+
 - [ ] **TASK-083**: Create UI for league, team, match, and point system management
 - [ ] **TASK-084**: Implement drag-and-drop lineup UI with slot validation and visibility controls
 - [ ] **TASK-085**: League standings page and real-time updates
@@ -198,6 +200,7 @@
 - [x] **TASK-079**: Update documentation/specs for Expenses module
 
 ### 4.2 Advanced Features & Monitoring
+
 - [ ] **TASK-086**: Add multi-currency, receipt upload, and budget tracking to expenses
 - [ ] **TASK-087**: Implement monitoring, backup, and alerting infrastructure
 
@@ -255,7 +258,7 @@
 - [ ] **TASK-152**: Set up production database with backups
 - [ ] **TASK-153**: Configure production Redis cluster
 - [ ] **TASK-154**: Implement SSL/TLS certificates
-- [ ] **TASK-155**: Set up load balancing with Nginx
+
 - [ ] **TASK-156**: Create environment variable management
 - [ ] **TASK-157**: Implement database migration strategy
 - [ ] **TASK-158**: Add production monitoring and alerting

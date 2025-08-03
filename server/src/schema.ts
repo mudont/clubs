@@ -235,15 +235,33 @@ export const typeDefs = gql`
     createTeamMatch(leagueId: ID!, input: CreateTeamMatchInput!): TeamLeagueTeamMatch!
     updateTeamMatch(id: ID!, input: UpdateTeamMatchInput!): TeamLeagueTeamMatch!
     deleteTeamMatch(id: ID!): Boolean!
-    createIndividualSinglesMatch(leagueId: ID!, input: CreateIndividualSinglesMatchInput!): TeamLeagueIndividualSinglesMatch!
-    updateIndividualSinglesMatch(id: ID!, input: UpdateIndividualSinglesMatchInput!): TeamLeagueIndividualSinglesMatch!
+    createIndividualSinglesMatch(
+      leagueId: ID!
+      input: CreateIndividualSinglesMatchInput!
+    ): TeamLeagueIndividualSinglesMatch!
+    updateIndividualSinglesMatch(
+      id: ID!
+      input: UpdateIndividualSinglesMatchInput!
+    ): TeamLeagueIndividualSinglesMatch!
     deleteIndividualSinglesMatch(id: ID!): Boolean!
-    createIndividualDoublesMatch(leagueId: ID!, input: CreateIndividualDoublesMatchInput!): TeamLeagueIndividualDoublesMatch!
-    updateIndividualDoublesMatch(id: ID!, input: UpdateIndividualDoublesMatchInput!): TeamLeagueIndividualDoublesMatch!
+    createIndividualDoublesMatch(
+      leagueId: ID!
+      input: CreateIndividualDoublesMatchInput!
+    ): TeamLeagueIndividualDoublesMatch!
+    updateIndividualDoublesMatch(
+      id: ID!
+      input: UpdateIndividualDoublesMatchInput!
+    ): TeamLeagueIndividualDoublesMatch!
     deleteIndividualDoublesMatch(id: ID!): Boolean!
     updatePointSystem(leagueId: ID!, input: UpdatePointSystemInput!): TeamLeaguePointSystem!
-    createTeamLeaguePointSystem(leagueId: ID!, input: CreateTeamLeaguePointSystemInput!): TeamLeaguePointSystem!
-    updateTeamLeaguePointSystem(id: ID!, input: UpdateTeamLeaguePointSystemInput!): TeamLeaguePointSystem!
+    createTeamLeaguePointSystem(
+      leagueId: ID!
+      input: CreateTeamLeaguePointSystemInput!
+    ): TeamLeaguePointSystem!
+    updateTeamLeaguePointSystem(
+      id: ID!
+      input: UpdateTeamLeaguePointSystemInput!
+    ): TeamLeaguePointSystem!
     deleteTeamLeaguePointSystem(id: ID!): Boolean!
     createOrUpdateLineup(input: LineupInput!): TeamMatchLineup!
     publishLineup(lineupId: ID!, visibility: LineupVisibility!): TeamMatchLineup!
@@ -312,6 +330,8 @@ export const typeDefs = gql`
     individualSinglesMatches: [TeamLeagueIndividualSinglesMatch!]!
     individualDoublesMatches: [TeamLeagueIndividualDoublesMatch!]!
     associatedEvents: [Event!]!
+    homeTeamEvent: Event
+    awayTeamEvent: Event
   }
 
   enum Winner {

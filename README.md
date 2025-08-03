@@ -27,15 +27,74 @@
 
 Clubs is a production-ready social and sports club management platform built with modern web technologies. It provides comprehensive club management, real-time communication, event scheduling, and member administration capabilities.
 
+## 🚀 Quick Development
+
+### Option 1: Docker Development (Recommended)
+
+```bash
+# Start database and Redis services
+npm run docker:dev
+
+# Then start the application
+npm run dev
+```
+
+### Option 2: Local Development
+
+```bash
+# Start both server and client
+npm run dev
+
+# Start individual services
+npm run dev:server  # GraphQL API on port 4010
+npm run dev:client  # React app on port 3000
+```
+
+### Docker Commands
+
+```bash
+# Development
+npm run docker:dev    # Start development database and Redis
+npm run docker:stop   # Stop development services
+npm run docker:reset  # Reset development environment (destroys data)
+npm run docker:logs   # View service logs
+
+# Production
+npm run setup:nginx   # Setup NGINX reverse proxy with SSL
+npm run deploy:prod   # Deploy to production (port 12410 → 4010)
+npm run test:restart  # Test auto-restart behavior
+```
+
+### Other Useful Commands
+
+```bash
+# Install all dependencies
+npm run install:all
+
+# Build both projects
+npm run build
+
+# Run all tests
+npm run test
+
+# Lint all code
+npm run lint
+
+# Clean all node_modules and build artifacts
+npm run clean
+```
+
 ### **Tech Stack**
+
 - **Frontend**: React 19, TypeScript, Apollo Client, Redux Toolkit
 - **Backend**: Node.js, Express, GraphQL, Prisma ORM
 - **Database**: PostgreSQL, Redis
-- **Infrastructure**: Docker, Nginx, GitHub Actions
+- **Infrastructure**: Docker, NGINX (reverse proxy), GitHub Actions
 - **Monitoring**: Winston, Custom monitoring scripts
 - **Testing**: Jest, Playwright, Supertest
 
 ### **Key Capabilities**
+
 - Multi-authentication (Local, Google, GitHub, Facebook OAuth)
 - Real-time chat with WebSocket support
 - Event management with RSVP functionality
@@ -52,6 +111,7 @@ Clubs is a production-ready social and sports club management platform built wit
 For a comprehensive list of features and architecture details, see [FEATURES.md](./FEATURES.md).
 
 **Core Features:**
+
 - 🔐 Secure authentication & authorization
 - 👥 Club creation and member management
 - 📅 Event scheduling and RSVP system
@@ -62,6 +122,7 @@ For a comprehensive list of features and architecture details, see [FEATURES.md]
 - 🚀 Production-ready infrastructure
 
 **Code Quality Excellence:**
+
 - ✅ **Zero ESLint Errors**: Enterprise-grade linting with 0 errors (down from 42 issues)
 - 🎯 **Type Safety**: Comprehensive TypeScript interfaces for all GraphQL operations
 - ♿ **Accessibility**: Full WCAG compliance with comprehensive test coverage
@@ -76,11 +137,13 @@ For a comprehensive list of features and architecture details, see [FEATURES.md]
 ## 🚀 Quick Start
 
 ### **Prerequisites**
+
 - Node.js 18+ and npm
 - Docker and Docker Compose
 - Git
 
 ### **1. Clone and Setup**
+
 ```bash
 # Clone the repository
 git clone https://github.com/username/clubs.git
@@ -94,6 +157,7 @@ nano .env
 ```
 
 ### **2. Start with Docker (Recommended)**
+
 ```bash
 # Start all services (PostgreSQL, Redis, Application)
 docker-compose up -d
@@ -106,6 +170,7 @@ open http://localhost:4010
 ```
 
 ### **3. Manual Setup (Development)**
+
 ```bash
 # Install dependencies
 npm install
@@ -134,11 +199,13 @@ npm run dev:client &  # Frontend on :3000
 ### **Environment Configuration**
 
 1. **Copy the example environment file:**
+
 ```bash
 cp env.example .env
 ```
 
 2. **Configure required variables:**
+
 ```bash
 # Database Configuration
 DATABASE_URL=postgresql://postgres:password@localhost:5432/clubs_db
@@ -158,6 +225,7 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 ```
 
 **💡 Pro Tip**: Generate secure secrets automatically:
+
 ```bash
 cd server && npm run generate:secrets
 ```
@@ -165,6 +233,7 @@ cd server && npm run generate:secrets
 ### **Development Workflow**
 
 1. **Install dependencies:**
+
 ```bash
 # Root dependencies
 npm install
@@ -178,6 +247,7 @@ cd ..
 ```
 
 2. **Database setup:**
+
 ```bash
 cd server
 
@@ -195,6 +265,7 @@ npx prisma studio
 ```
 
 3. **Start development servers:**
+
 ```bash
 # Start backend (GraphQL server)
 cd server
@@ -209,6 +280,7 @@ npm run dev
 ```
 
 4. **Access services:**
+
 - **Frontend**: http://localhost:3000
 - **Backend GraphQL**: http://localhost:4010/graphql
 - **Health Check**: http://localhost:4010/health
@@ -248,12 +320,14 @@ This application uses **Redis for persistent session storage** instead of the de
 - **Production Ready**: Industry-standard session storage solution
 
 **Configuration:**
+
 - Sessions are stored in Redis with prefix `sess:`
 - 24-hour session lifetime with automatic cleanup
 - Secure HTTP-only cookies in production
 - Graceful Redis connection handling with retry logic
 
 **Redis Setup:**
+
 ```bash
 # Start Redis with Docker
 docker-compose up -d redis
@@ -267,6 +341,7 @@ redis-cli ping  # Should return PONG
 ```
 
 ### **Code Quality Status**
+
 - ✅ **ESLint**: 0 errors, 20 warnings (TypeScript `any` types only)
 - ✅ **Import Organization**: 100% compliant with import/order rules
 - ✅ **TypeScript**: Comprehensive interface definitions for GraphQL operations
@@ -279,6 +354,7 @@ redis-cli ping  # Should return PONG
 This project uses **modular Cursor rules** for AI-assisted development:
 
 #### **Modular Rules Structure**
+
 ```
 .cursor/rules/
 ├── project.md              # Project overview & architecture
@@ -297,6 +373,7 @@ This project uses **modular Cursor rules** for AI-assisted development:
 ```
 
 #### **Managing Cursor Rules**
+
 ```bash
 # Edit modular rules (recommended)
 nano .cursor/rules/typescript.md
@@ -310,12 +387,14 @@ cat .cursorrules
 ```
 
 #### **Benefits of Modular Rules**
+
 - **Organized by topic** - Easy to find and edit specific standards
 - **Team collaboration** - Different team members can maintain different rule sets
 - **Version control** - Track changes to specific rule categories
 - **Maintainability** - Smaller, focused files are easier to manage
 
 #### **TypeScript Enforcement**
+
 - **All scripts and utilities use TypeScript** (.ts/.tsx)
 - **No JavaScript files** (.js/.jsx) are created for new development
 - **Type safety** is enforced across all code, including scripts
@@ -329,6 +408,7 @@ cat .cursorrules
 ### **Docker Production Deployment**
 
 1. **Environment Setup:**
+
 ```bash
 # Create production environment file
 cp env.example .env.production
@@ -340,15 +420,17 @@ DB_PASSWORD=$(openssl rand -base64 16)
 ```
 
 2. **Deploy with Docker Compose:**
+
 ```bash
 # Build and start production services
 docker-compose -f docker-compose.yml --profile production up -d
 
 # Or deploy specific services
-docker-compose up -d db redis app nginx
+docker-compose up -d db redis app
 ```
 
 3. **Initialize production database:**
+
 ```bash
 # Run migrations
 docker-compose exec app npm run migrate
@@ -360,6 +442,7 @@ docker-compose exec app npm run seed:prod
 ### **Manual Production Deployment**
 
 1. **Build the application:**
+
 ```bash
 # Build frontend
 cd client
@@ -372,17 +455,18 @@ cd ..
 ```
 
 2. **Setup production services:**
+
 ```bash
 # Install production dependencies only
 cd server && npm ci --only=production
 cd ../client && npm ci --only=production
 
 # Setup PostgreSQL and Redis
-# Configure nginx reverse proxy
 # Setup SSL certificates
 ```
 
 3. **Start production services:**
+
 ```bash
 # Start with PM2 (recommended)
 npm install -g pm2
@@ -395,6 +479,7 @@ cd server && npm start
 ### **Cloud Deployment**
 
 **AWS/GCP/Azure:**
+
 ```bash
 # Build and push Docker image
 docker build -t clubs-app .
@@ -406,6 +491,7 @@ kubectl apply -f k8s/
 ```
 
 **Heroku:**
+
 ```bash
 # Install Heroku CLI and login
 heroku login
@@ -425,6 +511,7 @@ git push heroku main
 ## 🔨 Building
 
 ### **Development Build**
+
 ```bash
 # Build server
 cd server
@@ -443,6 +530,7 @@ npm run build
 ```
 
 ### **Production Build**
+
 ```bash
 # Build optimized production bundles
 NODE_ENV=production npm run build
@@ -455,6 +543,7 @@ docker buildx build --platform linux/amd64,linux/arm64 -t clubs-app .
 ```
 
 ### **Build Verification**
+
 ```bash
 # Test production build locally
 npm run build
@@ -469,6 +558,7 @@ docker run -p 4010:4010 --env-file .env clubs-app
 ## 🧪 Testing
 
 ### **Unit Tests**
+
 ```bash
 # Run all tests
 npm test
@@ -487,6 +577,7 @@ npm run test:watch
 ```
 
 ### **Code Quality Testing**
+
 ```bash
 # Lint checking (must pass - 0 errors)
 npm run lint
@@ -502,6 +593,7 @@ npx lint-staged
 ```
 
 ### **Integration Tests**
+
 ```bash
 # Run integration tests with test database
 cd server
@@ -512,6 +604,7 @@ DATABASE_URL=postgresql://postgres:password@localhost:5432/clubs_test npm run te
 ```
 
 ### **End-to-End Tests**
+
 ```bash
 # Install Playwright
 cd client
@@ -528,6 +621,7 @@ npx playwright test auth.spec.ts
 ```
 
 ### **Security Tests**
+
 ```bash
 # Run security scan
 npm run security:scan
@@ -540,6 +634,7 @@ semgrep --config=auto .
 ```
 
 ### **Performance Tests**
+
 ```bash
 # Load testing with Artillery
 npm install -g artillery
@@ -553,22 +648,20 @@ npm run test:db-performance
 ### **Test Configuration**
 
 **Jest Configuration** (`server/jest.config.js`):
+
 ```javascript
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  collectCoverageFrom: [
-    'src/**/*.ts',
-    '!src/**/*.d.ts',
-  ],
+  collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts'],
   coverageThreshold: {
     global: {
       branches: 80,
       functions: 80,
       lines: 80,
-      statements: 80
-    }
-  }
+      statements: 80,
+    },
+  },
 };
 ```
 
@@ -579,6 +672,7 @@ module.exports = {
 ### **Application Monitoring**
 
 1. **Start monitoring services:**
+
 ```bash
 # Start monitoring script
 cd server
@@ -592,6 +686,7 @@ pm2 start scripts/monitor.js --name "clubs-monitor"
 ```
 
 2. **Health checks:**
+
 ```bash
 # Application health
 curl http://localhost:4010/health
@@ -609,6 +704,7 @@ curl http://localhost:4010/metrics
 ### **Log Management**
 
 1. **View logs:**
+
 ```bash
 # Application logs
 tail -f logs/app.log
@@ -624,6 +720,7 @@ docker-compose logs -f app
 ```
 
 2. **Log aggregation:**
+
 ```bash
 # Centralized logging with ELK stack
 docker-compose -f docker-compose.elk.yml up -d
@@ -635,6 +732,7 @@ open http://localhost:5601
 ### **Metrics Collection**
 
 1. **Prometheus metrics:**
+
 ```bash
 # Start Prometheus
 docker run -p 9090:9090 -v ./prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus
@@ -644,6 +742,7 @@ open http://localhost:9090
 ```
 
 2. **Grafana dashboards:**
+
 ```bash
 # Start Grafana
 docker run -p 3001:3000 grafana/grafana
@@ -654,6 +753,7 @@ docker run -p 3001:3000 grafana/grafana
 ### **Alerting**
 
 1. **Configure webhook alerts:**
+
 ```bash
 # Set webhook URL in environment
 export ALERT_WEBHOOK_URL=https://hooks.slack.com/your-webhook
@@ -665,6 +765,7 @@ export ALERT_RESPONSE_TIME_MS=5000
 ```
 
 2. **Email alerts:**
+
 ```bash
 # Configure SMTP settings
 export SMTP_HOST=smtp.gmail.com
@@ -713,12 +814,14 @@ docker-compose -f docker-compose.prod.yml up -d
 ### **Database Management**
 
 #### **Database Naming Conventions**
+
 - **PostgreSQL uses snake_case** for all table names and column names
 - Prisma schema uses camelCase for TypeScript compatibility
 - All database entities are mapped using `@map()` and `@@map()` directives
 - Examples: `createdAt` → `created_at`, `firstName` → `first_name`, `userId` → `user_id`
 
 #### **Schema Management**
+
 ```bash
 # View current database schema
 cd server && npx prisma studio
@@ -737,6 +840,7 @@ cd server && npx prisma migrate reset
 ```
 
 2. **Backups:**
+
 ```bash
 # Manual backup
 node scripts/backup.js
@@ -751,6 +855,7 @@ psql -U postgres -d clubs_db < backups/database_backup_2024-01-01.sql
 ### **Deployment Scripts**
 
 1. **Zero-downtime deployment:**
+
 ```bash
 #!/bin/bash
 # deploy.sh
@@ -758,10 +863,10 @@ psql -U postgres -d clubs_db < backups/database_backup_2024-01-01.sql
 docker-compose pull
 docker-compose up -d --no-deps app
 ./scripts/wait-for-health.sh
-docker-compose restart nginx
 ```
 
 2. **Rollback script:**
+
 ```bash
 #!/bin/bash
 # rollback.sh
@@ -778,6 +883,7 @@ docker-compose up -d app
 ### **Security Checklist**
 
 ✅ **Environment Security:**
+
 - [ ] JWT secrets are 32+ characters
 - [ ] Database passwords are strong
 - [ ] Environment files are not committed
@@ -785,6 +891,7 @@ docker-compose up -d app
 - [ ] CORS is properly configured
 
 ✅ **Application Security:**
+
 - [ ] Input validation on all endpoints
 - [ ] SQL injection protection
 - [ ] XSS protection
@@ -793,6 +900,7 @@ docker-compose up -d app
 - [ ] Security headers configured
 
 ✅ **Infrastructure Security:**
+
 - [ ] Non-root Docker containers
 - [ ] Network security groups configured
 - [ ] Database access restricted
@@ -835,6 +943,7 @@ apt-get update && apt-get upgrade
 ### **Common Issues**
 
 **Database Connection Issues:**
+
 ```bash
 # Check database status
 docker-compose ps db
@@ -849,6 +958,7 @@ docker-compose up -d db
 ```
 
 **Redis Connection Issues:**
+
 ```bash
 # Check Redis status
 docker-compose ps redis
@@ -861,6 +971,7 @@ redis-cli flushall
 ```
 
 **Application Startup Issues:**
+
 ```bash
 # Check application logs
 docker-compose logs app
@@ -873,6 +984,7 @@ docker-compose restart app
 ```
 
 **Build Issues (Linux/Mac differences):**
+
 ```bash
 # Regenerate Prisma client after schema changes
 cd server && npx prisma generate
@@ -886,6 +998,7 @@ npm install
 ```
 
 **SMTP/Email Issues:**
+
 ```bash
 # Test SMTP connectivity
 cd server && npm run test:smtp
@@ -900,6 +1013,7 @@ echo $EMAIL_USER $EMAIL_PASS
 ### **Performance Issues**
 
 **Slow Database Queries:**
+
 ```bash
 # Enable query logging
 echo "log_statement = 'all'" >> postgresql.conf
@@ -913,6 +1027,7 @@ docker-compose exec db pg_stat_activity
 ```
 
 **High Memory Usage:**
+
 ```bash
 # Monitor memory usage
 docker stats
@@ -928,6 +1043,7 @@ clinic doctor -- node server/dist/index.js
 ### **SMTP Testing**
 
 **Test Email Configuration:**
+
 ```bash
 # Test SMTP connectivity
 cd server && npm run test:smtp
@@ -940,6 +1056,7 @@ cd server && node scripts/smtp-cli-test.js
 ```
 
 **Common SMTP Issues:**
+
 - **Gmail App Password**: Use App Password instead of regular password if 2FA is enabled
 - **Network/Firewall**: Check if port 587/465 is blocked
 - **Environment Variables**: Verify EMAIL_USER and EMAIL_PASS are set correctly
@@ -948,6 +1065,7 @@ cd server && node scripts/smtp-cli-test.js
 ### **Secret Generation**
 
 **Generate Secure Secrets:**
+
 ```bash
 # Generate JWT and session secrets
 cd server && npm run generate:secrets
@@ -960,6 +1078,7 @@ cd server && npm run generate:secrets
 ### **Debugging**
 
 **Debug Mode:**
+
 ```bash
 # Start in debug mode
 DEBUG=* npm run dev
@@ -972,6 +1091,7 @@ node --inspect-brk server/dist/index.js
 ```
 
 **Production Debugging:**
+
 ```bash
 # Check health endpoints
 curl http://localhost:4010/health
@@ -992,17 +1112,20 @@ free -m
 ### **Development Process**
 
 1. **Fork and clone:**
+
 ```bash
 git clone https://github.com/yourusername/clubs.git
 cd clubs
 ```
 
 2. **Create feature branch:**
+
 ```bash
 git checkout -b feature/new-feature
 ```
 
 3. **Make changes and test:**
+
 ```bash
 npm test
 npm run lint
@@ -1010,6 +1133,7 @@ npm run type-check
 ```
 
 4. **Commit and push:**
+
 ```bash
 git commit -m "feat: add new feature"
 git push origin feature/new-feature
@@ -1053,6 +1177,7 @@ clubs/
 This project maintains enterprise-grade code quality standards:
 
 ### **✅ Code Quality Metrics**
+
 - **ESLint Status**: 0 errors, 20 warnings (TypeScript `any` types only)
 - **Import Organization**: 100% compliance with ESLint import/order rules
 - **Type Safety**: Comprehensive TypeScript interfaces for all GraphQL operations
@@ -1061,6 +1186,7 @@ This project maintains enterprise-grade code quality standards:
 - **Modern React**: Error boundaries, lazy loading, custom dialogs
 
 ### **🚀 Recent Improvements (Latest Update)**
+
 - ✅ Eliminated all 12 ESLint errors (down from 42 total issues)
 - ✅ Fixed all import organization issues
 - ✅ Removed all unused variables and imports
@@ -1077,6 +1203,7 @@ This project maintains enterprise-grade code quality standards:
 - ✅ Added comprehensive error handling for email sending operations
 
 ### **🛡️ Production Readiness**
+
 - **Security**: Enterprise-grade security scanning and validation
 - **Performance**: Optimized bundle sizes and lazy loading
 - **Monitoring**: Comprehensive observability and alerting
@@ -1090,6 +1217,7 @@ This project maintains enterprise-grade code quality standards:
 ## 🚀 Quick Reference
 
 ### **Common Commands**
+
 ```bash
 # Development
 npm run dev                    # Start both client and server
@@ -1121,6 +1249,7 @@ nano .cursor/rules/typescript.md # Edit TypeScript rules
 ```
 
 ### **Environment Setup**
+
 ```bash
 # Copy and configure environment
 cp env.example .env

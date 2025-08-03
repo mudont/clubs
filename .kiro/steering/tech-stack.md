@@ -27,7 +27,7 @@
 
 - **Docker**: Containerized deployment with multi-stage builds
 - **Docker Compose**: Complete development environment orchestration
-- **Nginx**: Reverse proxy and static file serving
+
 - **GitHub Actions**: Automated CI/CD pipeline with security scanning
 
 ## Key Architecture Patterns

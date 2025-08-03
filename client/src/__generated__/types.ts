@@ -990,9 +990,11 @@ export type TeamLeagueTeamMatch = {
   __typename?: 'TeamLeagueTeamMatch';
   associatedEvents: Array<Event>;
   awayTeam: TeamLeagueTeam;
+  awayTeamEvent: Maybe<Event>;
   awayTeamId: Scalars['String']['output'];
   createdAt: Scalars['DateTime']['output'];
   homeTeam: TeamLeagueTeam;
+  homeTeamEvent: Maybe<Event>;
   homeTeamId: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   individualDoublesMatches: Array<TeamLeagueIndividualDoublesMatch>;

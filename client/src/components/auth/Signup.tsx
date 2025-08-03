@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import './Auth.css';
+import { FacebookIcon, GoogleIcon } from './OAuthIcons';
 
 const Signup: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -143,6 +144,7 @@ const Signup: React.FC = () => {
             className="btn-oauth btn-google"
             onClick={() => handleOAuth('google')}
           >
+            <GoogleIcon />
             Continue with Google
           </button>
           {/*
@@ -159,6 +161,7 @@ const Signup: React.FC = () => {
             className="btn-oauth btn-facebook"
             onClick={() => handleOAuth('facebook')}
           >
+            <FacebookIcon />
             Continue with Facebook
           </button>
         </div>
