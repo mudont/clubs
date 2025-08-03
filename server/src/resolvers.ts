@@ -2176,7 +2176,7 @@ export const resolvers = {
         include: { user: true, blockedBy: true },
       });
     },
-    rsvps: async (parent: any, _: any, context: Context) => {
+    rsvps: async (parent: any, _: unknown, context: Context) => {
       return await context.prisma.rSVP.findMany({
         where: { event: { groupId: parent.id } },
         include: { user: true },
@@ -2185,7 +2185,7 @@ export const resolvers = {
   },
 
   Membership: {
-    role: (parent: unknown) => {
+    role: (parent: { isAdmin: boolean }) => {
       return parent.isAdmin ? 'ADMIN' : 'MEMBER';
     },
   },
