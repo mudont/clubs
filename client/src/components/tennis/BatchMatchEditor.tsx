@@ -197,7 +197,7 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
     matches: (IndividualSinglesMatch | IndividualDoublesMatch)[],
     type: 'singles' | 'doubles'
   ) {
-    return matches.map((m: unknown, idx) => {
+    return matches.map((m: any, idx) => {
       // Always render 3 sets for alignment
       const sets: [string | number, string | number][] = [0, 1, 2].map(i =>
         m.scoreArr && m.scoreArr[i] ? m.scoreArr[i] : ['', '']
