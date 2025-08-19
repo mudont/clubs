@@ -97,8 +97,8 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
             teamMatchId: m.teamMatchId,
             order: m.order,
             score: m.score,
-            winner: m.winner,
-            resultType: m.resultType,
+            winner: m.winner === '' ? null : m.winner,
+            resultType: m.resultType === '' ? null : m.resultType,
           };
         } else {
           input = {
@@ -110,8 +110,8 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
             teamMatchId: m.teamMatchId,
             order: m.order,
             score: m.score,
-            winner: m.winner,
-            resultType: m.resultType,
+            winner: m.winner === '' ? null : m.winner,
+            resultType: m.resultType === '' ? null : m.resultType,
           };
         }
         return mutation({ variables: { id: m.id, input } });

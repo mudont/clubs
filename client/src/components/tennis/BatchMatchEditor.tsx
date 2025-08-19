@@ -92,7 +92,7 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
 
   // Helper to update a match in state
   function updateMatchState(
-    index: number,
+    matchId: string,
     field: string,
     value: string,
     type: 'singles' | 'doubles'
@@ -100,13 +100,19 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
     if (type === 'singles') {
       setSinglesState(state => {
         const newState = [...state];
-        newState[index] = { ...newState[index], [field]: value };
+        const index = newState.findIndex(m => m.id === matchId);
+        if (index !== -1) {
+          newState[index] = { ...newState[index], [field]: value };
+        }
         return newState;
       });
     } else {
       setDoublesState(state => {
         const newState = [...state];
-        newState[index] = { ...newState[index], [field]: value };
+        const index = newState.findIndex(m => m.id === matchId);
+        if (index !== -1) {
+          newState[index] = { ...newState[index], [field]: value };
+        }
         return newState;
       });
     }
@@ -114,7 +120,7 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
 
   // Helper to update set scores
   function updateSetScore(
-    index: number,
+    matchId: string,
     setIdx: number,
     side: 0 | 1,
     value: string,
@@ -124,19 +130,25 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
     if (type === 'singles') {
       setSinglesState(state => {
         const newState = [...state];
-        const arr = newState[index].scoreArr ? [...newState[index].scoreArr] : [];
-        arr[setIdx] = arr[setIdx] ? [...arr[setIdx]] : [0, 0];
-        arr[setIdx][side] = parsed;
-        newState[index] = { ...newState[index], scoreArr: arr };
+        const index = newState.findIndex(m => m.id === matchId);
+        if (index !== -1) {
+          const arr = newState[index].scoreArr ? [...newState[index].scoreArr] : [];
+          arr[setIdx] = arr[setIdx] ? [...arr[setIdx]] : [0, 0];
+          arr[setIdx][side] = parsed;
+          newState[index] = { ...newState[index], scoreArr: arr };
+        }
         return newState;
       });
     } else {
       setDoublesState(state => {
         const newState = [...state];
-        const arr = newState[index].scoreArr ? [...newState[index].scoreArr] : [];
-        arr[setIdx] = arr[setIdx] ? [...arr[setIdx]] : [0, 0];
-        arr[setIdx][side] = parsed;
-        newState[index] = { ...newState[index], scoreArr: arr };
+        const index = newState.findIndex(m => m.id === matchId);
+        if (index !== -1) {
+          const arr = newState[index].scoreArr ? [...newState[index].scoreArr] : [];
+          arr[setIdx] = arr[setIdx] ? [...arr[setIdx]] : [0, 0];
+          arr[setIdx][side] = parsed;
+          newState[index] = { ...newState[index], scoreArr: arr };
+        }
         return newState;
       });
     }
@@ -202,7 +214,7 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
     matches: (IndividualSinglesMatch | IndividualDoublesMatch)[],
     type: 'singles' | 'doubles'
   ) {
-    return matches.map((m: any, idx) => {
+    return matches.map((m: any) => {
       // Always render 3 sets for alignment
       const sets: [string | number, string | number][] = [0, 1, 2].map(i =>
         m.scoreArr && m.scoreArr[i] ? m.scoreArr[i] : ['', '']
@@ -243,12 +255,12 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
                   type="text"
                   value={set[0] ?? ''}
                   onChange={e =>
-                    updateSetScore(idx, setIdx, 0, e.target.value.replace(/[^0-9]/g, ''), type)
+                    updateSetScore(m.id, setIdx, 0, e.target.value.replace(/[^0-9]/g, ''), type)
                   }
                   onBlur={e => {
                     const v = e.target.value;
                     if (v === '' || (Number(v) >= 0 && Number(v) <= 7)) return;
-                    updateSetScore(idx, setIdx, 0, '', type);
+                    updateSetScore(m.id, setIdx, 0, '', type);
                   }}
                   className="w-5 border rounded text-xs text-center"
                   style={{ width: 22 }}
@@ -269,12 +281,12 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
                   type="text"
                   value={set[1] ?? ''}
                   onChange={e =>
-                    updateSetScore(idx, setIdx, 1, e.target.value.replace(/[^0-9]/g, ''), type)
+                    updateSetScore(m.id, setIdx, 1, e.target.value.replace(/[^0-9]/g, ''), type)
                   }
                   onBlur={e => {
                     const v = e.target.value;
                     if (v === '' || (Number(v) >= 0 && Number(v) <= 7)) return;
-                    updateSetScore(idx, setIdx, 1, '', type);
+                    updateSetScore(m.id, setIdx, 1, '', type);
                   }}
                   className="w-5 border rounded text-xs text-center"
                   style={{ width: 22 }}
@@ -286,7 +298,7 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
           <td className="px-2 py-1 align-middle" style={{ borderLeft: '2px solid #e5e7eb' }}>
             <select
               value={m.winner || ''}
-              onChange={e => updateMatchState(idx, 'winner', e.target.value, type)}
+              onChange={e => updateMatchState(m.id, 'winner', e.target.value, type)}
               className="border rounded text-xs w-16"
               style={{ minWidth: 60 }}
             >
@@ -298,10 +310,11 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
           {/* Result type dropdown */}
           <td className="px-2 py-1 align-middle">
             <select
-              value={m.resultType || 'NONE'}
-              onChange={e => updateMatchState(idx, 'resultType', e.target.value, type)}
+              value={m.resultType || ''}
+              onChange={e => updateMatchState(m.id, 'resultType', e.target.value, type)}
               className="border rounded text-xs"
             >
+              <option value="">Select</option>
               {RESULT_TYPES.map(rt => (
                 <option key={rt.value} value={rt.value}>
                   {rt.label}
