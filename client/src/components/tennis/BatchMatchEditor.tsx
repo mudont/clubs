@@ -197,14 +197,14 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
     matches: (IndividualSinglesMatch | IndividualDoublesMatch)[],
     type: 'singles' | 'doubles'
   ) {
-    return matches.map((m: any, idx) => {
+    return matches.map((m: unknown, idx) => {
       // Always render 3 sets for alignment
       const sets: [string | number, string | number][] = [0, 1, 2].map(i =>
         m.scoreArr && m.scoreArr[i] ? m.scoreArr[i] : ['', '']
       );
       return (
         <tr key={m.id} className="border-b">
-          <td className="px-2 py-1 text-xs font-semibold align-middle">{idx + 1}</td>
+          <td className="px-2 py-1 text-xs font-semibold align-middle">{m.order}</td>
           <td className="px-2 py-1 align-middle">
             <PlayerLink user={type === 'singles' ? m.player1 : m.team1Player1} />
             {type === 'doubles' && (
@@ -331,6 +331,7 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
   }
 
   const matches = activeTab === 'singles' ? singlesState : doublesState;
+  const sortedMatches = [...matches].sort((a, b) => a.order - b.order);
   const type = activeTab;
 
   return (
@@ -353,7 +354,7 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
       <table className="min-w-full text-xs mb-4">
         <thead>
           <tr className="bg-gray-100">
-            <th className="px-2 py-1 align-middle">#</th>
+            <th className="px-2 py-1 align-middle">Order</th>
             <th className="px-2 py-1 align-middle text-left">Home</th>
             <th
               className="px-2 py-1 align-middle text-left"
@@ -394,7 +395,7 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
             <th className="px-2 py-1 align-middle text-left">Actions</th>
           </tr>
         </thead>
-        <tbody>{renderRows(matches, type)}</tbody>
+        <tbody>{renderRows(sortedMatches, type)}</tbody>
       </table>
 
       {/* Add Match Button */}

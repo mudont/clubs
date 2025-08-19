@@ -350,7 +350,7 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({
     if (leagueData && leagueData.tennisLeague && Array.isArray(leagueData.tennisLeague.teams)) {
       leagueData.tennisLeague.teams.forEach((team: any) => {
         if (team.group && Array.isArray(team.group.members)) {
-          team.group.members.forEach((membership: any) => {
+          team.group.members.forEach((membership: unknown) => {
             if (membership.user && !players.find(p => p.id === membership.user.id)) {
               const name =
                 membership.user.firstName || membership.user.lastName
@@ -692,146 +692,148 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({
 
       {/* Matches List */}
       <div className="space-y-4">
-        {matches.map(match => (
-          <div
-            key={match.id}
-            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
-          >
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="text-lg font-semibold">
-                    {matchType === 'singles' ? (
-                      <>
-                        {(() => {
-                          const player1 = (match as IndividualSinglesMatch).player1;
-                          const player2 = (match as IndividualSinglesMatch).player2;
-                          const player1Name =
-                            player1.firstName || player1.lastName
-                              ? `${player1.firstName ?? ''} ${player1.lastName ?? ''}`.trim()
-                              : player1.username || player1.email;
-                          const player2Name =
-                            player2.firstName || player2.lastName
-                              ? `${player2.firstName ?? ''} ${player2.lastName ?? ''}`.trim()
-                              : player2.username || player2.email;
-                          return `${player1Name} vs ${player2Name}`;
-                        })()}
-                      </>
-                    ) : (
-                      <>
-                        {(() => {
-                          const matchDoubles = match as IndividualDoublesMatch;
-                          const team1Player1Name =
-                            matchDoubles.team1Player1.firstName ||
-                            matchDoubles.team1Player1.lastName
-                              ? `${matchDoubles.team1Player1.firstName ?? ''} ${matchDoubles.team1Player1.lastName ?? ''}`.trim()
-                              : matchDoubles.team1Player1.username ||
-                                matchDoubles.team1Player1.email;
-                          const team1Player2Name =
-                            matchDoubles.team1Player2.firstName ||
-                            matchDoubles.team1Player2.lastName
-                              ? `${matchDoubles.team1Player2.firstName ?? ''} ${matchDoubles.team1Player2.lastName ?? ''}`.trim()
-                              : matchDoubles.team1Player2.username ||
-                                matchDoubles.team1Player2.email;
-                          const team2Player1Name =
-                            matchDoubles.team2Player1.firstName ||
-                            matchDoubles.team2Player1.lastName
-                              ? `${matchDoubles.team2Player1.firstName ?? ''} ${matchDoubles.team2Player1.lastName ?? ''}`.trim()
-                              : matchDoubles.team2Player1.username ||
-                                matchDoubles.team2Player1.email;
-                          const team2Player2Name =
-                            matchDoubles.team2Player2.firstName ||
-                            matchDoubles.team2Player2.lastName
-                              ? `${matchDoubles.team2Player2.firstName ?? ''} ${matchDoubles.team2Player2.lastName ?? ''}`.trim()
-                              : matchDoubles.team2Player2.username ||
-                                matchDoubles.team2Player2.email;
-                          return `Home (${team1Player1Name} & ${team1Player2Name}) vs Away (${team2Player1Name} & ${team2Player2Name})`;
-                        })()}
-                      </>
-                    )}
+        {[...matches]
+          .sort((a, b) => a.order - b.order)
+          .map(match => (
+            <div
+              key={match.id}
+              className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-lg font-semibold">
+                      {matchType === 'singles' ? (
+                        <>
+                          {(() => {
+                            const player1 = (match as IndividualSinglesMatch).player1;
+                            const player2 = (match as IndividualSinglesMatch).player2;
+                            const player1Name =
+                              player1.firstName || player1.lastName
+                                ? `${player1.firstName ?? ''} ${player1.lastName ?? ''}`.trim()
+                                : player1.username || player1.email;
+                            const player2Name =
+                              player2.firstName || player2.lastName
+                                ? `${player2.firstName ?? ''} ${player2.lastName ?? ''}`.trim()
+                                : player2.username || player2.email;
+                            return `${player1Name} vs ${player2Name}`;
+                          })()}
+                        </>
+                      ) : (
+                        <>
+                          {(() => {
+                            const matchDoubles = match as IndividualDoublesMatch;
+                            const team1Player1Name =
+                              matchDoubles.team1Player1.firstName ||
+                              matchDoubles.team1Player1.lastName
+                                ? `${matchDoubles.team1Player1.firstName ?? ''} ${matchDoubles.team1Player1.lastName ?? ''}`.trim()
+                                : matchDoubles.team1Player1.username ||
+                                  matchDoubles.team1Player1.email;
+                            const team1Player2Name =
+                              matchDoubles.team1Player2.firstName ||
+                              matchDoubles.team1Player2.lastName
+                                ? `${matchDoubles.team1Player2.firstName ?? ''} ${matchDoubles.team1Player2.lastName ?? ''}`.trim()
+                                : matchDoubles.team1Player2.username ||
+                                  matchDoubles.team1Player2.email;
+                            const team2Player1Name =
+                              matchDoubles.team2Player1.firstName ||
+                              matchDoubles.team2Player1.lastName
+                                ? `${matchDoubles.team2Player1.firstName ?? ''} ${matchDoubles.team2Player1.lastName ?? ''}`.trim()
+                                : matchDoubles.team2Player1.username ||
+                                  matchDoubles.team2Player1.email;
+                            const team2Player2Name =
+                              matchDoubles.team2Player2.firstName ||
+                              matchDoubles.team2Player2.lastName
+                                ? `${matchDoubles.team2Player2.firstName ?? ''} ${matchDoubles.team2Player2.lastName ?? ''}`.trim()
+                                : matchDoubles.team2Player2.username ||
+                                  matchDoubles.team2Player2.email;
+                            return `Home (${team1Player1Name} & ${team1Player2Name}) vs Away (${team2Player1Name} & ${team2Player2Name})`;
+                          })()}
+                        </>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          match.winner === 'HOME'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}
+                      >
+                        {match.winner === 'HOME' ? 'Completed' : 'Scheduled'}
+                      </span>
+                      <button
+                        onClick={() => handleEdit(match)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition-colors"
+                        title="Edit match"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(match.id)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition-colors"
+                        title="Delete match"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        match.winner === 'HOME'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}
-                    >
-                      {match.winner === 'HOME' ? 'Completed' : 'Scheduled'}
-                    </span>
-                    <button
-                      onClick={() => handleEdit(match)}
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition-colors"
-                      title="Edit match"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(match.id)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition-colors"
-                      title="Delete match"
-                    >
-                      Delete
-                    </button>
-                  </div>
+                  <div className="text-sm text-gray-600">{formatDate(match.matchDate)}</div>
                 </div>
-                <div className="text-sm text-gray-600">{formatDate(match.matchDate)}</div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">
-                  {matchType === 'singles'
-                    ? (match as IndividualSinglesMatch).score
-                    : (match as IndividualDoublesMatch).score}
-                </div>
-                <div className="text-sm text-gray-600">
-                  {matchType === 'singles'
-                    ? (() => {
-                        const player = (match as IndividualSinglesMatch).player1;
-                        return player.firstName || player.lastName
-                          ? `${player.firstName ?? ''} ${player.lastName ?? ''}`.trim()
-                          : player.username || player.email;
-                      })()
-                    : 'Home'}
-                </div>
-              </div>
-              <div className="text-center flex items-center justify-center">
-                <div className="text-lg font-medium text-gray-500">vs</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">
-                  {matchType === 'singles'
-                    ? (match as IndividualSinglesMatch).score
-                    : (match as IndividualDoublesMatch).score}
-                </div>
-                <div className="text-sm text-gray-600">
-                  {matchType === 'singles'
-                    ? (() => {
-                        const player = (match as IndividualSinglesMatch).player2;
-                        return player.firstName || player.lastName
-                          ? `${player.firstName ?? ''} ${player.lastName ?? ''}`.trim()
-                          : player.username || player.email;
-                      })()
-                    : 'Away'}
-                </div>
-              </div>
-            </div>
-
-            {match.winner && (
-              <div className="mt-4 pt-4 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center">
-                  <span className="text-sm font-medium text-gray-700">Result: </span>
-                  <span className="text-sm font-semibold text-gray-900">
-                    {getMatchResult(match)}
-                  </span>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {matchType === 'singles'
+                      ? (match as IndividualSinglesMatch).score
+                      : (match as IndividualDoublesMatch).score}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {matchType === 'singles'
+                      ? (() => {
+                          const player = (match as IndividualSinglesMatch).player1;
+                          return player.firstName || player.lastName
+                            ? `${player.firstName ?? ''} ${player.lastName ?? ''}`.trim()
+                            : player.username || player.email;
+                        })()
+                      : 'Home'}
+                  </div>
+                </div>
+                <div className="text-center flex items-center justify-center">
+                  <div className="text-lg font-medium text-gray-500">vs</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-red-600">
+                    {matchType === 'singles'
+                      ? (match as IndividualSinglesMatch).score
+                      : (match as IndividualDoublesMatch).score}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {matchType === 'singles'
+                      ? (() => {
+                          const player = (match as IndividualSinglesMatch).player2;
+                          return player.firstName || player.lastName
+                            ? `${player.firstName ?? ''} ${player.lastName ?? ''}`.trim()
+                            : player.username || player.email;
+                        })()
+                      : 'Away'}
+                  </div>
                 </div>
               </div>
-            )}
-          </div>
-        ))}
+
+              {match.winner && (
+                <div className="mt-4 pt-4 border-t">
+                  <div className="text-center">
+                    <span className="text-sm font-medium text-gray-700">Result: </span>
+                    <span className="text-sm font-semibold text-gray-900">
+                      {getMatchResult(match)}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
       </div>
 
       {matches.length === 0 && (
