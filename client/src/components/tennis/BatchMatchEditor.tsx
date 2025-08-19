@@ -1,7 +1,15 @@
-import React, { useState } from 'react';
+import { useMutation } from '@apollo/client';
+import React, { useEffect, useState } from 'react';
 
+import { DELETE_INDIVIDUAL_DOUBLES_MATCH, DELETE_INDIVIDUAL_SINGLES_MATCH } from './graphql';
 import IndividualMatchForm from './IndividualMatchForm';
-import { IndividualDoublesMatch, IndividualSinglesMatch, TeamLeagueTeamMatch } from './types';
+import {
+  DeleteIndividualDoublesMatchData,
+  DeleteIndividualSinglesMatchData,
+  IndividualDoublesMatch,
+  IndividualSinglesMatch,
+  TeamLeagueTeamMatch,
+} from './types';
 import { parseScoreString, scoreArrayToString } from './utils';
 
 const RESULT_TYPES = [
@@ -42,6 +50,42 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
     doublesMatches.map(m => ({ ...m, scoreArr: parseScoreString(m.score) }))
   );
   const [saving, setSaving] = useState(false);
+
+  // Delete mutations
+  const [deleteSinglesMatch] = useMutation<DeleteIndividualSinglesMatchData, { id: string }>(
+    DELETE_INDIVIDUAL_SINGLES_MATCH,
+    {
+      onCompleted: () => {
+        onRefresh();
+      },
+      onError: error => {
+        console.error('Error deleting singles match:', error);
+        alert('Failed to delete match. Please try again.');
+      },
+    }
+  );
+
+  const [deleteDoublesMatch] = useMutation<DeleteIndividualDoublesMatchData, { id: string }>(
+    DELETE_INDIVIDUAL_DOUBLES_MATCH,
+    {
+      onCompleted: () => {
+        onRefresh();
+      },
+      onError: error => {
+        console.error('Error deleting doubles match:', error);
+        alert('Failed to delete match. Please try again.');
+      },
+    }
+  );
+
+  // Sync local state with props when they change (e.g., after new matches are added)
+  useEffect(() => {
+    setSinglesState(singlesMatches.map(m => ({ ...m, scoreArr: parseScoreString(m.score) })));
+  }, [singlesMatches]);
+
+  useEffect(() => {
+    setDoublesState(doublesMatches.map(m => ({ ...m, scoreArr: parseScoreString(m.score) })));
+  }, [doublesMatches]);
 
   // Helper to update a match in state
   function updateMatchState(index: number, field: string, value: any, type: 'singles' | 'doubles') {
@@ -89,6 +133,19 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
       });
     }
   }
+
+  // Delete handler
+  const handleDelete = (id: string, type: 'singles' | 'doubles') => {
+    if (
+      window.confirm('Are you sure you want to delete this match? This action cannot be undone.')
+    ) {
+      if (type === 'singles') {
+        deleteSinglesMatch({ variables: { id } });
+      } else {
+        deleteDoublesMatch({ variables: { id } });
+      }
+    }
+  };
 
   // Save handler
   async function handleSave() {
@@ -150,7 +207,7 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
             )}
           </td>
           {/* Set scores: always 3 sets */}
-          {sets.map((set: any, setIdx: number) => (
+          {sets.map((set: unknown, setIdx: number) => (
             <React.Fragment key={setIdx}>
               <td
                 className="px-0 py-1 align-middle"
@@ -230,6 +287,17 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
               ))}
             </select>
           </td>
+          {/* Delete button */}
+          <td className="px-2 py-1 align-middle">
+            <button
+              onClick={() => handleDelete(m.id, type)}
+              className="text-red-600 hover:text-red-800 transition-colors"
+              title="Delete Match"
+              aria-label="Delete Match"
+            >
+              🗑️
+            </button>
+          </td>
         </tr>
       );
     });
@@ -296,6 +364,7 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
               Winner
             </th>
             <th className="px-2 py-1 align-middle text-left">Result</th>
+            <th className="px-2 py-1 align-middle text-left">Actions</th>
           </tr>
         </thead>
         <tbody>{renderRows(matches, type)}</tbody>

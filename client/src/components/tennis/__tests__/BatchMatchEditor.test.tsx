@@ -149,4 +149,52 @@ describe('BatchMatchEditor', () => {
     const saveAllButton = screen.getByText('Save All');
     expect(saveAllButton).toBeInTheDocument();
   });
+
+  it('renders delete buttons for existing matches', () => {
+    const singlesMatchWithData: IndividualSinglesMatch[] = [
+      {
+        id: 'singles-1',
+        player1Id: 'user-1',
+        player2Id: 'user-2',
+        matchDate: '2024-01-15T10:00:00Z',
+        createdAt: '2024-01-01T00:00:00Z',
+        teamMatchId: 'team-match-1',
+        order: 1,
+        score: '6-4,6-2',
+        winner: 'HOME',
+        resultType: 'C',
+        player1: {
+          id: 'user-1',
+          username: 'player1',
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john@example.com',
+        },
+        player2: {
+          id: 'user-2',
+          username: 'player2',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@example.com',
+        },
+      },
+    ];
+
+    render(
+      <MockedProvider mocks={[]}>
+        <BatchMatchEditor
+          singlesMatches={singlesMatchWithData}
+          doublesMatches={mockDoublesMatches}
+          onSave={mockOnSave}
+          teamMatch={mockTeamMatch}
+          leagueId="league-1"
+          onRefresh={mockOnRefresh}
+        />
+      </MockedProvider>
+    );
+
+    const deleteButton = screen.getByLabelText('Delete Match');
+    expect(deleteButton).toBeInTheDocument();
+    expect(deleteButton).toHaveTextContent('🗑️');
+  });
 });
