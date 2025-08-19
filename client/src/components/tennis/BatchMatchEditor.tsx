@@ -42,6 +42,9 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'singles' | 'doubles'>('singles');
   const [showCreateForm, setShowCreateForm] = useState<'singles' | 'doubles' | null>(null);
+  const [editingMatch, setEditingMatch] = useState<
+    IndividualSinglesMatch | IndividualDoublesMatch | null
+  >(null);
   // Local state for editing
   const [singlesState, setSinglesState] = useState(() =>
     singlesMatches.map(m => ({ ...m, scoreArr: parseScoreString(m.score) }))
@@ -147,6 +150,15 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
     }
   };
 
+  // Edit handler
+  const handleEdit = (
+    match: IndividualSinglesMatch | IndividualDoublesMatch,
+    type: 'singles' | 'doubles'
+  ) => {
+    setEditingMatch(match);
+    setShowCreateForm(type);
+  };
+
   // Save handler
   async function handleSave() {
     setSaving(true);
@@ -181,8 +193,11 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
   }
 
   // Render match rows
-  function renderRows(matches: any[], type: 'singles' | 'doubles') {
-    return matches.map((m, idx) => {
+  function renderRows(
+    matches: (IndividualSinglesMatch | IndividualDoublesMatch)[],
+    type: 'singles' | 'doubles'
+  ) {
+    return matches.map((m: unknown, idx) => {
       // Always render 3 sets for alignment
       const sets: [string | number, string | number][] = [0, 1, 2].map(i =>
         m.scoreArr && m.scoreArr[i] ? m.scoreArr[i] : ['', '']
@@ -289,16 +304,26 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
               ))}
             </select>
           </td>
-          {/* Delete button */}
+          {/* Edit and Delete buttons */}
           <td className="px-2 py-1 align-middle">
-            <button
-              onClick={() => handleDelete(m.id, type)}
-              className="text-red-600 hover:text-red-800 transition-colors"
-              title="Delete Match"
-              aria-label="Delete Match"
-            >
-              🗑️
-            </button>
+            <div className="flex gap-1">
+              <button
+                onClick={() => handleEdit(m, type)}
+                className="text-blue-600 hover:text-blue-800 transition-colors"
+                title="Edit Match"
+                aria-label="Edit Match"
+              >
+                ✏️
+              </button>
+              <button
+                onClick={() => handleDelete(m.id, type)}
+                className="text-red-600 hover:text-red-800 transition-colors"
+                title="Delete Match"
+                aria-label="Delete Match"
+              >
+                🗑️
+              </button>
+            </div>
           </td>
         </tr>
       );
@@ -386,20 +411,27 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
         </div>
       )}
 
-      {/* Individual Match Creation Form */}
+      {/* Individual Match Creation/Edit Form */}
       {showCreateForm && (
         <IndividualMatchForm
           matchType={showCreateForm}
           teamMatch={teamMatch}
           leagueId={leagueId}
           initialOrder={
-            (showCreateForm === 'singles' ? singlesMatches.length : doublesMatches.length) + 1
+            editingMatch
+              ? editingMatch.order
+              : (showCreateForm === 'singles' ? singlesMatches.length : doublesMatches.length) + 1
           }
+          editingMatch={editingMatch}
           onSuccess={() => {
             setShowCreateForm(null);
+            setEditingMatch(null);
             onRefresh();
           }}
-          onCancel={() => setShowCreateForm(null)}
+          onCancel={() => {
+            setShowCreateForm(null);
+            setEditingMatch(null);
+          }}
         />
       )}
 

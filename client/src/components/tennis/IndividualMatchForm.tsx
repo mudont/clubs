@@ -1,13 +1,22 @@
 import { useMutation } from '@apollo/client';
 import React, { useEffect, useState } from 'react';
 
-import { CREATE_INDIVIDUAL_DOUBLES_MATCH, CREATE_INDIVIDUAL_SINGLES_MATCH } from './graphql';
+import {
+  CREATE_INDIVIDUAL_DOUBLES_MATCH,
+  CREATE_INDIVIDUAL_SINGLES_MATCH,
+  UPDATE_INDIVIDUAL_DOUBLES_MATCH,
+  UPDATE_INDIVIDUAL_SINGLES_MATCH,
+} from './graphql';
 import {
   CreateIndividualDoublesMatchData,
   CreateIndividualDoublesMatchInput,
   CreateIndividualSinglesMatchData,
   CreateIndividualSinglesMatchInput,
   TeamLeagueTeamMatch,
+  UpdateIndividualDoublesMatchData,
+  UpdateIndividualDoublesMatchInput,
+  UpdateIndividualSinglesMatchData,
+  UpdateIndividualSinglesMatchInput,
 } from './types';
 import { getFormattedAwayTeamPlayers, getFormattedHomeTeamPlayers } from './utils';
 
@@ -18,6 +27,7 @@ interface IndividualMatchFormProps {
   onSuccess: () => void;
   onCancel: () => void;
   initialOrder?: number;
+  editingMatch?: any; // The match being edited (IndividualSinglesMatch | IndividualDoublesMatch)
 }
 
 const IndividualMatchForm: React.FC<IndividualMatchFormProps> = ({
@@ -27,29 +37,58 @@ const IndividualMatchForm: React.FC<IndividualMatchFormProps> = ({
   onSuccess,
   onCancel,
   initialOrder = 1,
+  editingMatch,
 }) => {
   // Form data for singles matches
-  const [singlesFormData, setSinglesFormData] = useState<CreateIndividualSinglesMatchInput>({
-    player1Id: '',
-    player2Id: '',
-    matchDate: teamMatch.matchDate.split('T')[0],
-    order: initialOrder,
-    score: '',
-    winner: null,
-    teamMatchId: teamMatch.id,
+  const [singlesFormData, setSinglesFormData] = useState<CreateIndividualSinglesMatchInput>(() => {
+    if (editingMatch && matchType === 'singles') {
+      return {
+        player1Id: editingMatch.player1Id,
+        player2Id: editingMatch.player2Id,
+        matchDate: editingMatch.matchDate.split('T')[0],
+        order: editingMatch.order,
+        score: editingMatch.score || '',
+        winner: editingMatch.winner,
+        teamMatchId: teamMatch.id,
+      };
+    }
+    return {
+      player1Id: '',
+      player2Id: '',
+      matchDate: teamMatch.matchDate.split('T')[0],
+      order: initialOrder,
+      score: '',
+      winner: null,
+      teamMatchId: teamMatch.id,
+    };
   });
 
   // Form data for doubles matches
-  const [doublesFormData, setDoublesFormData] = useState<CreateIndividualDoublesMatchInput>({
-    team1Player1Id: '',
-    team1Player2Id: '',
-    team2Player1Id: '',
-    team2Player2Id: '',
-    matchDate: teamMatch.matchDate.split('T')[0],
-    order: initialOrder,
-    score: '',
-    winner: null,
-    teamMatchId: teamMatch.id,
+  const [doublesFormData, setDoublesFormData] = useState<CreateIndividualDoublesMatchInput>(() => {
+    if (editingMatch && matchType === 'doubles') {
+      return {
+        team1Player1Id: editingMatch.team1Player1Id,
+        team1Player2Id: editingMatch.team1Player2Id,
+        team2Player1Id: editingMatch.team2Player1Id,
+        team2Player2Id: editingMatch.team2Player2Id,
+        matchDate: editingMatch.matchDate.split('T')[0],
+        order: editingMatch.order,
+        score: editingMatch.score || '',
+        winner: editingMatch.winner,
+        teamMatchId: teamMatch.id,
+      };
+    }
+    return {
+      team1Player1Id: '',
+      team1Player2Id: '',
+      team2Player1Id: '',
+      team2Player2Id: '',
+      matchDate: teamMatch.matchDate.split('T')[0],
+      order: initialOrder,
+      score: '',
+      winner: null,
+      teamMatchId: teamMatch.id,
+    };
   });
 
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -93,6 +132,31 @@ const IndividualMatchForm: React.FC<IndividualMatchFormProps> = ({
     },
   });
 
+  // Update mutations
+  const [updateSinglesMatch, { loading: updatingSingles, error: updateSinglesError }] = useMutation<
+    UpdateIndividualSinglesMatchData,
+    { id: string; input: UpdateIndividualSinglesMatchInput }
+  >(UPDATE_INDIVIDUAL_SINGLES_MATCH, {
+    onCompleted: () => {
+      onSuccess();
+    },
+    onError: error => {
+      console.error('Error updating singles match:', error);
+    },
+  });
+
+  const [updateDoublesMatch, { loading: updatingDoubles, error: updateDoublesError }] = useMutation<
+    UpdateIndividualDoublesMatchData,
+    { id: string; input: UpdateIndividualDoublesMatchInput }
+  >(UPDATE_INDIVIDUAL_DOUBLES_MATCH, {
+    onCompleted: () => {
+      onSuccess();
+    },
+    onError: error => {
+      console.error('Error updating doubles match:', error);
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError(null);
@@ -108,7 +172,11 @@ const IndividualMatchForm: React.FC<IndividualMatchFormProps> = ({
         return;
       }
 
-      createSinglesMatch({ variables: { leagueId, input: singlesFormData } });
+      if (editingMatch) {
+        updateSinglesMatch({ variables: { id: editingMatch.id, input: singlesFormData } });
+      } else {
+        createSinglesMatch({ variables: { leagueId, input: singlesFormData } });
+      }
     } else {
       if (
         !doublesFormData.team1Player1Id ||
@@ -129,20 +197,26 @@ const IndividualMatchForm: React.FC<IndividualMatchFormProps> = ({
         return;
       }
 
-      createDoublesMatch({ variables: { leagueId, input: doublesFormData } });
+      if (editingMatch) {
+        updateDoublesMatch({ variables: { id: editingMatch.id, input: doublesFormData } });
+      } else {
+        createDoublesMatch({ variables: { leagueId, input: doublesFormData } });
+      }
     }
   };
 
   const homeTeamPlayers = getFormattedHomeTeamPlayers(teamMatch);
   const awayTeamPlayers = getFormattedAwayTeamPlayers(teamMatch);
 
-  const loading = creatingSingles || creatingDoubles;
-  const error = createSinglesError || createDoublesError;
+  const loading = creatingSingles || creatingDoubles || updatingSingles || updatingDoubles;
+  const error =
+    createSinglesError || createDoublesError || updateSinglesError || updateDoublesError;
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
       <h3 className="text-xl font-semibold mb-4">
-        Create New {matchType === 'singles' ? 'Singles' : 'Doubles'} Match
+        {editingMatch ? 'Edit' : 'Create New'} {matchType === 'singles' ? 'Singles' : 'Doubles'}{' '}
+        Match
       </h3>
       {(error || validationError) && (
         <div
@@ -421,7 +495,13 @@ const IndividualMatchForm: React.FC<IndividualMatchFormProps> = ({
             className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg transition-colors"
             aria-label={`Create ${matchType} match`}
           >
-            {loading ? 'Creating...' : 'Create Match'}
+            {loading
+              ? editingMatch
+                ? 'Updating...'
+                : 'Creating...'
+              : editingMatch
+                ? 'Update Match'
+                : 'Create Match'}
           </button>
           <button
             type="button"

@@ -162,7 +162,7 @@ describe('BatchMatchEditor', () => {
         order: 1,
         score: '6-4,6-2',
         winner: 'HOME',
-        resultType: 'C',
+
         player1: {
           id: 'user-1',
           username: 'player1',
@@ -177,6 +177,7 @@ describe('BatchMatchEditor', () => {
           lastName: 'Smith',
           email: 'jane@example.com',
         },
+        teamMatch: mockTeamMatch,
       },
     ];
 
