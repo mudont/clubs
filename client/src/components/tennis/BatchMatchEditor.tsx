@@ -91,7 +91,12 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
   }, [doublesMatches]);
 
   // Helper to update a match in state
-  function updateMatchState(index: number, field: string, value: any, type: 'singles' | 'doubles') {
+  function updateMatchState(
+    index: number,
+    field: string,
+    value: string,
+    type: 'singles' | 'doubles'
+  ) {
     if (type === 'singles') {
       setSinglesState(state => {
         const newState = [...state];
@@ -398,20 +403,6 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
         <tbody>{renderRows(sortedMatches, type)}</tbody>
       </table>
 
-      {/* Add Match Button */}
-      {!showCreateForm && (
-        <div className="mb-4">
-          <button
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-            onClick={() => setShowCreateForm(activeTab)}
-            aria-label={`Add new ${activeTab} match`}
-          >
-            <span className="text-lg">+</span>
-            Add {activeTab === 'singles' ? 'Singles' : 'Doubles'} Match
-          </button>
-        </div>
-      )}
-
       {/* Individual Match Creation/Edit Form */}
       {showCreateForm && (
         <IndividualMatchForm
@@ -436,13 +427,26 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
         />
       )}
 
-      <button
-        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-        onClick={handleSave}
-        disabled={saving}
-      >
-        {saving ? 'Saving...' : 'Save All'}
-      </button>
+      {/* Action buttons row */}
+      <div className="flex gap-4 items-center">
+        {!showCreateForm && (
+          <button
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+            onClick={() => setShowCreateForm(activeTab)}
+            aria-label={`Add new ${activeTab} match`}
+          >
+            <span className="text-lg">+</span>
+            Add {activeTab === 'singles' ? 'Singles' : 'Doubles'} Match
+          </button>
+        )}
+        <button
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+          onClick={handleSave}
+          disabled={saving}
+        >
+          {saving ? 'Saving...' : 'Save Scores'}
+        </button>
+      </div>
     </div>
   );
 };
