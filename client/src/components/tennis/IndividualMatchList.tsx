@@ -1,8 +1,31 @@
 import { useMutation, useQuery } from '@apollo/client';
 import React, { useState } from 'react';
 
-import { CREATE_INDIVIDUAL_DOUBLES_MATCH, CREATE_INDIVIDUAL_SINGLES_MATCH, DELETE_INDIVIDUAL_DOUBLES_MATCH, DELETE_INDIVIDUAL_SINGLES_MATCH, GET_TENNIS_LEAGUE, UPDATE_INDIVIDUAL_DOUBLES_MATCH, UPDATE_INDIVIDUAL_SINGLES_MATCH } from './graphql';
-import { CreateIndividualDoublesMatchData, CreateIndividualDoublesMatchInput, CreateIndividualSinglesMatchData, CreateIndividualSinglesMatchInput, DeleteIndividualDoublesMatchData, DeleteIndividualSinglesMatchData, IndividualDoublesMatch, IndividualSinglesMatch, UpdateIndividualDoublesMatchData, UpdateIndividualDoublesMatchInput, UpdateIndividualSinglesMatchData, UpdateIndividualSinglesMatchInput } from './types';
+import { sortByName } from '../../utils/sorting';
+
+import {
+  CREATE_INDIVIDUAL_DOUBLES_MATCH,
+  CREATE_INDIVIDUAL_SINGLES_MATCH,
+  DELETE_INDIVIDUAL_DOUBLES_MATCH,
+  DELETE_INDIVIDUAL_SINGLES_MATCH,
+  GET_TENNIS_LEAGUE,
+  UPDATE_INDIVIDUAL_DOUBLES_MATCH,
+  UPDATE_INDIVIDUAL_SINGLES_MATCH,
+} from './graphql';
+import {
+  CreateIndividualDoublesMatchData,
+  CreateIndividualDoublesMatchInput,
+  CreateIndividualSinglesMatchData,
+  CreateIndividualSinglesMatchInput,
+  DeleteIndividualDoublesMatchData,
+  DeleteIndividualSinglesMatchData,
+  IndividualDoublesMatch,
+  IndividualSinglesMatch,
+  UpdateIndividualDoublesMatchData,
+  UpdateIndividualDoublesMatchInput,
+  UpdateIndividualSinglesMatchData,
+  UpdateIndividualSinglesMatchInput,
+} from './types';
 
 interface IndividualMatchListProps {
   teamMatchId: string;
@@ -11,9 +34,16 @@ interface IndividualMatchListProps {
   leagueId?: string;
 }
 
-const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, matches, matchType, leagueId }) => {
+const IndividualMatchList: React.FC<IndividualMatchListProps> = ({
+  teamMatchId,
+  matches,
+  matchType,
+  leagueId,
+}) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [editingMatch, setEditingMatch] = useState<IndividualSinglesMatch | IndividualDoublesMatch | null>(null);
+  const [editingMatch, setEditingMatch] = useState<
+    IndividualSinglesMatch | IndividualDoublesMatch | null
+  >(null);
 
   // Form data for singles matches
   const [singlesFormData, setSinglesFormData] = useState<CreateIndividualSinglesMatchInput>({
@@ -44,86 +74,128 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
   const { refetch } = useQuery(GET_TENNIS_LEAGUE, { variables: { id: leagueQueryId } });
 
   // Singles mutations
-  const [createSinglesMatch, { loading: creatingSingles, error: createSinglesError }] = useMutation<CreateIndividualSinglesMatchData, { input: CreateIndividualSinglesMatchInput }>(
-    CREATE_INDIVIDUAL_SINGLES_MATCH,
-    {
-      onCompleted: () => {
-        setShowCreateForm(false);
-        setSinglesFormData({ player1Id: '', player2Id: '', matchDate: '', order: 0, score: '', winner: null, teamMatchId });
-        refetch();
-      },
-      onError: (error) => {
-        console.error('Error creating singles match:', error);
-        alert('Failed to create match. Please try again.');
-      },
-    }
-  );
-
-  const [updateSinglesMatch, { loading: updatingSingles, error: updateSinglesError }] = useMutation<UpdateIndividualSinglesMatchData, { id: string; input: UpdateIndividualSinglesMatchInput }>(
-    UPDATE_INDIVIDUAL_SINGLES_MATCH,
-    {
-      onCompleted: () => {
-        setEditingMatch(null);
-        setSinglesFormData({ player1Id: '', player2Id: '', matchDate: '', order: 0, score: '', winner: null, teamMatchId });
-        refetch();
-      },
-      onError: (error) => {
-        console.error('Error updating singles match:', error);
-        alert('Failed to update match. Please try again.');
-      },
-    }
-  );
-
-  const [deleteSinglesMatch] = useMutation<DeleteIndividualSinglesMatchData, { id: string }>(DELETE_INDIVIDUAL_SINGLES_MATCH, {
+  const [createSinglesMatch, { loading: creatingSingles, error: createSinglesError }] = useMutation<
+    CreateIndividualSinglesMatchData,
+    { input: CreateIndividualSinglesMatchInput }
+  >(CREATE_INDIVIDUAL_SINGLES_MATCH, {
     onCompleted: () => {
+      setShowCreateForm(false);
+      setSinglesFormData({
+        player1Id: '',
+        player2Id: '',
+        matchDate: '',
+        order: 0,
+        score: '',
+        winner: null,
+        teamMatchId,
+      });
       refetch();
     },
-    onError: (error) => {
-      console.error('Error deleting singles match:', error);
-      alert('Failed to delete match. Please try again.');
+    onError: error => {
+      console.error('Error creating singles match:', error);
+      alert('Failed to create match. Please try again.');
     },
   });
+
+  const [updateSinglesMatch, { loading: updatingSingles, error: updateSinglesError }] = useMutation<
+    UpdateIndividualSinglesMatchData,
+    { id: string; input: UpdateIndividualSinglesMatchInput }
+  >(UPDATE_INDIVIDUAL_SINGLES_MATCH, {
+    onCompleted: () => {
+      setEditingMatch(null);
+      setSinglesFormData({
+        player1Id: '',
+        player2Id: '',
+        matchDate: '',
+        order: 0,
+        score: '',
+        winner: null,
+        teamMatchId,
+      });
+      refetch();
+    },
+    onError: error => {
+      console.error('Error updating singles match:', error);
+      alert('Failed to update match. Please try again.');
+    },
+  });
+
+  const [deleteSinglesMatch] = useMutation<DeleteIndividualSinglesMatchData, { id: string }>(
+    DELETE_INDIVIDUAL_SINGLES_MATCH,
+    {
+      onCompleted: () => {
+        refetch();
+      },
+      onError: error => {
+        console.error('Error deleting singles match:', error);
+        alert('Failed to delete match. Please try again.');
+      },
+    }
+  );
 
   // Doubles mutations
-  const [createDoublesMatch, { loading: creatingDoubles, error: createDoublesError }] = useMutation<CreateIndividualDoublesMatchData, { input: CreateIndividualDoublesMatchInput }>(
-    CREATE_INDIVIDUAL_DOUBLES_MATCH,
-    {
-      onCompleted: () => {
-        setShowCreateForm(false);
-        setDoublesFormData({ team1Player1Id: '', team1Player2Id: '', team2Player1Id: '', team2Player2Id: '', matchDate: '', order: 0, score: '', winner: null, teamMatchId });
-        refetch();
-      },
-      onError: (error) => {
-        console.error('Error creating doubles match:', error);
-        alert('Failed to create match. Please try again.');
-      },
-    }
-  );
-
-  const [updateDoublesMatch, { loading: updatingDoubles, error: updateDoublesError }] = useMutation<UpdateIndividualDoublesMatchData, { id: string; input: UpdateIndividualDoublesMatchInput }>(
-    UPDATE_INDIVIDUAL_DOUBLES_MATCH,
-    {
-      onCompleted: () => {
-        setEditingMatch(null);
-        setDoublesFormData({ team1Player1Id: '', team1Player2Id: '', team2Player1Id: '', team2Player2Id: '', matchDate: '', order: 0, score: '', winner: null, teamMatchId });
-        refetch();
-      },
-      onError: (error) => {
-        console.error('Error updating doubles match:', error);
-        alert('Failed to update match. Please try again.');
-      },
-    }
-  );
-
-  const [deleteDoublesMatch] = useMutation<DeleteIndividualDoublesMatchData, { id: string }>(DELETE_INDIVIDUAL_DOUBLES_MATCH, {
+  const [createDoublesMatch, { loading: creatingDoubles, error: createDoublesError }] = useMutation<
+    CreateIndividualDoublesMatchData,
+    { input: CreateIndividualDoublesMatchInput }
+  >(CREATE_INDIVIDUAL_DOUBLES_MATCH, {
     onCompleted: () => {
+      setShowCreateForm(false);
+      setDoublesFormData({
+        team1Player1Id: '',
+        team1Player2Id: '',
+        team2Player1Id: '',
+        team2Player2Id: '',
+        matchDate: '',
+        order: 0,
+        score: '',
+        winner: null,
+        teamMatchId,
+      });
       refetch();
     },
-    onError: (error) => {
-      console.error('Error deleting doubles match:', error);
-      alert('Failed to delete match. Please try again.');
+    onError: error => {
+      console.error('Error creating doubles match:', error);
+      alert('Failed to create match. Please try again.');
     },
   });
+
+  const [updateDoublesMatch, { loading: updatingDoubles, error: updateDoublesError }] = useMutation<
+    UpdateIndividualDoublesMatchData,
+    { id: string; input: UpdateIndividualDoublesMatchInput }
+  >(UPDATE_INDIVIDUAL_DOUBLES_MATCH, {
+    onCompleted: () => {
+      setEditingMatch(null);
+      setDoublesFormData({
+        team1Player1Id: '',
+        team1Player2Id: '',
+        team2Player1Id: '',
+        team2Player2Id: '',
+        matchDate: '',
+        order: 0,
+        score: '',
+        winner: null,
+        teamMatchId,
+      });
+      refetch();
+    },
+    onError: error => {
+      console.error('Error updating doubles match:', error);
+      alert('Failed to update match. Please try again.');
+    },
+  });
+
+  const [deleteDoublesMatch] = useMutation<DeleteIndividualDoublesMatchData, { id: string }>(
+    DELETE_INDIVIDUAL_DOUBLES_MATCH,
+    {
+      onCompleted: () => {
+        refetch();
+      },
+      onError: error => {
+        console.error('Error deleting doubles match:', error);
+        alert('Failed to delete match. Please try again.');
+      },
+    }
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,7 +217,13 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
         createSinglesMatch({ variables: { input: singlesFormData } });
       }
     } else {
-      if (!doublesFormData.team1Player1Id || !doublesFormData.team1Player2Id || !doublesFormData.team2Player1Id || !doublesFormData.team2Player2Id || !doublesFormData.matchDate) {
+      if (
+        !doublesFormData.team1Player1Id ||
+        !doublesFormData.team1Player2Id ||
+        !doublesFormData.team2Player1Id ||
+        !doublesFormData.team2Player2Id ||
+        !doublesFormData.matchDate
+      ) {
         alert('Please fill in all required fields.');
         return;
       }
@@ -197,7 +275,9 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this match? This action cannot be undone.')) {
+    if (
+      window.confirm('Are you sure you want to delete this match? This action cannot be undone.')
+    ) {
       if (matchType === 'singles') {
         deleteSinglesMatch({ variables: { id } });
       } else {
@@ -209,8 +289,26 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
   const handleCancel = () => {
     setShowCreateForm(false);
     setEditingMatch(null);
-    setSinglesFormData({ player1Id: '', player2Id: '', matchDate: '', order: 0, score: '', winner: null, teamMatchId });
-    setDoublesFormData({ team1Player1Id: '', team1Player2Id: '', team2Player1Id: '', team2Player2Id: '', matchDate: '', order: 0, score: '', winner: null, teamMatchId });
+    setSinglesFormData({
+      player1Id: '',
+      player2Id: '',
+      matchDate: '',
+      order: 0,
+      score: '',
+      winner: null,
+      teamMatchId,
+    });
+    setDoublesFormData({
+      team1Player1Id: '',
+      team1Player2Id: '',
+      team2Player1Id: '',
+      team2Player2Id: '',
+      matchDate: '',
+      order: 0,
+      score: '',
+      winner: null,
+      teamMatchId,
+    });
   };
 
   const formatDate = (dateString: string) => {
@@ -228,18 +326,18 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
       return matchType === 'singles'
         ? (() => {
             const player = (match as IndividualSinglesMatch).player1;
-            return (player.firstName || player.lastName)
+            return player.firstName || player.lastName
               ? `${player.firstName ?? ''} ${player.lastName ?? ''}`.trim()
-              : (player.username || player.email);
+              : player.username || player.email;
           })()
         : 'Home wins';
     } else if (match.winner === 'AWAY') {
       return matchType === 'singles'
         ? (() => {
             const player = (match as IndividualSinglesMatch).player2;
-            return (player.firstName || player.lastName)
+            return player.firstName || player.lastName
               ? `${player.firstName ?? ''} ${player.lastName ?? ''}`.trim()
-              : (player.username || player.email);
+              : player.username || player.email;
           })()
         : 'Away wins';
     } else {
@@ -254,9 +352,10 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
         if (team.group && Array.isArray(team.group.members)) {
           team.group.members.forEach((membership: any) => {
             if (membership.user && !players.find(p => p.id === membership.user.id)) {
-              const name = (membership.user.firstName || membership.user.lastName)
-                ? `${membership.user.firstName ?? ''} ${membership.user.lastName ?? ''}`.trim()
-                : membership.user.username || membership.user.email;
+              const name =
+                membership.user.firstName || membership.user.lastName
+                  ? `${membership.user.firstName ?? ''} ${membership.user.lastName ?? ''}`.trim()
+                  : membership.user.username || membership.user.email;
               players.push({
                 id: membership.user.id,
                 name,
@@ -270,6 +369,8 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
   };
 
   const players = getAllPlayers();
+  // Sort players alphabetically by name for dropdowns
+  const sortedPlayers = sortByName(players);
   const loading = creatingSingles || updatingSingles || creatingDoubles || updatingDoubles;
 
   return (
@@ -290,13 +391,21 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
       {(showCreateForm || editingMatch) && (
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h3 className="text-xl font-semibold mb-4">
-            {editingMatch ? 'Edit Match' : `Create New ${matchType === 'singles' ? 'Singles' : 'Doubles'} Match`}
+            {editingMatch
+              ? 'Edit Match'
+              : `Create New ${matchType === 'singles' ? 'Singles' : 'Doubles'} Match`}
           </h3>
           {createSinglesError || updateSinglesError || createDoublesError || updateDoublesError ? (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <div
+              className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
+              role="alert"
+            >
               <strong className="font-bold">Error!</strong>
               <span className="block sm:inline">
-                {createSinglesError?.message || updateSinglesError?.message || createDoublesError?.message || updateDoublesError?.message}
+                {createSinglesError?.message ||
+                  updateSinglesError?.message ||
+                  createDoublesError?.message ||
+                  updateDoublesError?.message}
               </span>
             </div>
           ) : null}
@@ -311,12 +420,14 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                     </label>
                     <select
                       value={singlesFormData.player1Id}
-                      onChange={(e) => setSinglesFormData({ ...singlesFormData, player1Id: e.target.value })}
+                      onChange={e =>
+                        setSinglesFormData({ ...singlesFormData, player1Id: e.target.value })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     >
                       <option value="">Select player 1</option>
-                      {players.map((player) => (
+                      {sortedPlayers.map(player => (
                         <option key={player.id} value={player.id}>
                           {player.name}
                         </option>
@@ -329,12 +440,14 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                     </label>
                     <select
                       value={singlesFormData.player2Id}
-                      onChange={(e) => setSinglesFormData({ ...singlesFormData, player2Id: e.target.value })}
+                      onChange={e =>
+                        setSinglesFormData({ ...singlesFormData, player2Id: e.target.value })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     >
                       <option value="">Select player 2</option>
-                      {players.map((player) => (
+                      {sortedPlayers.map(player => (
                         <option key={player.id} value={player.id}>
                           {player.name}
                         </option>
@@ -350,7 +463,9 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                     <input
                       type="date"
                       value={singlesFormData.matchDate}
-                      onChange={(e) => setSinglesFormData({ ...singlesFormData, matchDate: e.target.value })}
+                      onChange={e =>
+                        setSinglesFormData({ ...singlesFormData, matchDate: e.target.value })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     />
@@ -363,19 +478,21 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                       type="number"
                       min="1"
                       value={singlesFormData.order}
-                      onChange={(e) => setSinglesFormData({ ...singlesFormData, order: parseInt(e.target.value) })}
+                      onChange={e =>
+                        setSinglesFormData({ ...singlesFormData, order: parseInt(e.target.value) })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Score
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Score</label>
                     <input
                       type="text"
                       value={singlesFormData.score}
-                      onChange={(e) => setSinglesFormData({ ...singlesFormData, score: e.target.value })}
+                      onChange={e =>
+                        setSinglesFormData({ ...singlesFormData, score: e.target.value })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="e.g., 6-4, 6-2"
                     />
@@ -386,7 +503,12 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                     </label>
                     <select
                       value={singlesFormData.winner ?? ''}
-                      onChange={(e) => setSinglesFormData({ ...singlesFormData, winner: e.target.value as 'HOME' | 'AWAY' | null })}
+                      onChange={e =>
+                        setSinglesFormData({
+                          ...singlesFormData,
+                          winner: e.target.value as 'HOME' | 'AWAY' | null,
+                        })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     >
@@ -407,12 +529,14 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                     </label>
                     <select
                       value={doublesFormData.team1Player1Id}
-                      onChange={(e) => setDoublesFormData({ ...doublesFormData, team1Player1Id: e.target.value })}
+                      onChange={e =>
+                        setDoublesFormData({ ...doublesFormData, team1Player1Id: e.target.value })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     >
                       <option value="">Select player</option>
-                      {players.map((player) => (
+                      {sortedPlayers.map(player => (
                         <option key={player.id} value={player.id}>
                           {player.name}
                         </option>
@@ -425,12 +549,14 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                     </label>
                     <select
                       value={doublesFormData.team1Player2Id}
-                      onChange={(e) => setDoublesFormData({ ...doublesFormData, team1Player2Id: e.target.value })}
+                      onChange={e =>
+                        setDoublesFormData({ ...doublesFormData, team1Player2Id: e.target.value })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     >
                       <option value="">Select player</option>
-                      {players.map((player) => (
+                      {sortedPlayers.map(player => (
                         <option key={player.id} value={player.id}>
                           {player.name}
                         </option>
@@ -443,12 +569,14 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                     </label>
                     <select
                       value={doublesFormData.team2Player1Id}
-                      onChange={(e) => setDoublesFormData({ ...doublesFormData, team2Player1Id: e.target.value })}
+                      onChange={e =>
+                        setDoublesFormData({ ...doublesFormData, team2Player1Id: e.target.value })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     >
                       <option value="">Select player</option>
-                      {players.map((player) => (
+                      {sortedPlayers.map(player => (
                         <option key={player.id} value={player.id}>
                           {player.name}
                         </option>
@@ -461,12 +589,14 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                     </label>
                     <select
                       value={doublesFormData.team2Player2Id}
-                      onChange={(e) => setDoublesFormData({ ...doublesFormData, team2Player2Id: e.target.value })}
+                      onChange={e =>
+                        setDoublesFormData({ ...doublesFormData, team2Player2Id: e.target.value })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     >
                       <option value="">Select player</option>
-                      {players.map((player) => (
+                      {sortedPlayers.map(player => (
                         <option key={player.id} value={player.id}>
                           {player.name}
                         </option>
@@ -482,7 +612,9 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                     <input
                       type="date"
                       value={doublesFormData.matchDate}
-                      onChange={(e) => setDoublesFormData({ ...doublesFormData, matchDate: e.target.value })}
+                      onChange={e =>
+                        setDoublesFormData({ ...doublesFormData, matchDate: e.target.value })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     />
@@ -495,19 +627,21 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                       type="number"
                       min="1"
                       value={doublesFormData.order}
-                      onChange={(e) => setDoublesFormData({ ...doublesFormData, order: parseInt(e.target.value) })}
+                      onChange={e =>
+                        setDoublesFormData({ ...doublesFormData, order: parseInt(e.target.value) })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Score
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Score</label>
                     <input
                       type="text"
                       value={doublesFormData.score}
-                      onChange={(e) => setDoublesFormData({ ...doublesFormData, score: e.target.value })}
+                      onChange={e =>
+                        setDoublesFormData({ ...doublesFormData, score: e.target.value })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="e.g., 6-4, 6-2"
                     />
@@ -518,7 +652,12 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                     </label>
                     <select
                       value={doublesFormData.winner ?? ''}
-                      onChange={(e) => setDoublesFormData({ ...doublesFormData, winner: e.target.value as 'HOME' | 'AWAY' | null })}
+                      onChange={e =>
+                        setDoublesFormData({
+                          ...doublesFormData,
+                          winner: e.target.value as 'HOME' | 'AWAY' | null,
+                        })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     >
@@ -537,7 +676,7 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                 disabled={loading}
                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg transition-colors"
               >
-                {loading ? 'Saving...' : (editingMatch ? 'Update Match' : 'Create Match')}
+                {loading ? 'Saving...' : editingMatch ? 'Update Match' : 'Create Match'}
               </button>
               <button
                 type="button"
@@ -553,8 +692,11 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
 
       {/* Matches List */}
       <div className="space-y-4">
-        {matches.map((match) => (
-          <div key={match.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+        {matches.map(match => (
+          <div
+            key={match.id}
+            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+          >
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-2">
@@ -564,12 +706,14 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                         {(() => {
                           const player1 = (match as IndividualSinglesMatch).player1;
                           const player2 = (match as IndividualSinglesMatch).player2;
-                          const player1Name = (player1.firstName || player1.lastName)
-                            ? `${player1.firstName ?? ''} ${player1.lastName ?? ''}`.trim()
-                            : (player1.username || player1.email);
-                          const player2Name = (player2.firstName || player2.lastName)
-                            ? `${player2.firstName ?? ''} ${player2.lastName ?? ''}`.trim()
-                            : (player2.username || player2.email);
+                          const player1Name =
+                            player1.firstName || player1.lastName
+                              ? `${player1.firstName ?? ''} ${player1.lastName ?? ''}`.trim()
+                              : player1.username || player1.email;
+                          const player2Name =
+                            player2.firstName || player2.lastName
+                              ? `${player2.firstName ?? ''} ${player2.lastName ?? ''}`.trim()
+                              : player2.username || player2.email;
                           return `${player1Name} vs ${player2Name}`;
                         })()}
                       </>
@@ -577,18 +721,30 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                       <>
                         {(() => {
                           const matchDoubles = match as IndividualDoublesMatch;
-                          const team1Player1Name = (matchDoubles.team1Player1.firstName || matchDoubles.team1Player1.lastName)
-                            ? `${matchDoubles.team1Player1.firstName ?? ''} ${matchDoubles.team1Player1.lastName ?? ''}`.trim()
-                            : (matchDoubles.team1Player1.username || matchDoubles.team1Player1.email);
-                          const team1Player2Name = (matchDoubles.team1Player2.firstName || matchDoubles.team1Player2.lastName)
-                            ? `${matchDoubles.team1Player2.firstName ?? ''} ${matchDoubles.team1Player2.lastName ?? ''}`.trim()
-                            : (matchDoubles.team1Player2.username || matchDoubles.team1Player2.email);
-                          const team2Player1Name = (matchDoubles.team2Player1.firstName || matchDoubles.team2Player1.lastName)
-                            ? `${matchDoubles.team2Player1.firstName ?? ''} ${matchDoubles.team2Player1.lastName ?? ''}`.trim()
-                            : (matchDoubles.team2Player1.username || matchDoubles.team2Player1.email);
-                          const team2Player2Name = (matchDoubles.team2Player2.firstName || matchDoubles.team2Player2.lastName)
-                            ? `${matchDoubles.team2Player2.firstName ?? ''} ${matchDoubles.team2Player2.lastName ?? ''}`.trim()
-                            : (matchDoubles.team2Player2.username || matchDoubles.team2Player2.email);
+                          const team1Player1Name =
+                            matchDoubles.team1Player1.firstName ||
+                            matchDoubles.team1Player1.lastName
+                              ? `${matchDoubles.team1Player1.firstName ?? ''} ${matchDoubles.team1Player1.lastName ?? ''}`.trim()
+                              : matchDoubles.team1Player1.username ||
+                                matchDoubles.team1Player1.email;
+                          const team1Player2Name =
+                            matchDoubles.team1Player2.firstName ||
+                            matchDoubles.team1Player2.lastName
+                              ? `${matchDoubles.team1Player2.firstName ?? ''} ${matchDoubles.team1Player2.lastName ?? ''}`.trim()
+                              : matchDoubles.team1Player2.username ||
+                                matchDoubles.team1Player2.email;
+                          const team2Player1Name =
+                            matchDoubles.team2Player1.firstName ||
+                            matchDoubles.team2Player1.lastName
+                              ? `${matchDoubles.team2Player1.firstName ?? ''} ${matchDoubles.team2Player1.lastName ?? ''}`.trim()
+                              : matchDoubles.team2Player1.username ||
+                                matchDoubles.team2Player1.email;
+                          const team2Player2Name =
+                            matchDoubles.team2Player2.firstName ||
+                            matchDoubles.team2Player2.lastName
+                              ? `${matchDoubles.team2Player2.firstName ?? ''} ${matchDoubles.team2Player2.lastName ?? ''}`.trim()
+                              : matchDoubles.team2Player2.username ||
+                                matchDoubles.team2Player2.email;
                           return `Home (${team1Player1Name} & ${team1Player2Name}) vs Away (${team2Player1Name} & ${team2Player2Name})`;
                         })()}
                       </>
@@ -604,9 +760,7 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                     {match.winner === 'HOME' ? 'Completed' : 'Scheduled'}
                   </span>
                 </div>
-                <div className="text-sm text-gray-600">
-                  {formatDate(match.matchDate)}
-                </div>
+                <div className="text-sm text-gray-600">{formatDate(match.matchDate)}</div>
               </div>
               <div className="flex gap-2 ml-4">
                 <button
@@ -631,19 +785,17 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                 <div className="text-2xl font-bold text-blue-600">
                   {matchType === 'singles'
                     ? (match as IndividualSinglesMatch).score
-                    : (match as IndividualDoublesMatch).score
-                  }
+                    : (match as IndividualDoublesMatch).score}
                 </div>
                 <div className="text-sm text-gray-600">
                   {matchType === 'singles'
                     ? (() => {
                         const player = (match as IndividualSinglesMatch).player1;
-                        return (player.firstName || player.lastName)
+                        return player.firstName || player.lastName
                           ? `${player.firstName ?? ''} ${player.lastName ?? ''}`.trim()
-                          : (player.username || player.email);
+                          : player.username || player.email;
                       })()
-                    : 'Home'
-                  }
+                    : 'Home'}
                 </div>
               </div>
               <div className="text-center flex items-center justify-center">
@@ -653,19 +805,17 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
                 <div className="text-2xl font-bold text-red-600">
                   {matchType === 'singles'
                     ? (match as IndividualSinglesMatch).score
-                    : (match as IndividualDoublesMatch).score
-                  }
+                    : (match as IndividualDoublesMatch).score}
                 </div>
                 <div className="text-sm text-gray-600">
                   {matchType === 'singles'
                     ? (() => {
                         const player = (match as IndividualSinglesMatch).player2;
-                        return (player.firstName || player.lastName)
+                        return player.firstName || player.lastName
                           ? `${player.firstName ?? ''} ${player.lastName ?? ''}`.trim()
-                          : (player.username || player.email);
+                          : player.username || player.email;
                       })()
-                    : 'Away'
-                  }
+                    : 'Away'}
                 </div>
               </div>
             </div>
@@ -674,7 +824,9 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
               <div className="mt-4 pt-4 border-t">
                 <div className="text-center">
                   <span className="text-sm font-medium text-gray-700">Result: </span>
-                  <span className="text-sm font-semibold text-gray-900">{getMatchResult(match)}</span>
+                  <span className="text-sm font-semibold text-gray-900">
+                    {getMatchResult(match)}
+                  </span>
                 </div>
               </div>
             )}
@@ -691,7 +843,8 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({ teamMatchId, 
             No {matchType === 'singles' ? 'Singles' : 'Doubles'} Matches Yet
           </h3>
           <p className="text-gray-600 mb-4">
-            Create your first {matchType === 'singles' ? 'singles' : 'doubles'} match to get started!
+            Create your first {matchType === 'singles' ? 'singles' : 'doubles'} match to get
+            started!
           </p>
           <button
             onClick={() => setShowCreateForm(true)}

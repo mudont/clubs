@@ -2,12 +2,15 @@ import { useMutation, useQuery } from '@apollo/client';
 import React, { createContext, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { sortByDisplayName } from '../../utils/sorting';
+
 import {
   CREATE_INDIVIDUAL_DOUBLES_MATCH,
   CREATE_INDIVIDUAL_SINGLES_MATCH,
   DELETE_INDIVIDUAL_DOUBLES_MATCH,
   DELETE_INDIVIDUAL_SINGLES_MATCH,
-  GET_TENNIS_LEAGUE, GET_TENNIS_LEAGUE_STANDINGS,
+  GET_TENNIS_LEAGUE,
+  GET_TENNIS_LEAGUE_STANDINGS,
   UPDATE_INDIVIDUAL_DOUBLES_MATCH,
   UPDATE_INDIVIDUAL_SINGLES_MATCH,
 } from './graphql';
@@ -16,7 +19,14 @@ import StandingsTable from './StandingsTable';
 import TeamList from './TeamList';
 import TeamMatchList from './TeamMatchList';
 import TennisNavbar from './TennisNavbar';
-import { CreateIndividualDoublesMatchInput, CreateIndividualSinglesMatchInput, GetTennisLeagueData, GetTennisLeagueStandingsData, IndividualDoublesMatch, IndividualSinglesMatch, User } from './types';
+import {
+  CreateIndividualDoublesMatchInput,
+  CreateIndividualSinglesMatchInput,
+  GetTennisLeagueData,
+  GetTennisLeagueStandingsData,
+  IndividualDoublesMatch,
+  IndividualSinglesMatch,
+} from './types';
 
 export const LeagueContext = createContext<{ leagueId: string } | undefined>(undefined);
 
@@ -26,7 +36,9 @@ const LeagueDetail: React.FC = () => {
 
   // Move all useState/useMutation hooks to the top, before any early returns
   const [showSinglesForm, setShowSinglesForm] = useState(false);
-  const [editingSinglesMatch, setEditingSinglesMatch] = useState<IndividualSinglesMatch | null>(null);
+  const [editingSinglesMatch, setEditingSinglesMatch] = useState<IndividualSinglesMatch | null>(
+    null
+  );
   const [singlesFormData, setSinglesFormData] = useState<CreateIndividualSinglesMatchInput>({
     player1Id: '',
     player2Id: '',
@@ -37,7 +49,9 @@ const LeagueDetail: React.FC = () => {
     teamMatchId: '',
   });
   const [showDoublesForm, setShowDoublesForm] = useState(false);
-  const [editingDoublesMatch, setEditingDoublesMatch] = useState<IndividualDoublesMatch | null>(null);
+  const [editingDoublesMatch, setEditingDoublesMatch] = useState<IndividualDoublesMatch | null>(
+    null
+  );
   const [doublesFormData, setDoublesFormData] = useState<CreateIndividualDoublesMatchInput>({
     team1Player1Id: '',
     team1Player2Id: '',
@@ -49,20 +63,50 @@ const LeagueDetail: React.FC = () => {
     winner: null,
     teamMatchId: '',
   });
-  const [createSinglesMatch] = useMutation(CREATE_INDIVIDUAL_SINGLES_MATCH, { onCompleted: () => { setShowSinglesForm(false); setEditingSinglesMatch(null); refetch(); } });
-  const [updateSinglesMatch] = useMutation(UPDATE_INDIVIDUAL_SINGLES_MATCH, { onCompleted: () => { setShowSinglesForm(false); setEditingSinglesMatch(null); refetch(); } });
-  const [deleteSinglesMatch] = useMutation(DELETE_INDIVIDUAL_SINGLES_MATCH, { onCompleted: () => refetch() });
-  const [createDoublesMatch] = useMutation(CREATE_INDIVIDUAL_DOUBLES_MATCH, { onCompleted: () => { setShowDoublesForm(false); setEditingDoublesMatch(null); refetch(); } });
-  const [updateDoublesMatch] = useMutation(UPDATE_INDIVIDUAL_DOUBLES_MATCH, { onCompleted: () => { setShowDoublesForm(false); setEditingDoublesMatch(null); refetch(); } });
-  const [deleteDoublesMatch] = useMutation(DELETE_INDIVIDUAL_DOUBLES_MATCH, { onCompleted: () => refetch() });
+  const [createSinglesMatch] = useMutation(CREATE_INDIVIDUAL_SINGLES_MATCH, {
+    onCompleted: () => {
+      setShowSinglesForm(false);
+      setEditingSinglesMatch(null);
+      refetch();
+    },
+  });
+  const [updateSinglesMatch] = useMutation(UPDATE_INDIVIDUAL_SINGLES_MATCH, {
+    onCompleted: () => {
+      setShowSinglesForm(false);
+      setEditingSinglesMatch(null);
+      refetch();
+    },
+  });
+  const [deleteSinglesMatch] = useMutation(DELETE_INDIVIDUAL_SINGLES_MATCH, {
+    onCompleted: () => refetch(),
+  });
+  const [createDoublesMatch] = useMutation(CREATE_INDIVIDUAL_DOUBLES_MATCH, {
+    onCompleted: () => {
+      setShowDoublesForm(false);
+      setEditingDoublesMatch(null);
+      refetch();
+    },
+  });
+  const [updateDoublesMatch] = useMutation(UPDATE_INDIVIDUAL_DOUBLES_MATCH, {
+    onCompleted: () => {
+      setShowDoublesForm(false);
+      setEditingDoublesMatch(null);
+      refetch();
+    },
+  });
+  const [deleteDoublesMatch] = useMutation(DELETE_INDIVIDUAL_DOUBLES_MATCH, {
+    onCompleted: () => refetch(),
+  });
 
-  const { data: leagueData, loading: leagueLoading, error: leagueError, refetch } = useQuery<GetTennisLeagueData>(
-    GET_TENNIS_LEAGUE,
-    {
-      variables: { id: id! },
-      skip: !id,
-    }
-  );
+  const {
+    data: leagueData,
+    loading: leagueLoading,
+    error: leagueError,
+    refetch,
+  } = useQuery<GetTennisLeagueData>(GET_TENNIS_LEAGUE, {
+    variables: { id: id! },
+    skip: !id,
+  });
 
   const { data: standingsData, loading: standingsLoading } = useQuery<GetTennisLeagueStandingsData>(
     GET_TENNIS_LEAGUE_STANDINGS,
@@ -83,12 +127,19 @@ const LeagueDetail: React.FC = () => {
   useEffect(() => {
     // Only clear player fields when creating new matches, not when editing
     if (!editingDoublesMatch) {
-      setDoublesFormData(f => ({ ...f, team1Player1Id: '', team1Player2Id: '', team2Player1Id: '', team2Player2Id: '' }));
+      setDoublesFormData(f => ({
+        ...f,
+        team1Player1Id: '',
+        team1Player2Id: '',
+        team2Player1Id: '',
+        team2Player2Id: '',
+      }));
     }
   }, [doublesFormData.teamMatchId, editingDoublesMatch]);
 
   if (leagueLoading) return <div className="text-center p-4">Loading league details...</div>;
-  if (leagueError) return <div className="text-red-500 p-4">Error loading league: {leagueError.message}</div>;
+  if (leagueError)
+    return <div className="text-red-500 p-4">Error loading league: {leagueError.message}</div>;
   if (!leagueData?.tennisLeague) return <div className="text-center p-4">League not found</div>;
 
   const league = leagueData.tennisLeague;
@@ -130,8 +181,12 @@ const LeagueDetail: React.FC = () => {
   // };
 
   // Helper to get selected team match
-  const selectedSinglesTeamMatch = league.teamMatches.find(tm => tm.id === singlesFormData.teamMatchId);
-  const selectedDoublesTeamMatch = league.teamMatches.find(tm => tm.id === doublesFormData.teamMatchId);
+  const selectedSinglesTeamMatch = league.teamMatches.find(
+    tm => tm.id === singlesFormData.teamMatchId
+  );
+  const selectedDoublesTeamMatch = league.teamMatches.find(
+    tm => tm.id === doublesFormData.teamMatchId
+  );
 
   // Helper to format date for HTML date input
   const formatDateForInput = (dateString: string) => {
@@ -154,9 +209,7 @@ const LeagueDetail: React.FC = () => {
               </div>
               <span
                 className={`px-3 py-1 text-sm font-medium rounded-full ${
-                  league.isActive
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-gray-100 text-gray-800'
+                  league.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                 }`}
               >
                 {league.isActive ? 'Active' : 'Inactive'}
@@ -197,13 +250,15 @@ const LeagueDetail: React.FC = () => {
                   aria-label="Select tab"
                 >
                   {tabs.map(tab => (
-                    <option key={tab.id} value={tab.id}>{tab.icon} {tab.label}</option>
+                    <option key={tab.id} value={tab.id}>
+                      {tab.icon} {tab.label}
+                    </option>
                   ))}
                 </select>
               </div>
               {/* Desktop: Horizontal Tabs */}
               <nav className="hidden sm:flex space-x-8 px-6" aria-label="Tabs">
-                {tabs.map((tab) => (
+                {tabs.map(tab => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
@@ -331,26 +386,77 @@ const LeagueDetail: React.FC = () => {
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-semibold">All Singles Matches</h3>
-                  <button className="btn-primary" onClick={() => { setShowSinglesForm(true); setEditingSinglesMatch(null); setSinglesFormData({ player1Id: '', player2Id: '', matchDate: '', order: 1, score: '', winner: null, teamMatchId: league.teamMatches[0]?.id || '' }); }}>Create New Match</button>
+                  <button
+                    className="btn-primary"
+                    onClick={() => {
+                      setShowSinglesForm(true);
+                      setEditingSinglesMatch(null);
+                      setSinglesFormData({
+                        player1Id: '',
+                        player2Id: '',
+                        matchDate: '',
+                        order: 1,
+                        score: '',
+                        winner: null,
+                        teamMatchId: league.teamMatches[0]?.id || '',
+                      });
+                    }}
+                  >
+                    Create New Match
+                  </button>
                 </div>
                 {showSinglesForm && (
-                  <form className="mb-6 bg-gray-50 p-4 rounded" onSubmit={e => { e.preventDefault(); if (editingSinglesMatch) { updateSinglesMatch({ variables: { id: editingSinglesMatch.id, input: singlesFormData } }); } else { createSinglesMatch({ variables: { leagueId: league.id, input: singlesFormData } }); } }}>
+                  <form
+                    className="mb-6 bg-gray-50 p-4 rounded"
+                    onSubmit={e => {
+                      e.preventDefault();
+                      if (editingSinglesMatch) {
+                        updateSinglesMatch({
+                          variables: { id: editingSinglesMatch.id, input: singlesFormData },
+                        });
+                      } else {
+                        createSinglesMatch({
+                          variables: { leagueId: league.id, input: singlesFormData },
+                        });
+                      }
+                    }}
+                  >
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
                       <div>
                         <label className="block text-sm font-medium">Team Match</label>
-                        <select value={singlesFormData.teamMatchId} onChange={e => setSinglesFormData(f => ({ ...f, teamMatchId: e.target.value }))} className="w-full border rounded p-2">
-                          {league.teamMatches.map(tm => <option key={tm.id} value={tm.id}>{formatDate(tm.matchDate)}: {tm.homeTeam.group.name} vs {tm.awayTeam.group.name}</option>)}
+                        <select
+                          value={singlesFormData.teamMatchId}
+                          onChange={e =>
+                            setSinglesFormData(f => ({ ...f, teamMatchId: e.target.value }))
+                          }
+                          className="w-full border rounded p-2"
+                        >
+                          {league.teamMatches.map(tm => (
+                            <option key={tm.id} value={tm.id}>
+                              {formatDate(tm.matchDate)}: {tm.homeTeam.group.name} vs{' '}
+                              {tm.awayTeam.group.name}
+                            </option>
+                          ))}
                         </select>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
                       <div>
                         <label className="block text-sm font-medium">Player 1</label>
-                        <select value={singlesFormData.player1Id} onChange={e => setSinglesFormData(f => ({ ...f, player1Id: e.target.value }))} className="w-full border rounded p-2">
+                        <select
+                          value={singlesFormData.player1Id}
+                          onChange={e =>
+                            setSinglesFormData(f => ({ ...f, player1Id: e.target.value }))
+                          }
+                          className="w-full border rounded p-2"
+                        >
                           <option value="">Select Player 1</option>
-                          {(selectedSinglesTeamMatch?.homeTeam.group?.members?.map(m => m.user) || []).map((u: User) => (
+                          {sortByDisplayName(
+                            selectedSinglesTeamMatch?.homeTeam.group?.members?.map(m => m.user) ||
+                              []
+                          ).map((u: any) => (
                             <option key={u.id} value={u.id}>
-                              {((u.firstName || u.lastName)
+                              {(u.firstName || u.lastName
                                 ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim()
                                 : u.username) + ` (${u.email})`}
                             </option>
@@ -359,11 +465,20 @@ const LeagueDetail: React.FC = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-medium">Player 2</label>
-                        <select value={singlesFormData.player2Id} onChange={e => setSinglesFormData(f => ({ ...f, player2Id: e.target.value }))} className="w-full border rounded p-2">
+                        <select
+                          value={singlesFormData.player2Id}
+                          onChange={e =>
+                            setSinglesFormData(f => ({ ...f, player2Id: e.target.value }))
+                          }
+                          className="w-full border rounded p-2"
+                        >
                           <option value="">Select Player 2</option>
-                          {(selectedSinglesTeamMatch?.awayTeam.group?.members?.map(m => m.user) || []).map((u: User) => (
+                          {sortByDisplayName(
+                            selectedSinglesTeamMatch?.awayTeam.group?.members?.map(m => m.user) ||
+                              []
+                          ).map((u: any) => (
                             <option key={u.id} value={u.id}>
-                              {((u.firstName || u.lastName)
+                              {(u.firstName || u.lastName
                                 ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim()
                                 : u.username) + ` (${u.email})`}
                             </option>
@@ -374,21 +489,53 @@ const LeagueDetail: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
                       <div>
                         <label className="block text-sm font-medium">Date</label>
-                        <input type="date" value={singlesFormData.matchDate} onChange={e => setSinglesFormData(f => ({ ...f, matchDate: e.target.value }))} className="w-full border rounded p-2" />
+                        <input
+                          type="date"
+                          value={singlesFormData.matchDate}
+                          onChange={e =>
+                            setSinglesFormData(f => ({ ...f, matchDate: e.target.value }))
+                          }
+                          className="w-full border rounded p-2"
+                        />
                       </div>
                       <div>
                         <label className="block text-sm font-medium">Order</label>
-                        <input type="number" value={singlesFormData.order} onChange={e => setSinglesFormData(f => ({ ...f, order: parseInt(e.target.value, 10) || 1 }))} className="w-full border rounded p-2" />
+                        <input
+                          type="number"
+                          value={singlesFormData.order}
+                          onChange={e =>
+                            setSinglesFormData(f => ({
+                              ...f,
+                              order: parseInt(e.target.value, 10) || 1,
+                            }))
+                          }
+                          className="w-full border rounded p-2"
+                        />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
                       <div>
                         <label className="block text-sm font-medium">Score</label>
-                        <input type="text" value={singlesFormData.score} onChange={e => setSinglesFormData(f => ({ ...f, score: e.target.value }))} className="w-full border rounded p-2" />
+                        <input
+                          type="text"
+                          value={singlesFormData.score}
+                          onChange={e => setSinglesFormData(f => ({ ...f, score: e.target.value }))}
+                          className="w-full border rounded p-2"
+                        />
                       </div>
                       <div>
                         <label className="block text-sm font-medium">Winner</label>
-                        <select value={singlesFormData.winner ?? ''} onChange={e => setSinglesFormData(f => ({ ...f, winner: e.target.value === '' ? null : e.target.value as 'HOME' | 'AWAY' }))} className="w-full border rounded p-2">
+                        <select
+                          value={singlesFormData.winner ?? ''}
+                          onChange={e =>
+                            setSinglesFormData(f => ({
+                              ...f,
+                              winner:
+                                e.target.value === '' ? null : (e.target.value as 'HOME' | 'AWAY'),
+                            }))
+                          }
+                          className="w-full border rounded p-2"
+                        >
                           <option value="">Select Winner</option>
                           <option value="HOME">Home</option>
                           <option value="AWAY">Away</option>
@@ -397,8 +544,19 @@ const LeagueDetail: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex gap-2 mt-2">
-                      <button type="submit" className="btn-primary">{editingSinglesMatch ? 'Update' : 'Create'} Match</button>
-                      <button type="button" className="btn-secondary" onClick={() => { setShowSinglesForm(false); setEditingSinglesMatch(null); }}>Cancel</button>
+                      <button type="submit" className="btn-primary">
+                        {editingSinglesMatch ? 'Update' : 'Create'} Match
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        onClick={() => {
+                          setShowSinglesForm(false);
+                          setEditingSinglesMatch(null);
+                        }}
+                      >
+                        Cancel
+                      </button>
                     </div>
                   </form>
                 )}
@@ -415,65 +573,78 @@ const LeagueDetail: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {league.teamMatches.flatMap(m => m.individualSinglesMatches ?? []).map(match => {
-                      const teamMatch = league.teamMatches.find(tm => tm.id === match.teamMatchId);
-                      return { match, teamMatch };
-                    }).sort((a, b) => {
-                      // Sort by team match date first, then by order
-                      const dateA = new Date(a.teamMatch?.matchDate || '');
-                      const dateB = new Date(b.teamMatch?.matchDate || '');
-                      if (dateA.getTime() !== dateB.getTime()) {
-                        return dateA.getTime() - dateB.getTime();
-                      }
-                      return (a.match.order || 0) - (b.match.order || 0);
-                    }).map(({ match, teamMatch }) => (
-                      <tr key={match.id} className="bg-white">
-                        <td className="px-4 py-2">
-                          {teamMatch ? `${formatDate(teamMatch.matchDate)} / ${formatDate(match.matchDate)}` : formatDate(match.matchDate)}
-                        </td>
-                        <td className="px-4 py-2">{match.order}</td>
-                        <td className="px-4 py-2">{
-                          (match.player1.firstName || match.player1.lastName)
-                            ? `${match.player1.firstName ?? ''} ${match.player1.lastName ?? ''}`.trim()
-                            : (match.player1.username || match.player1.email)
-                        }</td>
-                        <td className="px-4 py-2">{
-                          (match.player2.firstName || match.player2.lastName)
-                            ? `${match.player2.firstName ?? ''} ${match.player2.lastName ?? ''}`.trim()
-                            : (match.player2.username || match.player2.email)
-                        }</td>
-                        <td className="px-4 py-2">{match.score}</td>
-                        <td className="px-4 py-2">{match.winner ? (match.winner === 'HOME' ? 'Home' : 'Away') : '-'}</td>
-                        <td className="px-4 py-2 flex gap-2">
-                          <button
-                            className="text-blue-600 hover:text-blue-800 p-1"
-                            onClick={() => {
-                              setShowSinglesForm(true);
-                              setEditingSinglesMatch(match);
-                              setSinglesFormData({
-                                player1Id: match.player1Id,
-                                player2Id: match.player2Id,
-                                matchDate: formatDateForInput(match.matchDate),
-                                order: match.order,
-                                score: match.score,
-                                winner: match.winner,
-                                teamMatchId: match.teamMatchId
-                              });
-                            }}
-                            title="Edit Match"
-                          >
-                            ✏️
-                          </button>
-                          <button
-                            className="text-red-600 hover:text-red-800 p-1"
-                            onClick={() => { if (window.confirm('Delete this match?')) deleteSinglesMatch({ variables: { id: match.id } }); }}
-                            title="Delete Match"
-                          >
-                            🗑️
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                    {league.teamMatches
+                      .flatMap(m => m.individualSinglesMatches ?? [])
+                      .map(match => {
+                        const teamMatch = league.teamMatches.find(
+                          tm => tm.id === match.teamMatchId
+                        );
+                        return { match, teamMatch };
+                      })
+                      .sort((a, b) => {
+                        // Sort by team match date first, then by order
+                        const dateA = new Date(a.teamMatch?.matchDate || '');
+                        const dateB = new Date(b.teamMatch?.matchDate || '');
+                        if (dateA.getTime() !== dateB.getTime()) {
+                          return dateA.getTime() - dateB.getTime();
+                        }
+                        return (a.match.order || 0) - (b.match.order || 0);
+                      })
+                      .map(({ match, teamMatch }) => (
+                        <tr key={match.id} className="bg-white">
+                          <td className="px-4 py-2">
+                            {teamMatch
+                              ? `${formatDate(teamMatch.matchDate)} / ${formatDate(match.matchDate)}`
+                              : formatDate(match.matchDate)}
+                          </td>
+                          <td className="px-4 py-2">{match.order}</td>
+                          <td className="px-4 py-2">
+                            {match.player1.firstName || match.player1.lastName
+                              ? `${match.player1.firstName ?? ''} ${match.player1.lastName ?? ''}`.trim()
+                              : match.player1.username || match.player1.email}
+                          </td>
+                          <td className="px-4 py-2">
+                            {match.player2.firstName || match.player2.lastName
+                              ? `${match.player2.firstName ?? ''} ${match.player2.lastName ?? ''}`.trim()
+                              : match.player2.username || match.player2.email}
+                          </td>
+                          <td className="px-4 py-2">{match.score}</td>
+                          <td className="px-4 py-2">
+                            {match.winner ? (match.winner === 'HOME' ? 'Home' : 'Away') : '-'}
+                          </td>
+                          <td className="px-4 py-2 flex gap-2">
+                            <button
+                              className="text-blue-600 hover:text-blue-800 p-1"
+                              onClick={() => {
+                                setShowSinglesForm(true);
+                                setEditingSinglesMatch(match);
+                                setSinglesFormData({
+                                  player1Id: match.player1Id,
+                                  player2Id: match.player2Id,
+                                  matchDate: formatDateForInput(match.matchDate),
+                                  order: match.order,
+                                  score: match.score,
+                                  winner: match.winner,
+                                  teamMatchId: match.teamMatchId,
+                                });
+                              }}
+                              title="Edit Match"
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              className="text-red-600 hover:text-red-800 p-1"
+                              onClick={() => {
+                                if (window.confirm('Delete this match?'))
+                                  deleteSinglesMatch({ variables: { id: match.id } });
+                              }}
+                              title="Delete Match"
+                            >
+                              🗑️
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
               </div>
@@ -483,26 +654,79 @@ const LeagueDetail: React.FC = () => {
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-semibold">All Doubles Matches</h3>
-                  <button className="btn-primary" onClick={() => { setShowDoublesForm(true); setEditingDoublesMatch(null); setDoublesFormData({ team1Player1Id: '', team1Player2Id: '', team2Player1Id: '', team2Player2Id: '', matchDate: '', order: 1, score: '', winner: null, teamMatchId: league.teamMatches[0]?.id || '' }); }}>Create New Match</button>
+                  <button
+                    className="btn-primary"
+                    onClick={() => {
+                      setShowDoublesForm(true);
+                      setEditingDoublesMatch(null);
+                      setDoublesFormData({
+                        team1Player1Id: '',
+                        team1Player2Id: '',
+                        team2Player1Id: '',
+                        team2Player2Id: '',
+                        matchDate: '',
+                        order: 1,
+                        score: '',
+                        winner: null,
+                        teamMatchId: league.teamMatches[0]?.id || '',
+                      });
+                    }}
+                  >
+                    Create New Match
+                  </button>
                 </div>
                 {showDoublesForm && (
-                  <form className="mb-6 bg-gray-50 p-4 rounded" onSubmit={e => { e.preventDefault(); if (editingDoublesMatch) { updateDoublesMatch({ variables: { id: editingDoublesMatch.id, input: doublesFormData } }); } else { createDoublesMatch({ variables: { leagueId: league.id, input: doublesFormData } }); } }}>
+                  <form
+                    className="mb-6 bg-gray-50 p-4 rounded"
+                    onSubmit={e => {
+                      e.preventDefault();
+                      if (editingDoublesMatch) {
+                        updateDoublesMatch({
+                          variables: { id: editingDoublesMatch.id, input: doublesFormData },
+                        });
+                      } else {
+                        createDoublesMatch({
+                          variables: { leagueId: league.id, input: doublesFormData },
+                        });
+                      }
+                    }}
+                  >
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
                       <div>
                         <label className="block text-sm font-medium">Team Match</label>
-                        <select value={doublesFormData.teamMatchId} onChange={e => setDoublesFormData(f => ({ ...f, teamMatchId: e.target.value }))} className="w-full border rounded p-2">
-                          {league.teamMatches.map(tm => <option key={tm.id} value={tm.id}>{formatDate(tm.matchDate)}: {tm.homeTeam.group.name} vs {tm.awayTeam.group.name}</option>)}
+                        <select
+                          value={doublesFormData.teamMatchId}
+                          onChange={e =>
+                            setDoublesFormData(f => ({ ...f, teamMatchId: e.target.value }))
+                          }
+                          className="w-full border rounded p-2"
+                        >
+                          {league.teamMatches.map(tm => (
+                            <option key={tm.id} value={tm.id}>
+                              {formatDate(tm.matchDate)}: {tm.homeTeam.group.name} vs{' '}
+                              {tm.awayTeam.group.name}
+                            </option>
+                          ))}
                         </select>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
                       <div>
                         <label className="block text-sm font-medium">Home</label>
-                        <select value={doublesFormData.team1Player1Id} onChange={e => setDoublesFormData(f => ({ ...f, team1Player1Id: e.target.value }))} className="w-full border rounded p-2">
+                        <select
+                          value={doublesFormData.team1Player1Id}
+                          onChange={e =>
+                            setDoublesFormData(f => ({ ...f, team1Player1Id: e.target.value }))
+                          }
+                          className="w-full border rounded p-2"
+                        >
                           <option value="">Select Home Player 1</option>
-                          {(selectedDoublesTeamMatch?.homeTeam.group?.members?.map(m => m.user) || []).map((u: User) => (
+                          {sortByDisplayName(
+                            selectedDoublesTeamMatch?.homeTeam.group?.members?.map(m => m.user) ||
+                              []
+                          ).map((u: any) => (
                             <option key={u.id} value={u.id}>
-                              {((u.firstName || u.lastName)
+                              {(u.firstName || u.lastName
                                 ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim()
                                 : u.username) + ` (${u.email})`}
                             </option>
@@ -511,11 +735,20 @@ const LeagueDetail: React.FC = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-medium">Home</label>
-                        <select value={doublesFormData.team1Player2Id} onChange={e => setDoublesFormData(f => ({ ...f, team1Player2Id: e.target.value }))} className="w-full border rounded p-2">
+                        <select
+                          value={doublesFormData.team1Player2Id}
+                          onChange={e =>
+                            setDoublesFormData(f => ({ ...f, team1Player2Id: e.target.value }))
+                          }
+                          className="w-full border rounded p-2"
+                        >
                           <option value="">Select Home Player 2</option>
-                          {(selectedDoublesTeamMatch?.homeTeam.group?.members?.map(m => m.user) || []).map((u: User) => (
+                          {sortByDisplayName(
+                            selectedDoublesTeamMatch?.homeTeam.group?.members?.map(m => m.user) ||
+                              []
+                          ).map((u: any) => (
                             <option key={u.id} value={u.id}>
-                              {((u.firstName || u.lastName)
+                              {(u.firstName || u.lastName
                                 ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim()
                                 : u.username) + ` (${u.email})`}
                             </option>
@@ -526,11 +759,20 @@ const LeagueDetail: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
                       <div>
                         <label className="block text-sm font-medium">Away</label>
-                        <select value={doublesFormData.team2Player1Id} onChange={e => setDoublesFormData(f => ({ ...f, team2Player1Id: e.target.value }))} className="w-full border rounded p-2">
+                        <select
+                          value={doublesFormData.team2Player1Id}
+                          onChange={e =>
+                            setDoublesFormData(f => ({ ...f, team2Player1Id: e.target.value }))
+                          }
+                          className="w-full border rounded p-2"
+                        >
                           <option value="">Select Away Player 1</option>
-                          {(selectedDoublesTeamMatch?.awayTeam.group?.members?.map(m => m.user) || []).map((u: User) => (
+                          {sortByDisplayName(
+                            selectedDoublesTeamMatch?.awayTeam.group?.members?.map(m => m.user) ||
+                              []
+                          ).map((u: any) => (
                             <option key={u.id} value={u.id}>
-                              {((u.firstName || u.lastName)
+                              {(u.firstName || u.lastName
                                 ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim()
                                 : u.username) + ` (${u.email})`}
                             </option>
@@ -539,11 +781,20 @@ const LeagueDetail: React.FC = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-medium">Away</label>
-                        <select value={doublesFormData.team2Player2Id} onChange={e => setDoublesFormData(f => ({ ...f, team2Player2Id: e.target.value }))} className="w-full border rounded p-2">
+                        <select
+                          value={doublesFormData.team2Player2Id}
+                          onChange={e =>
+                            setDoublesFormData(f => ({ ...f, team2Player2Id: e.target.value }))
+                          }
+                          className="w-full border rounded p-2"
+                        >
                           <option value="">Select Away Player 2</option>
-                          {(selectedDoublesTeamMatch?.awayTeam.group?.members?.map(m => m.user) || []).map((u: User) => (
+                          {sortByDisplayName(
+                            selectedDoublesTeamMatch?.awayTeam.group?.members?.map(m => m.user) ||
+                              []
+                          ).map((u: any) => (
                             <option key={u.id} value={u.id}>
-                              {((u.firstName || u.lastName)
+                              {(u.firstName || u.lastName
                                 ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim()
                                 : u.username) + ` (${u.email})`}
                             </option>
@@ -554,21 +805,53 @@ const LeagueDetail: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
                       <div>
                         <label className="block text-sm font-medium">Date</label>
-                        <input type="date" value={doublesFormData.matchDate} onChange={e => setDoublesFormData(f => ({ ...f, matchDate: e.target.value }))} className="w-full border rounded p-2" />
+                        <input
+                          type="date"
+                          value={doublesFormData.matchDate}
+                          onChange={e =>
+                            setDoublesFormData(f => ({ ...f, matchDate: e.target.value }))
+                          }
+                          className="w-full border rounded p-2"
+                        />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
                       <div>
                         <label className="block text-sm font-medium">Order</label>
-                        <input type="number" value={doublesFormData.order} onChange={e => setDoublesFormData(f => ({ ...f, order: parseInt(e.target.value, 10) || 1 }))} className="w-full border rounded p-2" />
+                        <input
+                          type="number"
+                          value={doublesFormData.order}
+                          onChange={e =>
+                            setDoublesFormData(f => ({
+                              ...f,
+                              order: parseInt(e.target.value, 10) || 1,
+                            }))
+                          }
+                          className="w-full border rounded p-2"
+                        />
                       </div>
                       <div>
                         <label className="block text-sm font-medium">Score</label>
-                        <input type="text" value={doublesFormData.score} onChange={e => setDoublesFormData(f => ({ ...f, score: e.target.value }))} className="w-full border rounded p-2" />
+                        <input
+                          type="text"
+                          value={doublesFormData.score}
+                          onChange={e => setDoublesFormData(f => ({ ...f, score: e.target.value }))}
+                          className="w-full border rounded p-2"
+                        />
                       </div>
                       <div>
                         <label className="block text-sm font-medium">Winner</label>
-                        <select value={doublesFormData.winner ?? ''} onChange={e => setDoublesFormData(f => ({ ...f, winner: e.target.value === '' ? null : e.target.value as 'HOME' | 'AWAY' }))} className="w-full border rounded p-2">
+                        <select
+                          value={doublesFormData.winner ?? ''}
+                          onChange={e =>
+                            setDoublesFormData(f => ({
+                              ...f,
+                              winner:
+                                e.target.value === '' ? null : (e.target.value as 'HOME' | 'AWAY'),
+                            }))
+                          }
+                          className="w-full border rounded p-2"
+                        >
                           <option value="">Select Winner</option>
                           <option value="HOME">Home</option>
                           <option value="AWAY">Away</option>
@@ -577,8 +860,19 @@ const LeagueDetail: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex gap-2 mt-2">
-                      <button type="submit" className="btn-primary">{editingDoublesMatch ? 'Update' : 'Create'} Match</button>
-                      <button type="button" className="btn-secondary" onClick={() => { setShowDoublesForm(false); setEditingDoublesMatch(null); }}>Cancel</button>
+                      <button type="submit" className="btn-primary">
+                        {editingDoublesMatch ? 'Update' : 'Create'} Match
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        onClick={() => {
+                          setShowDoublesForm(false);
+                          setEditingDoublesMatch(null);
+                        }}
+                      >
+                        Cancel
+                      </button>
                     </div>
                   </form>
                 )}
@@ -595,75 +889,88 @@ const LeagueDetail: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {league.teamMatches.flatMap(m => m.individualDoublesMatches ?? []).map(match => {
-                      const teamMatch = league.teamMatches.find(tm => tm.id === match.teamMatchId);
-                      return { match, teamMatch };
-                    }).sort((a, b) => {
-                      // Sort by team match date first, then by order
-                      const dateA = new Date(a.teamMatch?.matchDate || '');
-                      const dateB = new Date(b.teamMatch?.matchDate || '');
-                      if (dateA.getTime() !== dateB.getTime()) {
-                        return dateA.getTime() - dateB.getTime();
-                      }
-                      return (a.match.order || 0) - (b.match.order || 0);
-                    }).map(({ match, teamMatch }) => (
-                      <tr key={match.id} className="bg-white">
-                        <td className="px-4 py-2">
-                          {teamMatch ? `${formatDate(teamMatch.matchDate)} / ${formatDate(match.matchDate)}` : formatDate(match.matchDate)}
-                        </td>
-                        <td className="px-4 py-2">{match.order}</td>
-                        <td className="px-4 py-2">{
-                          (match.team1Player1.firstName || match.team1Player1.lastName)
-                            ? `${match.team1Player1.firstName ?? ''} ${match.team1Player1.lastName ?? ''}`.trim()
-                            : (match.team1Player1.username || match.team1Player1.email)
-                        } & {
-                          (match.team1Player2.firstName || match.team1Player2.lastName)
-                            ? `${match.team1Player2.firstName ?? ''} ${match.team1Player2.lastName ?? ''}`.trim()
-                            : (match.team1Player2.username || match.team1Player2.email)
-                        }</td>
-                        <td className="px-4 py-2">{
-                          (match.team2Player1.firstName || match.team2Player1.lastName)
-                            ? `${match.team2Player1.firstName ?? ''} ${match.team2Player1.lastName ?? ''}`.trim()
-                            : (match.team2Player1.username || match.team2Player1.email)
-                        } & {
-                          (match.team2Player2.firstName || match.team2Player2.lastName)
-                            ? `${match.team2Player2.firstName ?? ''} ${match.team2Player2.lastName ?? ''}`.trim()
-                            : (match.team2Player2.username || match.team2Player2.email)
-                        }</td>
-                        <td className="px-4 py-2">{match.score}</td>
-                        <td className="px-4 py-2">{match.winner ? (match.winner === 'HOME' ? 'Home' : 'Away') : '-'}</td>
-                        <td className="px-4 py-2 flex gap-2">
-                          <button
-                            className="text-blue-600 hover:text-blue-800 p-1"
-                            onClick={() => {
-                              setShowDoublesForm(true);
-                              setEditingDoublesMatch(match);
-                              setDoublesFormData({
-                                team1Player1Id: match.team1Player1Id,
-                                team1Player2Id: match.team1Player2Id,
-                                team2Player1Id: match.team2Player1Id,
-                                team2Player2Id: match.team2Player2Id,
-                                matchDate: formatDateForInput(match.matchDate),
-                                order: match.order,
-                                score: match.score,
-                                winner: match.winner,
-                                teamMatchId: match.teamMatchId
-                              });
-                            }}
-                            title="Edit Match"
-                          >
-                            ✏️
-                          </button>
-                          <button
-                            className="text-red-600 hover:text-red-800 p-1"
-                            onClick={() => { if (window.confirm('Delete this match?')) deleteDoublesMatch({ variables: { id: match.id } }); }}
-                            title="Delete Match"
-                          >
-                            🗑️
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                    {league.teamMatches
+                      .flatMap(m => m.individualDoublesMatches ?? [])
+                      .map(match => {
+                        const teamMatch = league.teamMatches.find(
+                          tm => tm.id === match.teamMatchId
+                        );
+                        return { match, teamMatch };
+                      })
+                      .sort((a, b) => {
+                        // Sort by team match date first, then by order
+                        const dateA = new Date(a.teamMatch?.matchDate || '');
+                        const dateB = new Date(b.teamMatch?.matchDate || '');
+                        if (dateA.getTime() !== dateB.getTime()) {
+                          return dateA.getTime() - dateB.getTime();
+                        }
+                        return (a.match.order || 0) - (b.match.order || 0);
+                      })
+                      .map(({ match, teamMatch }) => (
+                        <tr key={match.id} className="bg-white">
+                          <td className="px-4 py-2">
+                            {teamMatch
+                              ? `${formatDate(teamMatch.matchDate)} / ${formatDate(match.matchDate)}`
+                              : formatDate(match.matchDate)}
+                          </td>
+                          <td className="px-4 py-2">{match.order}</td>
+                          <td className="px-4 py-2">
+                            {match.team1Player1.firstName || match.team1Player1.lastName
+                              ? `${match.team1Player1.firstName ?? ''} ${match.team1Player1.lastName ?? ''}`.trim()
+                              : match.team1Player1.username || match.team1Player1.email}{' '}
+                            &{' '}
+                            {match.team1Player2.firstName || match.team1Player2.lastName
+                              ? `${match.team1Player2.firstName ?? ''} ${match.team1Player2.lastName ?? ''}`.trim()
+                              : match.team1Player2.username || match.team1Player2.email}
+                          </td>
+                          <td className="px-4 py-2">
+                            {match.team2Player1.firstName || match.team2Player1.lastName
+                              ? `${match.team2Player1.firstName ?? ''} ${match.team2Player1.lastName ?? ''}`.trim()
+                              : match.team2Player1.username || match.team2Player1.email}{' '}
+                            &{' '}
+                            {match.team2Player2.firstName || match.team2Player2.lastName
+                              ? `${match.team2Player2.firstName ?? ''} ${match.team2Player2.lastName ?? ''}`.trim()
+                              : match.team2Player2.username || match.team2Player2.email}
+                          </td>
+                          <td className="px-4 py-2">{match.score}</td>
+                          <td className="px-4 py-2">
+                            {match.winner ? (match.winner === 'HOME' ? 'Home' : 'Away') : '-'}
+                          </td>
+                          <td className="px-4 py-2 flex gap-2">
+                            <button
+                              className="text-blue-600 hover:text-blue-800 p-1"
+                              onClick={() => {
+                                setShowDoublesForm(true);
+                                setEditingDoublesMatch(match);
+                                setDoublesFormData({
+                                  team1Player1Id: match.team1Player1Id,
+                                  team1Player2Id: match.team1Player2Id,
+                                  team2Player1Id: match.team2Player1Id,
+                                  team2Player2Id: match.team2Player2Id,
+                                  matchDate: formatDateForInput(match.matchDate),
+                                  order: match.order,
+                                  score: match.score,
+                                  winner: match.winner,
+                                  teamMatchId: match.teamMatchId,
+                                });
+                              }}
+                              title="Edit Match"
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              className="text-red-600 hover:text-red-800 p-1"
+                              onClick={() => {
+                                if (window.confirm('Delete this match?'))
+                                  deleteDoublesMatch({ variables: { id: match.id } });
+                              }}
+                              title="Delete Match"
+                            >
+                              🗑️
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
               </div>
@@ -671,7 +978,11 @@ const LeagueDetail: React.FC = () => {
 
             {activeTab === 'standings' && (
               <div className="p-6">
-                <StandingsTable standings={standings} loading={standingsLoading} teams={league.teams.map(t => ({ teamId: t.id, teamName: t.group.name }))} />
+                <StandingsTable
+                  standings={standings}
+                  loading={standingsLoading}
+                  teams={league.teams.map(t => ({ teamId: t.id, teamName: t.group.name }))}
+                />
               </div>
             )}
 

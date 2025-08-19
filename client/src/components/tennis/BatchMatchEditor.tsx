@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
-import { IndividualDoublesMatch, IndividualSinglesMatch } from './types';
+import IndividualMatchForm from './IndividualMatchForm';
+import { IndividualDoublesMatch, IndividualSinglesMatch, TeamLeagueTeamMatch } from './types';
 import { parseScoreString, scoreArrayToString } from './utils';
 
 const RESULT_TYPES = [
@@ -13,14 +14,33 @@ const RESULT_TYPES = [
 interface BatchMatchEditorProps {
   singlesMatches: IndividualSinglesMatch[];
   doublesMatches: IndividualDoublesMatch[];
-  onSave: (matches: (IndividualSinglesMatch | IndividualDoublesMatch)[], matchType: 'singles' | 'doubles') => void;
+  onSave: (
+    matches: (IndividualSinglesMatch | IndividualDoublesMatch)[],
+    matchType: 'singles' | 'doubles'
+  ) => void;
+  // New props for individual match creation
+  teamMatch: TeamLeagueTeamMatch;
+  leagueId: string;
+  onRefresh: () => void;
 }
 
-const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({ singlesMatches, doublesMatches, onSave }) => {
+const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
+  singlesMatches,
+  doublesMatches,
+  onSave,
+  teamMatch,
+  leagueId,
+  onRefresh,
+}) => {
   const [activeTab, setActiveTab] = useState<'singles' | 'doubles'>('singles');
+  const [showCreateForm, setShowCreateForm] = useState<'singles' | 'doubles' | null>(null);
   // Local state for editing
-  const [singlesState, setSinglesState] = useState(() => singlesMatches.map(m => ({ ...m, scoreArr: parseScoreString(m.score) })));
-  const [doublesState, setDoublesState] = useState(() => doublesMatches.map(m => ({ ...m, scoreArr: parseScoreString(m.score) })));
+  const [singlesState, setSinglesState] = useState(() =>
+    singlesMatches.map(m => ({ ...m, scoreArr: parseScoreString(m.score) }))
+  );
+  const [doublesState, setDoublesState] = useState(() =>
+    doublesMatches.map(m => ({ ...m, scoreArr: parseScoreString(m.score) }))
+  );
   const [saving, setSaving] = useState(false);
 
   // Helper to update a match in state
@@ -41,7 +61,13 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({ singlesMatches, dou
   }
 
   // Helper to update set scores
-  function updateSetScore(index: number, setIdx: number, side: 0 | 1, value: string, type: 'singles' | 'doubles') {
+  function updateSetScore(
+    index: number,
+    setIdx: number,
+    side: 0 | 1,
+    value: string,
+    type: 'singles' | 'doubles'
+  ) {
     const parsed = value === '' ? 0 : Number(value);
     if (type === 'singles') {
       setSinglesState(state => {
@@ -88,33 +114,58 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({ singlesMatches, dou
 
   // Render player link (stub)
   function PlayerLink({ user }: { user: any }) {
-    return <span className="text-blue-700 underline cursor-pointer">{user?.firstName || user?.lastName ? `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() : user?.username || user?.email}</span>;
+    return (
+      <span className="text-blue-700 underline cursor-pointer">
+        {user?.firstName || user?.lastName
+          ? `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim()
+          : user?.username || user?.email}
+      </span>
+    );
   }
 
   // Render match rows
   function renderRows(matches: any[], type: 'singles' | 'doubles') {
     return matches.map((m, idx) => {
       // Always render 3 sets for alignment
-      const sets = [0, 1, 2].map(i => m.scoreArr && m.scoreArr[i] ? m.scoreArr[i] : [ '', '' ]);
+      const sets = [0, 1, 2].map(i => (m.scoreArr && m.scoreArr[i] ? m.scoreArr[i] : ['', '']));
       return (
         <tr key={m.id} className="border-b">
           <td className="px-2 py-1 text-xs font-semibold align-middle">{idx + 1}</td>
           <td className="px-2 py-1 align-middle">
             <PlayerLink user={type === 'singles' ? m.player1 : m.team1Player1} />
-            {type === 'doubles' && <span> / <PlayerLink user={m.team1Player2} /></span>}
+            {type === 'doubles' && (
+              <span>
+                {' '}
+                / <PlayerLink user={m.team1Player2} />
+              </span>
+            )}
           </td>
           <td className="px-2 py-1 align-middle" style={{ borderRight: '2px solid #e5e7eb' }}>
             <PlayerLink user={type === 'singles' ? m.player2 : m.team2Player1} />
-            {type === 'doubles' && <span> / <PlayerLink user={m.team2Player2} /></span>}
+            {type === 'doubles' && (
+              <span>
+                {' '}
+                / <PlayerLink user={m.team2Player2} />
+              </span>
+            )}
           </td>
           {/* Set scores: always 3 sets */}
           {sets.map((set: any, setIdx: number) => (
             <React.Fragment key={setIdx}>
-              <td className="px-0 py-1 align-middle" style={{ minWidth: 22, width: 22, borderLeft: setIdx === 0 ? '2px solid #e5e7eb' : undefined }}>
+              <td
+                className="px-0 py-1 align-middle"
+                style={{
+                  minWidth: 22,
+                  width: 22,
+                  borderLeft: setIdx === 0 ? '2px solid #e5e7eb' : undefined,
+                }}
+              >
                 <input
                   type="text"
                   value={set[0] ?? ''}
-                  onChange={e => updateSetScore(idx, setIdx, 0, e.target.value.replace(/[^0-9]/g, ''), type)}
+                  onChange={e =>
+                    updateSetScore(idx, setIdx, 0, e.target.value.replace(/[^0-9]/g, ''), type)
+                  }
                   onBlur={e => {
                     const v = e.target.value;
                     if (v === '' || (Number(v) >= 0 && Number(v) <= 7)) return;
@@ -127,11 +178,20 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({ singlesMatches, dou
               <td className="px-0 py-1 align-middle" style={{ minWidth: 10, width: 10 }}>
                 <span className="inline-block w-2 text-center">-</span>
               </td>
-              <td className="px-0 py-1 align-middle" style={{ minWidth: 22, width: 22, borderRight: setIdx === 2 ? '2px solid #e5e7eb' : undefined }}>
+              <td
+                className="px-0 py-1 align-middle"
+                style={{
+                  minWidth: 22,
+                  width: 22,
+                  borderRight: setIdx === 2 ? '2px solid #e5e7eb' : undefined,
+                }}
+              >
                 <input
                   type="text"
                   value={set[1] ?? ''}
-                  onChange={e => updateSetScore(idx, setIdx, 1, e.target.value.replace(/[^0-9]/g, ''), type)}
+                  onChange={e =>
+                    updateSetScore(idx, setIdx, 1, e.target.value.replace(/[^0-9]/g, ''), type)
+                  }
                   onBlur={e => {
                     const v = e.target.value;
                     if (v === '' || (Number(v) >= 0 && Number(v) <= 7)) return;
@@ -164,7 +224,9 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({ singlesMatches, dou
               className="border rounded text-xs"
             >
               {RESULT_TYPES.map(rt => (
-                <option key={rt.value} value={rt.value}>{rt.label}</option>
+                <option key={rt.value} value={rt.value}>
+                  {rt.label}
+                </option>
               ))}
             </select>
           </td>
@@ -198,20 +260,78 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({ singlesMatches, dou
           <tr className="bg-gray-100">
             <th className="px-2 py-1 align-middle">#</th>
             <th className="px-2 py-1 align-middle text-left">Home</th>
-            <th className="px-2 py-1 align-middle text-left" style={{ borderRight: '2px solid #e5e7eb' }}>Away</th>
+            <th
+              className="px-2 py-1 align-middle text-left"
+              style={{ borderRight: '2px solid #e5e7eb' }}
+            >
+              Away
+            </th>
             {/* Vertical separator before S1 */}
-            <th className="px-0 py-1 align-middle" colSpan={3} style={{ borderLeft: '2px solid #e5e7eb', borderRight: '2px solid #e5e7eb' }}>S1</th>
-            <th className="px-0 py-1 align-middle" colSpan={3} style={{ borderRight: '2px solid #e5e7eb' }}>S2</th>
-            <th className="px-0 py-1 align-middle" colSpan={3} style={{ borderRight: '2px solid #e5e7eb' }}>S3</th>
+            <th
+              className="px-0 py-1 align-middle"
+              colSpan={3}
+              style={{ borderLeft: '2px solid #e5e7eb', borderRight: '2px solid #e5e7eb' }}
+            >
+              S1
+            </th>
+            <th
+              className="px-0 py-1 align-middle"
+              colSpan={3}
+              style={{ borderRight: '2px solid #e5e7eb' }}
+            >
+              S2
+            </th>
+            <th
+              className="px-0 py-1 align-middle"
+              colSpan={3}
+              style={{ borderRight: '2px solid #e5e7eb' }}
+            >
+              S3
+            </th>
             {/* Vertical separator after S3 */}
-            <th className="px-2 py-1 align-middle text-left" style={{ borderLeft: '2px solid #e5e7eb' }}>Winner</th>
+            <th
+              className="px-2 py-1 align-middle text-left"
+              style={{ borderLeft: '2px solid #e5e7eb' }}
+            >
+              Winner
+            </th>
             <th className="px-2 py-1 align-middle text-left">Result</th>
           </tr>
         </thead>
-        <tbody>
-          {renderRows(matches, type)}
-        </tbody>
+        <tbody>{renderRows(matches, type)}</tbody>
       </table>
+
+      {/* Add Match Button */}
+      {!showCreateForm && (
+        <div className="mb-4">
+          <button
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+            onClick={() => setShowCreateForm(activeTab)}
+            aria-label={`Add new ${activeTab} match`}
+          >
+            <span className="text-lg">+</span>
+            Add {activeTab === 'singles' ? 'Singles' : 'Doubles'} Match
+          </button>
+        </div>
+      )}
+
+      {/* Individual Match Creation Form */}
+      {showCreateForm && (
+        <IndividualMatchForm
+          matchType={showCreateForm}
+          teamMatch={teamMatch}
+          leagueId={leagueId}
+          initialOrder={
+            (showCreateForm === 'singles' ? singlesMatches.length : doublesMatches.length) + 1
+          }
+          onSuccess={() => {
+            setShowCreateForm(null);
+            onRefresh();
+          }}
+          onCancel={() => setShowCreateForm(null)}
+        />
+      )}
+
       <button
         className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
         onClick={handleSave}

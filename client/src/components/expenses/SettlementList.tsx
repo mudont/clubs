@@ -1,20 +1,18 @@
 import { useMutation, useQuery } from '@apollo/client';
 import React, { useState } from 'react';
 
-import { DELETE_SETTLEMENT, GET_GROUP_SETTLEMENTS, MARK_SETTLEMENT_PAID } from '../../graphql/Expenses';
+import {
+  DELETE_SETTLEMENT,
+  GET_GROUP_SETTLEMENTS,
+  MARK_SETTLEMENT_PAID,
+} from '../../graphql/Expenses';
+import { sortByLabel } from '../../utils/sorting';
 
 interface SettlementListProps {
   groupId: string;
 }
 
-const PAYMENT_METHODS = [
-  'CASH',
-  'BANK_TRANSFER',
-  'PAYPAL',
-  'VENMO',
-  'CASH_APP',
-  'OTHER',
-];
+const PAYMENT_METHODS = ['CASH', 'BANK_TRANSFER', 'PAYPAL', 'VENMO', 'CASH_APP', 'OTHER'];
 
 export const SettlementList: React.FC<SettlementListProps> = ({ groupId }) => {
   const [selectedSettlement, setSelectedSettlement] = useState<any>(null);
@@ -47,7 +45,7 @@ export const SettlementList: React.FC<SettlementListProps> = ({ groupId }) => {
         <div className="animate-pulse">
           <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
+            {[1, 2, 3].map(i => (
               <div key={i} className="h-4 bg-gray-200 rounded"></div>
             ))}
           </div>
@@ -59,9 +57,7 @@ export const SettlementList: React.FC<SettlementListProps> = ({ groupId }) => {
   if (error) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="text-red-600">
-          Error loading settlements: {error.message}
-        </div>
+        <div className="text-red-600">Error loading settlements: {error.message}</div>
       </div>
     );
   }
@@ -117,7 +113,10 @@ export const SettlementList: React.FC<SettlementListProps> = ({ groupId }) => {
   };
 
   const getPaymentMethodLabel = (method: string) => {
-    return method.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+    return method
+      .replace('_', ' ')
+      .toLowerCase()
+      .replace(/\b\w/g, l => l.toUpperCase());
   };
 
   return (
@@ -139,7 +138,8 @@ export const SettlementList: React.FC<SettlementListProps> = ({ groupId }) => {
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
                     <span className="text-sm font-medium text-gray-700">
-                      {settlement.fromUser.firstName?.[0] || settlement.fromUser.username[0].toUpperCase()}
+                      {settlement.fromUser.firstName?.[0] ||
+                        settlement.fromUser.username[0].toUpperCase()}
                     </span>
                   </div>
                   <div>
@@ -151,13 +151,17 @@ export const SettlementList: React.FC<SettlementListProps> = ({ groupId }) => {
                 </div>
                 <div className="text-right">
                   <div className="text-lg font-semibold">${settlement.amount.toFixed(2)}</div>
-                  <div className="text-sm text-gray-500">to {settlement.toUser.firstName} {settlement.toUser.lastName}</div>
+                  <div className="text-sm text-gray-500">
+                    to {settlement.toUser.firstName} {settlement.toUser.lastName}
+                  </div>
                 </div>
               </div>
 
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-4">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(settlement.status)}`}>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(settlement.status)}`}
+                  >
                     {settlement.status}
                   </span>
                   {settlement.paymentMethod && (
@@ -207,7 +211,8 @@ export const SettlementList: React.FC<SettlementListProps> = ({ groupId }) => {
 
             <div className="mb-4">
               <div className="text-sm text-gray-600 mb-2">
-                {selectedSettlement.fromUser.firstName} {selectedSettlement.fromUser.lastName} → {selectedSettlement.toUser.firstName} {selectedSettlement.toUser.lastName}
+                {selectedSettlement.fromUser.firstName} {selectedSettlement.fromUser.lastName} →{' '}
+                {selectedSettlement.toUser.firstName} {selectedSettlement.toUser.lastName}
               </div>
               <div className="text-lg font-semibold">${selectedSettlement.amount.toFixed(2)}</div>
             </div>
@@ -219,10 +224,10 @@ export const SettlementList: React.FC<SettlementListProps> = ({ groupId }) => {
                 </label>
                 <select
                   value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  onChange={e => setPaymentMethod(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {PAYMENT_METHODS.map(method => (
+                  {sortByLabel(PAYMENT_METHODS, getPaymentMethodLabel).map(method => (
                     <option key={method} value={method}>
                       {getPaymentMethodLabel(method)}
                     </option>
@@ -236,7 +241,7 @@ export const SettlementList: React.FC<SettlementListProps> = ({ groupId }) => {
                 </label>
                 <textarea
                   value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
+                  onChange={e => setNotes(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={3}
                   placeholder="Add any notes about this payment..."

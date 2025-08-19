@@ -2,9 +2,25 @@ import { useMutation, useQuery } from '@apollo/client';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { sortByName } from '../../utils/sorting';
+
 import BatchMatchEditor from './BatchMatchEditor';
-import { CREATE_TEAM_MATCH, DELETE_TEAM_MATCH, GET_TENNIS_LEAGUE, UPDATE_INDIVIDUAL_DOUBLES_MATCH, UPDATE_INDIVIDUAL_SINGLES_MATCH, UPDATE_TEAM_MATCH } from './graphql';
-import { CreateTeamMatchData, CreateTeamMatchInput, DeleteTeamMatchData, TeamLeagueTeamMatch, UpdateTeamMatchData, UpdateTeamMatchInput } from './types';
+import {
+  CREATE_TEAM_MATCH,
+  DELETE_TEAM_MATCH,
+  GET_TENNIS_LEAGUE,
+  UPDATE_INDIVIDUAL_DOUBLES_MATCH,
+  UPDATE_INDIVIDUAL_SINGLES_MATCH,
+  UPDATE_TEAM_MATCH,
+} from './graphql';
+import {
+  CreateTeamMatchData,
+  CreateTeamMatchInput,
+  DeleteTeamMatchData,
+  TeamLeagueTeamMatch,
+  UpdateTeamMatchData,
+  UpdateTeamMatchInput,
+} from './types';
 
 interface TeamMatchListProps {
   leagueId: string;
@@ -24,41 +40,41 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
   const { data: leagueData } = useQuery(GET_TENNIS_LEAGUE, { variables: { id: leagueId } });
   const { refetch } = useQuery(GET_TENNIS_LEAGUE, { variables: { id: leagueId } });
 
-  const [createMatch, { loading: creating }] = useMutation<CreateTeamMatchData, { leagueId: string; input: CreateTeamMatchInput }>(
-    CREATE_TEAM_MATCH,
-    {
-      onCompleted: () => {
-        setShowCreateForm(false);
-        setFormData({ homeTeamId: '', awayTeamId: '', matchDate: '' });
-        refetch();
-      },
-      onError: (error) => {
-        console.error('Error creating match:', error);
-        alert('Failed to create match. Please try again.');
-      },
-    }
-  );
+  const [createMatch, { loading: creating }] = useMutation<
+    CreateTeamMatchData,
+    { leagueId: string; input: CreateTeamMatchInput }
+  >(CREATE_TEAM_MATCH, {
+    onCompleted: () => {
+      setShowCreateForm(false);
+      setFormData({ homeTeamId: '', awayTeamId: '', matchDate: '' });
+      refetch();
+    },
+    onError: error => {
+      console.error('Error creating match:', error);
+      alert('Failed to create match. Please try again.');
+    },
+  });
 
-  const [updateMatch, { loading: updating }] = useMutation<UpdateTeamMatchData, { id: string; input: UpdateTeamMatchInput }>(
-    UPDATE_TEAM_MATCH,
-    {
-      onCompleted: () => {
-        setEditingMatch(null);
-        setFormData({ homeTeamId: '', awayTeamId: '', matchDate: '' });
-        refetch();
-      },
-      onError: (error) => {
-        console.error('Error updating match:', error);
-        alert('Failed to update match. Please try again.');
-      },
-    }
-  );
+  const [updateMatch, { loading: updating }] = useMutation<
+    UpdateTeamMatchData,
+    { id: string; input: UpdateTeamMatchInput }
+  >(UPDATE_TEAM_MATCH, {
+    onCompleted: () => {
+      setEditingMatch(null);
+      setFormData({ homeTeamId: '', awayTeamId: '', matchDate: '' });
+      refetch();
+    },
+    onError: error => {
+      console.error('Error updating match:', error);
+      alert('Failed to update match. Please try again.');
+    },
+  });
 
   const [deleteMatch] = useMutation<DeleteTeamMatchData, { id: string }>(DELETE_TEAM_MATCH, {
     onCompleted: () => {
       refetch();
     },
-    onError: (error) => {
+    onError: error => {
       console.error('Error deleting match:', error);
       alert('Failed to delete match. Please try again.');
     },
@@ -133,7 +149,9 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this match? This action cannot be undone.')) {
+    if (
+      window.confirm('Are you sure you want to delete this match? This action cannot be undone.')
+    ) {
       deleteMatch({ variables: { id } });
     }
   };
@@ -155,7 +173,11 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
   };
 
   const teams = leagueData?.tennisLeague?.teams || [];
-  const sortedMatches = [...matches].sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
+  // Sort teams alphabetically by group name for dropdowns
+  const sortedTeams = sortByName(teams.map((team: any) => ({ ...team, name: team.group.name })));
+  const sortedMatches = [...matches].sort(
+    (a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime()
+  );
   const navigate = useNavigate();
 
   return (
@@ -179,17 +201,15 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Home Team *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Home Team *</label>
                 <select
                   value={formData.homeTeamId}
-                  onChange={(e) => setFormData({ ...formData, homeTeamId: e.target.value })}
+                  onChange={e => setFormData({ ...formData, homeTeamId: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 >
                   <option value="">Select home team</option>
-                  {teams.map((team: { id: string; group: { id: string; name: string } }) => (
+                  {sortedTeams.map((team: any) => (
                     <option key={team.id} value={team.id}>
                       {team.group.name}
                     </option>
@@ -197,17 +217,15 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Away Team *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Away Team *</label>
                 <select
                   value={formData.awayTeamId}
-                  onChange={(e) => setFormData({ ...formData, awayTeamId: e.target.value })}
+                  onChange={e => setFormData({ ...formData, awayTeamId: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 >
                   <option value="">Select away team</option>
-                  {teams.map((team: { id: string; group: { id: string; name: string } }) => (
+                  {sortedTeams.map((team: any) => (
                     <option key={team.id} value={team.id}>
                       {team.group.name}
                     </option>
@@ -216,13 +234,11 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Match Date *
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Match Date *</label>
               <input
                 type="date"
                 value={formData.matchDate}
-                onChange={(e) => setFormData({ ...formData, matchDate: e.target.value })}
+                onChange={e => setFormData({ ...formData, matchDate: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
@@ -233,7 +249,11 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
                 disabled={creating || updating}
                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg transition-colors"
               >
-                {creating || updating ? 'Saving...' : (editingMatch ? 'Update Match' : 'Create Match')}
+                {creating || updating
+                  ? 'Saving...'
+                  : editingMatch
+                    ? 'Update Match'
+                    : 'Create Match'}
               </button>
               <button
                 type="button"
@@ -249,8 +269,11 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
 
       {/* Matches List */}
       <div className="space-y-4">
-        {sortedMatches.map((match) => (
-          <div key={match.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+        {sortedMatches.map(match => (
+          <div
+            key={match.id}
+            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+          >
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-2">
@@ -258,9 +281,7 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
                     {match.homeTeam.group.name} vs {match.awayTeam.group.name}
                   </div>
                 </div>
-                <div className="text-sm text-gray-600">
-                  {formatDate(match.matchDate)}
-                </div>
+                <div className="text-sm text-gray-600">{formatDate(match.matchDate)}</div>
               </div>
               <div className="flex gap-2 ml-4">
                 <button
@@ -280,7 +301,11 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
                 <button
                   onClick={() => setExpandedMatchId(expandedMatchId === match.id ? null : match.id)}
                   className="text-gray-600 hover:text-gray-900 ml-2"
-                  title={expandedMatchId === match.id ? 'Hide Individual Matches' : 'Show Individual Matches'}
+                  title={
+                    expandedMatchId === match.id
+                      ? 'Hide Individual Matches'
+                      : 'Show Individual Matches'
+                  }
                   aria-expanded={expandedMatchId === match.id}
                 >
                   {expandedMatchId === match.id ? '▲' : '▼'}
@@ -296,17 +321,13 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">
-                  {match.homeTeam.group.name}
-                </div>
+                <div className="text-2xl font-bold text-blue-600">{match.homeTeam.group.name}</div>
               </div>
               <div className="text-center flex items-center justify-center">
                 <div className="text-lg font-medium text-gray-500">vs</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">
-                  {match.awayTeam.group.name}
-                </div>
+                <div className="text-2xl font-bold text-red-600">{match.awayTeam.group.name}</div>
               </div>
             </div>
             {/* Collapsible Individual Matches Table */}
@@ -316,6 +337,9 @@ const TeamMatchList: React.FC<TeamMatchListProps> = ({ leagueId, matches }) => {
                   singlesMatches={match.individualSinglesMatches || []}
                   doublesMatches={match.individualDoublesMatches || []}
                   onSave={handleBatchSave}
+                  teamMatch={match}
+                  leagueId={leagueId}
+                  onRefresh={refetch}
                 />
               </div>
             )}

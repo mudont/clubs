@@ -1,8 +1,9 @@
 import { useLazyQuery } from '@apollo/client';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { GROUP_SEARCH } from './graphql';
+import { sortByName } from '../../utils/sorting';
 
+import { GROUP_SEARCH } from './graphql';
 
 interface Group {
   id: string;
@@ -105,39 +106,43 @@ const GroupAutocomplete: React.FC<GroupAutocompleteProps> = ({
           required={required}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
         />
-        {showSuggestions && groupSearchData?.publicGroups && groupSearchData.publicGroups.length > 0 && (
-          <div
-            ref={suggestionsRef}
-            className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
-          >
-            {groupSearchData.publicGroups.map((group: Group) => (
-              <div
-                key={group.id}
-                className="px-3 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
-                onClick={() => handleSuggestionClick(group)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleSuggestionClick(group);
-                  }
-                }}
-                role="button"
-                tabIndex={0}
-                aria-label={`Select ${group.name}`}
-              >
-                <div className="font-medium text-gray-900">{group.name}</div>
-                {group.description && (
-                  <div className="text-sm text-gray-500">{group.description}</div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-        {showSuggestions && groupSearchData?.publicGroups && groupSearchData.publicGroups.length === 0 && (
-          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
-            <div className="px-3 py-2 text-gray-500">No groups found</div>
-          </div>
-        )}
+        {showSuggestions &&
+          groupSearchData?.publicGroups &&
+          groupSearchData.publicGroups.length > 0 && (
+            <div
+              ref={suggestionsRef}
+              className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
+            >
+              {sortByName(groupSearchData.publicGroups as Group[]).map((group: Group) => (
+                <div
+                  key={group.id}
+                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
+                  onClick={() => handleSuggestionClick(group)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleSuggestionClick(group);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Select ${group.name}`}
+                >
+                  <div className="font-medium text-gray-900">{group.name}</div>
+                  {group.description && (
+                    <div className="text-sm text-gray-500">{group.description}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        {showSuggestions &&
+          groupSearchData?.publicGroups &&
+          groupSearchData.publicGroups.length === 0 && (
+            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
+              <div className="px-3 py-2 text-gray-500">No groups found</div>
+            </div>
+          )}
       </div>
     </div>
   );

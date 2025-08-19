@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { CREATE_EXPENSE, GET_GROUP_EXPENSES, UPDATE_EXPENSE } from '../../graphql/Expenses';
 import { GET_GROUP_MEMBERS } from '../../graphql/Group';
 import { ME_QUERY } from '../../graphql/User';
+import { sortAlphabetically, sortByDisplayName } from '../../utils/sorting';
 
 interface ExpenseFormProps {
   groupId: string;
@@ -52,7 +53,9 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     amount: expense?.amount || 0,
     currency: expense?.currency || 'USD',
     category: expense?.category || 'General',
-    date: expense?.date ? new Date(expense.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    date: expense?.date
+      ? new Date(expense.date).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0],
     receiptUrl: expense?.receiptUrl || '',
     splitType: expense?.splitType || 'EQUAL',
   });
@@ -84,12 +87,14 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       }));
       setSplits(initialSplits);
     } else if (expense?.splits) {
-      setSplits(expense.splits.map((split: any) => ({
-        userId: split.user.id,
-        amount: split.amount,
-        percentage: split.percentage,
-        shares: split.shares,
-      })));
+      setSplits(
+        expense.splits.map((split: any) => ({
+          userId: split.user.id,
+          amount: split.amount,
+          percentage: split.percentage,
+          shares: split.shares,
+        }))
+      );
     }
   }, [membersData, expense]);
 
@@ -114,27 +119,33 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
     if (formData.splitType === 'EQUAL') {
       const equalAmount = totalAmount / memberCount;
-      setSplits(splits.map(split => ({
-        ...split,
-        amount: equalAmount,
-        percentage: (equalAmount / totalAmount) * 100,
-        shares: 1,
-      })));
+      setSplits(
+        splits.map(split => ({
+          ...split,
+          amount: equalAmount,
+          percentage: (equalAmount / totalAmount) * 100,
+          shares: 1,
+        }))
+      );
     } else if (formData.splitType === 'PERCENTAGE') {
       const equalPercentage = 100 / memberCount;
-      setSplits(splits.map(split => ({
-        ...split,
-        amount: (equalPercentage / 100) * totalAmount,
-        percentage: equalPercentage,
-        shares: 1,
-      })));
+      setSplits(
+        splits.map(split => ({
+          ...split,
+          amount: (equalPercentage / 100) * totalAmount,
+          percentage: equalPercentage,
+          shares: 1,
+        }))
+      );
     } else if (formData.splitType === 'SHARES') {
       const totalShares = splits.reduce((sum, split) => sum + (split.shares || 1), 0);
-      setSplits(splits.map(split => ({
-        ...split,
-        amount: ((split.shares || 1) / totalShares) * totalAmount,
-        percentage: ((split.shares || 1) / totalShares) * 100,
-      })));
+      setSplits(
+        splits.map(split => ({
+          ...split,
+          amount: ((split.shares || 1) / totalShares) * totalAmount,
+          percentage: ((split.shares || 1) / totalShares) * 100,
+        }))
+      );
     }
   }, [formData.splitType, formData.amount, membersData]);
 
@@ -143,9 +154,9 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   };
 
   const handleSplitChange = (userId: string, field: string, value: number) => {
-    setSplits(prev => prev.map(split =>
-      split.userId === userId ? { ...split, [field]: value } : split
-    ));
+    setSplits(prev =>
+      prev.map(split => (split.userId === userId ? { ...split, [field]: value } : split))
+    );
   };
 
   const validateForm = (): boolean => {
@@ -209,11 +220,15 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     return <div>Loading...</div>;
   }
 
+  // Sort members by display name for "Paid By" dropdown
+  const sortedMembers = sortByDisplayName(membersData.group.memberships.map((m: any) => m.user));
+
+  // Sort categories alphabetically
+  const sortedCategories = sortAlphabetically(EXPENSE_CATEGORIES);
+
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6">
-        {expense ? 'Edit Expense' : 'Add New Expense'}
-      </h2>
+      <h2 className="text-2xl font-bold mb-6">{expense ? 'Edit Expense' : 'Add New Expense'}</h2>
 
       {errors.length > 0 && (
         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -228,19 +243,17 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Paid By Field */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Paid By
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Paid By</label>
           <select
             value={paidBy}
             onChange={e => setPaidBy(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           >
-            {membersData.group.memberships.map((membership: any) => (
-              <option key={membership.user.id} value={membership.user.id}>
-                {membership.user.firstName} {membership.user.lastName} ({membership.user.username})
-                {meData?.me?.id === membership.user.id ? ' (You)' : ''}
+            {sortedMembers.map((user: any) => (
+              <option key={user.id} value={user.id}>
+                {user.firstName} {user.lastName} ({user.username})
+                {meData?.me?.id === user.id ? ' (You)' : ''}
               </option>
             ))}
           </select>
@@ -248,13 +261,11 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         {/* Basic Expense Information */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
             <input
               type="text"
               value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
+              onChange={e => handleInputChange('description', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="What was this expense for?"
               required
@@ -262,9 +273,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Amount *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Amount *</label>
             <div className="relative">
               <span className="absolute left-3 top-2 text-gray-500">$</span>
               <input
@@ -272,7 +281,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                 step="0.01"
                 min="0"
                 value={formData.amount}
-                onChange={(e) => handleInputChange('amount', parseFloat(e.target.value) || 0)}
+                onChange={e => handleInputChange('amount', parseFloat(e.target.value) || 0)}
                 className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="0.00"
                 required
@@ -281,28 +290,26 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Category
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
             <select
               value={formData.category}
-              onChange={(e) => handleInputChange('category', e.target.value)}
+              onChange={e => handleInputChange('category', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              {EXPENSE_CATEGORIES.map(category => (
-                <option key={category} value={category}>{category}</option>
+              {sortedCategories.map(category => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Date
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
             <input
               type="date"
               value={formData.date}
-              onChange={(e) => handleInputChange('date', e.target.value)}
+              onChange={e => handleInputChange('date', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -316,7 +323,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           <input
             type="url"
             value={formData.receiptUrl}
-            onChange={(e) => handleInputChange('receiptUrl', e.target.value)}
+            onChange={e => handleInputChange('receiptUrl', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="https://example.com/receipt"
           />
@@ -324,32 +331,35 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
         {/* Split Type */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Split Type
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Split Type</label>
           <select
             value={formData.splitType}
-            onChange={(e) => handleInputChange('splitType', e.target.value)}
+            onChange={e => handleInputChange('splitType', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {SPLIT_TYPES.map(type => (
-              <option key={type.value} value={type.value}>{type.label}</option>
+              <option key={type.value} value={type.value}>
+                {type.label}
+              </option>
             ))}
           </select>
         </div>
 
         {/* Split Details */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Split Details
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Split Details</label>
           <div className="space-y-3">
-            {splits.map((split) => {
-              const member = membersData.group.memberships.find((m: any) => m.user.id === split.userId);
+            {splits.map(split => {
+              const member = membersData.group.memberships.find(
+                (m: any) => m.user.id === split.userId
+              );
               if (!member) return null;
 
               return (
-                <div key={split.userId} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-md">
+                <div
+                  key={split.userId}
+                  className="flex items-center space-x-4 p-3 bg-gray-50 rounded-md"
+                >
                   <div className="flex-1">
                     <span className="font-medium">
                       {member.user.firstName} {member.user.lastName} ({member.user.username})
@@ -364,7 +374,9 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                         step="0.01"
                         min="0"
                         value={split.amount || 0}
-                        onChange={(e) => handleSplitChange(split.userId, 'amount', parseFloat(e.target.value) || 0)}
+                        onChange={e =>
+                          handleSplitChange(split.userId, 'amount', parseFloat(e.target.value) || 0)
+                        }
                         className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
                       />
                     </div>
@@ -378,7 +390,13 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                         min="0"
                         max="100"
                         value={split.percentage || 0}
-                        onChange={(e) => handleSplitChange(split.userId, 'percentage', parseFloat(e.target.value) || 0)}
+                        onChange={e =>
+                          handleSplitChange(
+                            split.userId,
+                            'percentage',
+                            parseFloat(e.target.value) || 0
+                          )
+                        }
                         className="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
                       />
                       <span className="text-sm text-gray-600">%</span>
@@ -391,16 +409,16 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                         type="number"
                         min="1"
                         value={split.shares || 1}
-                        onChange={(e) => handleSplitChange(split.userId, 'shares', parseInt(e.target.value) || 1)}
+                        onChange={e =>
+                          handleSplitChange(split.userId, 'shares', parseInt(e.target.value) || 1)
+                        }
                         className="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
                       />
                       <span className="text-sm text-gray-600">shares</span>
                     </div>
                   )}
 
-                  <div className="text-sm text-gray-600">
-                    ${(split.amount || 0).toFixed(2)}
-                  </div>
+                  <div className="text-sm text-gray-600">${(split.amount || 0).toFixed(2)}</div>
                 </div>
               );
             })}
