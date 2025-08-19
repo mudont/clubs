@@ -184,7 +184,9 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
   function renderRows(matches: any[], type: 'singles' | 'doubles') {
     return matches.map((m, idx) => {
       // Always render 3 sets for alignment
-      const sets = [0, 1, 2].map(i => (m.scoreArr && m.scoreArr[i] ? m.scoreArr[i] : ['', '']));
+      const sets: [string | number, string | number][] = [0, 1, 2].map(i =>
+        m.scoreArr && m.scoreArr[i] ? m.scoreArr[i] : ['', '']
+      );
       return (
         <tr key={m.id} className="border-b">
           <td className="px-2 py-1 text-xs font-semibold align-middle">{idx + 1}</td>
@@ -207,7 +209,7 @@ const BatchMatchEditor: React.FC<BatchMatchEditorProps> = ({
             )}
           </td>
           {/* Set scores: always 3 sets */}
-          {sets.map((set: unknown, setIdx: number) => (
+          {sets.map((set: [string | number, string | number], setIdx: number) => (
             <React.Fragment key={setIdx}>
               <td
                 className="px-0 py-1 align-middle"
