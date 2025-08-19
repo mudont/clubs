@@ -350,7 +350,7 @@ const IndividualMatchList: React.FC<IndividualMatchListProps> = ({
     if (leagueData && leagueData.tennisLeague && Array.isArray(leagueData.tennisLeague.teams)) {
       leagueData.tennisLeague.teams.forEach((team: any) => {
         if (team.group && Array.isArray(team.group.members)) {
-          team.group.members.forEach((membership: unknown) => {
+          team.group.members.forEach((membership: any) => {
             if (membership.user && !players.find(p => p.id === membership.user.id)) {
               const name =
                 membership.user.firstName || membership.user.lastName
