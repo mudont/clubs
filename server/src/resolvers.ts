@@ -1,11 +1,18 @@
-import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { GraphQLError } from 'graphql';
 import { withFilter } from 'graphql-subscriptions';
+import {
+  CreateIndividualSinglesMatchInputSchema,
+  CreateTennisLeagueInputSchema,
+  CreateTennisTeamInputSchema,
+  UpdateTennisLeagueInputSchema,
+} from './__generated__/validation';
 import { generateToken } from './auth/jwt';
 import { expensesResolvers } from './expenses';
+import { applyValidationToResolvers } from './middleware/graphql-validation';
+import { validateInput } from './middleware/validation';
 import { pubsub } from './pubsub';
-import { logError, logInfo } from './utils/logger';
+import { Context } from './types/context';
 import { logError, logInfo } from './utils/logger';
 
 const EVENTS = {
@@ -15,10 +22,7 @@ const EVENTS = {
   MEMBER_JOINED: 'MEMBER_JOINED',
 } as const;
 
-interface Context {
-  prisma: PrismaClient;
-  user?: any;
-}
+// Context interface is now imported from types/context.ts
 
 // Helper function to check if user is admin of a group
 async function requireGroupAdmin(context: Context, groupId: string): Promise<void> {
@@ -55,6 +59,15 @@ function requireAuth(context: Context) {
 
 function publishMemberJoined(membership: any) {
   pubsub.publish(EVENTS.MEMBER_JOINED, { memberJoined: membership });
+}
+
+// Helper function to validate tennis score format
+function isValidTennisScore(score: string): boolean {
+  if (!score || score.trim() === '') return true; // Empty scores are allowed
+
+  // Basic tennis score validation - allows formats like "6-4, 6-2" or "6-4 6-2" etc.
+  const scorePattern = /^[\d\-\s,()]+$/;
+  return scorePattern.test(score.trim());
 }
 
 // TENNIS MODULE RESOLVERS
@@ -221,16 +234,19 @@ const tennisResolvers = {
     },
   },
   Mutation: {
-    createTennisLeague: async (_: any, { input, pointSystems }: any, context: Context) => {
+    createTennisLeague: async (_: any, args: any, context: Context) => {
       requireAuth(context);
+
+      const { input, pointSystems } = args;
+      const validatedInput = validateInput(CreateTennisLeagueInputSchema, input);
 
       const league = await context.prisma.teamLeague.create({
         data: {
-          name: input.name,
-          description: input.description,
-          startDate: new Date(input.startDate),
-          endDate: new Date(input.endDate),
-          isActive: input.isActive ?? true,
+          name: validatedInput.name,
+          description: validatedInput.description,
+          startDate: new Date(validatedInput.startDate),
+          endDate: new Date(validatedInput.endDate),
+          isActive: validatedInput.isActive ?? true,
         },
       });
 
@@ -265,15 +281,21 @@ const tennisResolvers = {
       }
       return league;
     },
-    updateTennisLeague: async (_: any, { id, input }: any, context: Context) => {
+    updateTennisLeague: async (_: any, args: any, context: Context) => {
       requireAuth(context);
 
+      const { id, input } = args;
+      const validatedInput = validateInput(UpdateTennisLeagueInputSchema, input);
+
       const updateData: any = {};
-      if (input.name !== undefined) updateData.name = input.name;
-      if (input.description !== undefined) updateData.description = input.description;
-      if (input.startDate !== undefined) updateData.startDate = new Date(input.startDate);
-      if (input.endDate !== undefined) updateData.endDate = new Date(input.endDate);
-      if (input.isActive !== undefined) updateData.isActive = input.isActive;
+      if (validatedInput.name !== undefined) updateData.name = validatedInput.name;
+      if (validatedInput.description !== undefined)
+        updateData.description = validatedInput.description;
+      if (validatedInput.startDate !== undefined)
+        updateData.startDate = new Date(validatedInput.startDate);
+      if (validatedInput.endDate !== undefined)
+        updateData.endDate = new Date(validatedInput.endDate);
+      if (validatedInput.isActive !== undefined) updateData.isActive = validatedInput.isActive;
 
       return context.prisma.teamLeague.update({
         where: { id },
@@ -308,13 +330,16 @@ const tennisResolvers = {
 
       return true;
     },
-    createTennisTeam: async (_: any, { leagueId, input }: any, context: Context) => {
+    createTennisTeam: async (_: any, args: any, context: Context) => {
       requireAuth(context);
+
+      const { leagueId, input } = args;
+      const validatedInput = validateInput(CreateTennisTeamInputSchema, input);
 
       const team = await context.prisma.teamLeagueTeam.create({
         data: {
-          groupId: input.groupId,
-          captainId: input.captainId,
+          groupId: validatedInput.groupId,
+          captainId: validatedInput.captainId,
           teamLeagueId: leagueId,
         },
         include: {
@@ -386,7 +411,7 @@ const tennisResolvers = {
           const homeEvent = await tx.event.create({
             data: {
               groupId: homeTeam.Group.id,
-              createdById: context.user.id,
+              createdById: context.user!.id,
               date: matchDate,
               description: homeEventDescription,
             },
@@ -399,7 +424,7 @@ const tennisResolvers = {
           const awayEvent = await tx.event.create({
             data: {
               groupId: awayTeam.Group.id,
-              createdById: context.user.id,
+              createdById: context.user!.id,
               date: matchDate,
               description: awayEventDescription,
             },
@@ -623,26 +648,31 @@ const tennisResolvers = {
         );
       }
     },
-    createIndividualSinglesMatch: async (_: any, { input }: any, context: Context) => {
+    createIndividualSinglesMatch: async (_: any, args: any, context: Context) => {
       requireAuth(context);
+
+      const { input } = args;
+      const validatedInput = validateInput(CreateIndividualSinglesMatchInputSchema, input);
+
       if (
-        input.score !== undefined &&
-        input.score !== null &&
-        input.score !== '' &&
-        !isValidTennisScore(input.score)
+        validatedInput.score !== undefined &&
+        validatedInput.score !== null &&
+        validatedInput.score !== '' &&
+        !isValidTennisScore(validatedInput.score)
       ) {
         throw new GraphQLError('Invalid tennis score format');
       }
+
       return context.prisma.teamLeagueIndividualSinglesMatch.create({
         data: {
-          player1Id: input.player1Id,
-          player2Id: input.player2Id,
-          matchDate: new Date(input.matchDate),
-          teamMatchId: input.teamMatchId,
-          order: input.order,
-          score: input.score ?? '',
-          winner: input.winner ?? null,
-          resultType: input.resultType ?? 'NONE',
+          player1Id: validatedInput.player1Id,
+          player2Id: validatedInput.player2Id,
+          matchDate: new Date(validatedInput.matchDate),
+          teamMatchId: validatedInput.teamMatchId,
+          order: validatedInput.order,
+          score: validatedInput.score ?? '',
+          winner: validatedInput.winner ?? null,
+          resultType: validatedInput.resultType ?? 'NONE',
         },
         include: {
           player1: true,
@@ -922,13 +952,7 @@ const tennisResolvers = {
 };
 
 // Tennis score validation helper
-function isValidTennisScore(score: string): boolean {
-  // Accepts scores like "6-4", "6-4 0-6 7-6", "7-6(5) 6-7(3) 7-5", etc.
-  // Each set: number-number, optional (tiebreak)
-  const set = /([0-7])-([0-7])(\([0-9]+\))?/;
-  const pattern = new RegExp(`^${set.source}( ${set.source})*$`);
-  return pattern.test(score.trim());
-}
+// Duplicate function removed - using the one defined earlier
 
 const lineupResolvers = {
   Query: {
@@ -1079,7 +1103,7 @@ const lineupResolvers = {
   },
 };
 
-export const resolvers = {
+const baseResolvers = {
   Query: {
     health: () => 'OK',
 
@@ -2205,3 +2229,6 @@ export const resolvers = {
     ...expensesResolvers.Expense,
   },
 };
+
+// Apply validation to all resolvers
+export const resolvers = applyValidationToResolvers(baseResolvers);

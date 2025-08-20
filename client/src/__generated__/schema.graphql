@@ -1,0 +1,690 @@
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+type AuthPayload {
+  token: String!
+  user: User!
+}
+
+input BlockUserInput {
+  groupId: ID!
+  reason: String
+  userId: ID!
+}
+
+type BlockedUser {
+  blockedAt: DateTime!
+  blockedBy: User!
+  group: Group!
+  id: ID!
+  reason: String
+  user: User!
+}
+
+input BulkCreateSettlementsInput {
+  groupId: ID!
+  settlements: [CreateSettlementInput!]!
+}
+
+input ChangePasswordInput {
+  currentPassword: String!
+  newPassword: String!
+}
+
+type ChangePasswordResponse {
+  message: String!
+  success: Boolean!
+}
+
+input CreateEventInput {
+  date: DateTime!
+  description: String!
+  groupId: ID!
+}
+
+input CreateExpenseInput {
+  amount: Float!
+  category: String!
+  currency: String!
+  date: DateTime!
+  description: String!
+  groupId: ID!
+  paidBy: ID!
+  receiptUrl: String
+  splitType: SplitType!
+  splits: [ExpenseSplitInput!]!
+}
+
+input CreateGroupInput {
+  description: String
+  isPublic: Boolean
+  name: String!
+}
+
+input CreateIndividualDoublesMatchInput {
+  matchDate: DateTime!
+  order: Int!
+  resultType: ResultType
+  score: String!
+  team1Player1Id: String!
+  team1Player2Id: String!
+  team2Player1Id: String!
+  team2Player2Id: String!
+  teamMatchId: String!
+  winner: Winner
+}
+
+input CreateIndividualSinglesMatchInput {
+  matchDate: DateTime!
+  order: Int!
+  player1Id: String!
+  player2Id: String!
+  resultType: ResultType
+  score: String!
+  teamMatchId: String!
+  winner: Winner
+}
+
+input CreateRSVPInput {
+  eventId: ID!
+  note: String
+  status: RSVPStatus!
+}
+
+input CreateSettlementInput {
+  amount: Float!
+  currency: String!
+  fromUserId: ID!
+  groupId: ID!
+  notes: String
+  paymentMethod: PaymentMethod
+  toUserId: ID!
+}
+
+input CreateTeamLeaguePointSystemInput {
+  drawPoints: Int
+  lossPoints: Int
+  matchType: MatchType!
+  order: Int!
+  winPoints: Int!
+}
+
+input CreateTeamMatchInput {
+  awayTeamId: String!
+  homeTeamId: String!
+  matchDate: DateTime!
+}
+
+input CreateTennisLeagueInput {
+  description: String
+  endDate: DateTime!
+  isActive: Boolean
+  name: String!
+  startDate: DateTime!
+}
+
+input CreateTennisTeamInput {
+  captainId: String!
+  groupId: String!
+}
+
+scalar DateTime
+
+type DebtDetail {
+  amount: Float!
+  currency: String!
+  toUser: User!
+}
+
+type DebtSummary {
+  debts: [DebtDetail!]!
+  netAmount: Float!
+  totalOwed: Float!
+  totalOwedTo: Float!
+  user: User!
+}
+
+type Event {
+  createdBy: User!
+  date: DateTime!
+  description: String!
+  group: Group!
+  id: ID!
+  rsvps: [RSVP!]!
+}
+
+type Expense {
+  amount: Float!
+  category: String!
+  createdAt: DateTime!
+  currency: String!
+  date: DateTime!
+  description: String!
+  group: Group!
+  id: ID!
+  paidBy: User!
+  receiptUrl: String
+  settlements: [Settlement!]!
+  splitType: SplitType!
+  splits: [ExpenseSplit!]!
+  updatedAt: DateTime!
+}
+
+type ExpenseSplit {
+  amount: Float!
+  createdAt: DateTime!
+  expense: Expense!
+  id: ID!
+  percentage: Float
+  shares: Int
+  user: User!
+}
+
+input ExpenseSplitInput {
+  amount: Float
+  percentage: Float
+  shares: Int
+  userId: ID!
+}
+
+type Group {
+  blockedUsers: [BlockedUser!]!
+  createdAt: DateTime!
+  description: String
+  events: [Event!]!
+  id: ID!
+  isPublic: Boolean!
+  members: [Membership!]!
+  memberships: [Membership!]!
+  messages: [Message!]!
+  name: String!
+  rsvps: [RSVP!]!
+  updatedAt: DateTime!
+}
+
+type GroupSettings {
+  allowExpenses: Boolean!
+  autoSettle: Boolean!
+  createdAt: DateTime!
+  defaultCurrency: String!
+  expenseLimit: Float
+  group: Group!
+  id: ID!
+  requireApproval: Boolean!
+  updatedAt: DateTime!
+}
+
+input LineupInput {
+  slots: [LineupSlotInput!]!
+  teamId: String!
+  teamMatchId: String!
+  visibility: LineupVisibility
+}
+
+input LineupSlotInput {
+  order: Int!
+  player1Id: String!
+  player2Id: String
+  type: LineupSlotType!
+}
+
+enum LineupSlotType {
+  DOUBLES
+  SINGLES
+}
+
+enum LineupVisibility {
+  ALL
+  PRIVATE
+  TEAM
+}
+
+input LoginInput {
+  password: String!
+  username: String!
+}
+
+input MarkSettlementPaidInput {
+  notes: String
+  paymentMethod: PaymentMethod!
+}
+
+enum MatchType {
+  DOUBLES
+  SINGLES
+}
+
+type Membership {
+  group: Group!
+  id: ID!
+  isAdmin: Boolean!
+  joinedAt: DateTime!
+  memberId: Int!
+  role: String!
+  user: User!
+}
+
+type Message {
+  content: String!
+  createdAt: DateTime!
+  group: Group!
+  id: ID!
+  user: User!
+}
+
+type Mutation {
+  addMember(groupId: ID!, userId: ID!): Membership!
+  addMemberByEmail(email: String!, groupId: ID!): Membership!
+  addMemberByUsername(groupId: ID!, username: String!): Membership!
+  blockUser(input: BlockUserInput!): Boolean!
+  bulkCreateSettlements(input: BulkCreateSettlementsInput!): [Settlement!]!
+  changePassword(input: ChangePasswordInput!): ChangePasswordResponse!
+  createEvent(input: CreateEventInput!): Event!
+  createExpense(input: CreateExpenseInput!): Expense!
+  createGroup(input: CreateGroupInput!): Group!
+  createIndividualDoublesMatch(input: CreateIndividualDoublesMatchInput!, leagueId: ID!): TeamLeagueIndividualDoublesMatch!
+  createIndividualSinglesMatch(input: CreateIndividualSinglesMatchInput!, leagueId: ID!): TeamLeagueIndividualSinglesMatch!
+  createOrUpdateLineup(input: LineupInput!): TeamMatchLineup!
+  createRSVP(input: CreateRSVPInput!): RSVP!
+  createSettlement(input: CreateSettlementInput!): Settlement!
+  createTeamLeaguePointSystem(input: CreateTeamLeaguePointSystemInput!, leagueId: ID!): TeamLeaguePointSystem!
+  createTeamMatch(input: CreateTeamMatchInput!, leagueId: ID!): TeamLeagueTeamMatch!
+  createTennisLeague(input: CreateTennisLeagueInput!): TeamLeague!
+  createTennisTeam(input: CreateTennisTeamInput!, leagueId: ID!): TeamLeagueTeam!
+  deleteEvent(id: ID!): Boolean!
+  deleteExpense(id: ID!): Boolean!
+  deleteGroup(id: ID!): Boolean!
+  deleteIndividualDoublesMatch(id: ID!): Boolean!
+  deleteIndividualSinglesMatch(id: ID!): Boolean!
+  deleteRSVP(id: ID!): Boolean!
+  deleteSettlement(id: ID!): Boolean!
+  deleteTeamLeaguePointSystem(id: ID!): Boolean!
+  deleteTeamMatch(id: ID!): Boolean!
+  deleteTennisLeague(id: ID!): Boolean!
+  deleteTennisTeam(id: ID!): Boolean!
+  deleteUser(userId: ID!): Boolean!
+  generateOptimalSettlements(groupId: ID!): [Settlement!]!
+  joinGroup(groupId: ID!): Group!
+  leaveGroup(groupId: ID!): Boolean!
+  login(input: LoginInput!): AuthPayload!
+  makeAdmin(groupId: ID!, userId: ID!): Membership!
+  markSettlementPaid(id: ID!, input: MarkSettlementPaidInput!): Settlement!
+  publishLineup(lineupId: ID!, visibility: LineupVisibility!): TeamMatchLineup!
+  removeAdmin(groupId: ID!, userId: ID!): Membership!
+  removeMember(groupId: ID!, userId: ID!): Boolean!
+  sendMessage(input: SendMessageInput!): Message!
+  signup(input: SignupInput!): AuthPayload!
+  unblockUser(groupId: ID!, userId: ID!): Boolean!
+  updateEvent(id: ID!, input: CreateEventInput!): Event!
+  updateExpense(id: ID!, input: UpdateExpenseInput!): Expense!
+  updateGroup(id: ID!, input: UpdateGroupInput!): Group!
+  updateGroupSettings(groupId: ID!, input: UpdateGroupSettingsInput!): GroupSettings!
+  updateIndividualDoublesMatch(id: ID!, input: UpdateIndividualDoublesMatchInput!): TeamLeagueIndividualDoublesMatch!
+  updateIndividualSinglesMatch(id: ID!, input: UpdateIndividualSinglesMatchInput!): TeamLeagueIndividualSinglesMatch!
+  updatePointSystem(input: UpdatePointSystemInput!, leagueId: ID!): TeamLeaguePointSystem!
+  updateProfile(input: UpdateUserInput!): User!
+  updateRSVP(id: ID!, note: String, status: RSVPStatus!): RSVP!
+  updateSettlement(id: ID!, input: UpdateSettlementInput!): Settlement!
+  updateTeamLeaguePointSystem(id: ID!, input: UpdateTeamLeaguePointSystemInput!): TeamLeaguePointSystem!
+  updateTeamMatch(id: ID!, input: UpdateTeamMatchInput!): TeamLeagueTeamMatch!
+  updateTennisLeague(id: ID!, input: UpdateTennisLeagueInput!): TeamLeague!
+  updateTennisTeam(id: ID!, input: UpdateTennisTeamInput!): TeamLeagueTeam!
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  CASH
+  CASH_APP
+  OTHER
+  PAYPAL
+  VENMO
+}
+
+type Query {
+  event(id: ID!): Event
+  events(groupId: ID!): [Event!]!
+  expense(id: ID!): Expense
+  group(id: ID!): Group
+  groupDebtSummary(groupId: ID!): [DebtSummary!]!
+  groupExpenses(groupId: ID!, limit: Int = 50): [Expense!]!
+  groupSettings(groupId: ID!): GroupSettings
+  groupSettlements(groupId: ID!): [Settlement!]!
+  groups: [Group!]!
+  health: String!
+  lineup(teamId: ID!, teamMatchId: ID!): TeamMatchLineup
+  me: User
+  messages(groupId: ID!, limit: Int = 50): [Message!]!
+  myGroups: [Group!]!
+  optimalSettlements(groupId: ID!): [Settlement!]!
+  publicGroups(query: String): [Group!]!
+  teamMatch(id: ID!): TeamLeagueTeamMatch
+  tennisLeague(id: ID!): TeamLeague
+  tennisLeagueStandings(id: ID!): [TeamLeagueStandingsRow!]!
+  tennisLeagues: [TeamLeague!]!
+  user(id: ID!): User
+  userDebtSummary(groupId: ID!, userId: ID!): DebtSummary
+  userExpenses(userId: ID!): [Expense!]!
+  userPendingEvents: [Event!]!
+  userSearch(query: String!): [User!]!
+  userSettlements(userId: ID!): [Settlement!]!
+  userTennisLeagues: [TeamLeague!]!
+}
+
+type RSVP {
+  createdAt: DateTime!
+  event: Event!
+  id: ID!
+  note: String
+  status: RSVPStatus!
+  user: User!
+}
+
+enum RSVPStatus {
+  AVAILABLE
+  MAYBE
+  NOT_AVAILABLE
+  ONLY_IF_NEEDED
+}
+
+enum ResultType {
+  C
+  D
+  NONE
+  TM
+}
+
+input SendMessageInput {
+  content: String!
+  groupId: ID!
+}
+
+type Settlement {
+  amount: Float!
+  createdAt: DateTime!
+  currency: String!
+  fromUser: User!
+  group: Group!
+  id: ID!
+  notes: String
+  paidAt: DateTime
+  paymentMethod: PaymentMethod
+  status: SettlementStatus!
+  toUser: User!
+  updatedAt: DateTime!
+}
+
+enum SettlementStatus {
+  CANCELLED
+  PAID
+  PENDING
+}
+
+input SignupInput {
+  email: String!
+  firstName: String
+  lastName: String
+  password: String!
+  username: String!
+}
+
+enum SplitType {
+  CUSTOM
+  EQUAL
+  PERCENTAGE
+  SHARES
+}
+
+type Subscription {
+  eventCreated(groupId: ID!): Event!
+  memberJoined(groupId: ID!): Membership!
+  messageAdded(groupId: ID!): Message!
+  rsvpUpdated(eventId: ID!): RSVP!
+}
+
+type TeamLeague {
+  createdAt: DateTime!
+  description: String
+  endDate: DateTime!
+  id: ID!
+  isActive: Boolean!
+  name: String!
+  pointSystems: [TeamLeaguePointSystem!]!
+  startDate: DateTime!
+  teamMatches: [TeamLeagueTeamMatch!]!
+  teams: [TeamLeagueTeam!]!
+  updatedAt: DateTime!
+}
+
+type TeamLeagueIndividualDoublesMatch {
+  createdAt: DateTime!
+  id: ID!
+  matchDate: DateTime!
+  order: Int!
+  resultType: ResultType
+  score: String!
+  team1Player1: User!
+  team1Player1Id: String!
+  team1Player2: User!
+  team1Player2Id: String!
+  team2Player1: User!
+  team2Player1Id: String!
+  team2Player2: User!
+  team2Player2Id: String!
+  teamMatch: TeamLeagueTeamMatch!
+  teamMatchId: String!
+  winner: Winner
+}
+
+type TeamLeagueIndividualSinglesMatch {
+  createdAt: DateTime!
+  id: ID!
+  matchDate: DateTime!
+  order: Int!
+  player1: User!
+  player1Id: String!
+  player2: User!
+  player2Id: String!
+  resultType: ResultType
+  score: String!
+  teamMatch: TeamLeagueTeamMatch!
+  teamMatchId: String!
+  winner: Winner
+}
+
+type TeamLeaguePointSystem {
+  defaultDrawPoints: Int!
+  defaultLossPoints: Int!
+  defaultWinPoints: Int!
+  drawPoints: Int!
+  id: ID!
+  lossPoints: Int!
+  matchType: MatchType!
+  order: Int!
+  teamLeagueId: String!
+  winPoints: Int!
+}
+
+type TeamLeagueStandingsRow {
+  draws: Int!
+  gamesLost: Int!
+  gamesWon: Int!
+  losses: Int!
+  matchesPlayed: Int!
+  points: Int!
+  teamId: String!
+  teamName: String!
+  wins: Int!
+}
+
+type TeamLeagueTeam {
+  captain: User!
+  captainId: String!
+  group: Group!
+  id: ID!
+  members: [User!]!
+}
+
+type TeamLeagueTeamMatch {
+  associatedEvents: [Event!]!
+  awayTeam: TeamLeagueTeam!
+  awayTeamEvent: Event
+  awayTeamId: String!
+  createdAt: DateTime!
+  homeTeam: TeamLeagueTeam!
+  homeTeamEvent: Event
+  homeTeamId: String!
+  id: ID!
+  individualDoublesMatches: [TeamLeagueIndividualDoublesMatch!]!
+  individualSinglesMatches: [TeamLeagueIndividualSinglesMatch!]!
+  matchDate: DateTime!
+  teamLeagueId: String!
+}
+
+type TeamMatchLineup {
+  createdAt: DateTime!
+  id: ID!
+  publishedAt: DateTime
+  slots: [TeamMatchLineupSlot!]!
+  teamId: String!
+  teamMatchId: String!
+  updatedAt: DateTime!
+  visibility: LineupVisibility!
+}
+
+type TeamMatchLineupSlot {
+  createdAt: DateTime!
+  id: ID!
+  order: Int!
+  player1: User!
+  player1Id: String!
+  player2: User
+  player2Id: String
+  type: LineupSlotType!
+}
+
+input UpdateExpenseInput {
+  amount: Float
+  category: String
+  currency: String
+  date: DateTime
+  description: String
+  receiptUrl: String
+  splitType: SplitType
+  splits: [ExpenseSplitInput!]
+}
+
+input UpdateGroupInput {
+  description: String
+  isPublic: Boolean
+  name: String
+}
+
+input UpdateGroupSettingsInput {
+  allowExpenses: Boolean
+  autoSettle: Boolean
+  defaultCurrency: String
+  expenseLimit: Float
+  requireApproval: Boolean
+}
+
+input UpdateIndividualDoublesMatchInput {
+  matchDate: DateTime
+  order: Int
+  resultType: ResultType
+  score: String
+  team1Player1Id: String
+  team1Player2Id: String
+  team2Player1Id: String
+  team2Player2Id: String
+  teamMatchId: String
+  winner: Winner
+}
+
+input UpdateIndividualSinglesMatchInput {
+  matchDate: DateTime
+  order: Int
+  player1Id: String
+  player2Id: String
+  resultType: ResultType
+  score: String
+  teamMatchId: String
+  winner: Winner
+}
+
+input UpdatePointSystemInput {
+  defaultDrawPoints: Int
+  defaultLossPoints: Int
+  defaultWinPoints: Int
+  drawPoints: Int
+  lossPoints: Int
+  winPoints: Int
+}
+
+input UpdateSettlementInput {
+  amount: Float
+  currency: String
+  notes: String
+  paymentMethod: PaymentMethod
+  status: SettlementStatus
+}
+
+input UpdateTeamLeaguePointSystemInput {
+  drawPoints: Int
+  lossPoints: Int
+  matchType: MatchType
+  order: Int
+  winPoints: Int
+}
+
+input UpdateTeamMatchInput {
+  awayTeamId: String
+  homeTeamId: String
+  matchDate: DateTime
+}
+
+input UpdateTennisLeagueInput {
+  description: String
+  endDate: DateTime
+  isActive: Boolean
+  name: String
+  startDate: DateTime
+}
+
+input UpdateTennisTeamInput {
+  captainId: String
+  groupId: String
+}
+
+input UpdateUserInput {
+  bio: String
+  firstName: String
+  lastName: String
+  phone: String
+  photoUrl: String
+  username: String
+}
+
+type User {
+  avatar: String
+  bio: String
+  createdAt: DateTime!
+  email: String!
+  emailVerified: Boolean!
+  firstName: String
+  id: ID!
+  lastName: String
+  memberships: [Membership!]!
+  messages: [Message!]!
+  phone: String
+  photoUrl: String
+  updatedAt: DateTime!
+  username: String!
+}
+
+enum Winner {
+  AWAY
+  HOME
+}
