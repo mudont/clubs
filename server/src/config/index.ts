@@ -47,7 +47,7 @@ const envSchema = z.object({
 const parseResult = envSchema.safeParse(process.env);
 
 if (!parseResult.success) {
-  console.error('❌ Invalid environment variables:', parseResult.error.format());
+  console.error('❌ Invalid environment variables:', JSON.stringify(parseResult.error.format()));
   process.exit(1);
 }
 
@@ -71,7 +71,12 @@ export const databaseConfig = {
 export const corsConfig = {
   origin: isProduction
     ? [config.FRONTEND_URL!]
-    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3010', 'http://localhost:5173'],
+    : [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:3010',
+        'http://localhost:5173',
+      ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],

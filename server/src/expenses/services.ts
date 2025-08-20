@@ -1,5 +1,6 @@
 import { PaymentMethod, PrismaClient, SettlementStatus, SplitType } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
+import { logInfo } from '../utils/logger';
 
 const prisma = new PrismaClient();
 
@@ -60,7 +61,7 @@ export class ExpensesService {
 
     // Debug: Log the paidBy user
     const paidByUser = await prisma.user.findUnique({ where: { id: input.paidBy } });
-    console.log('PaidBy user:', paidByUser);
+    logInfo('PaidBy user:' + JSON.stringify(paidByUser));
 
     // Check if paidBy is member of the group
     const membership = await prisma.membership.findUnique({
@@ -123,7 +124,7 @@ export class ExpensesService {
       });
 
       // Debug: Log the created expense object
-      console.log('Created expense:', JSON.stringify(expense, null, 2));
+      logInfo('Created expense:' + JSON.stringify(expense, null, 2));
 
       // Auto-generate settlements if enabled
       const settings = await tx.groupSettings.findUnique({

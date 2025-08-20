@@ -1,5 +1,6 @@
 import Redis from 'ioredis';
 import { config } from './index';
+import { logError, logInfo } from '../utils/logger';
 
 // Create Redis client with fallback handling
 export const redisClient = new Redis(config.REDIS_URL || 'redis://localhost:6379', {
@@ -12,31 +13,31 @@ export const redisClient = new Redis(config.REDIS_URL || 'redis://localhost:6379
 
 // Handle Redis connection events
 redisClient.on('connect', () => {
-  console.log('✅ Redis client connected');
+  logInfo('✅ Redis client connected');
 });
 
 redisClient.on('error', (err) => {
-  console.error('❌ Redis client error:', err);
-  console.log('⚠️  Sessions will fall back to memory store');
+  logError('❌ Redis client error:', err);
+  logInfo('⚠️  Sessions will fall back to memory store');
 });
 
 redisClient.on('close', () => {
-  console.log('🔌 Redis client connection closed');
+  logInfo('🔌 Redis client connection closed');
 });
 
 redisClient.on('reconnecting', () => {
-  console.log('🔄 Redis client reconnecting...');
+  logInfo('🔄 Redis client reconnecting...');
 });
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
-  console.log('🛑 Shutting down Redis client...');
+  logInfo('🛑 Shutting down Redis client...');
   await redisClient.quit();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-  console.log('🛑 Shutting down Redis client...');
+  logInfo('🛑 Shutting down Redis client...');
   await redisClient.quit();
   process.exit(0);
 });

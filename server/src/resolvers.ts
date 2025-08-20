@@ -5,6 +5,8 @@ import { withFilter } from 'graphql-subscriptions';
 import { generateToken } from './auth/jwt';
 import { expensesResolvers } from './expenses';
 import { pubsub } from './pubsub';
+import { logError, logInfo } from './utils/logger';
+import { logError, logInfo } from './utils/logger';
 
 const EVENTS = {
   MESSAGE_ADDED: 'MESSAGE_ADDED',
@@ -60,12 +62,12 @@ const tennisResolvers = {
   Query: {
     tennisLeagues: async (_: any, __: any, context: Context) => {
       try {
-        console.log('tennisLeagues resolver called');
+        logInfo('tennisLeagues resolver called');
         const leagues = await context.prisma.teamLeague.findMany();
-        console.log('tennisLeagues result:', leagues);
+        logInfo('tennisLeagues result:' + JSON.stringify(leagues));
         return Array.isArray(leagues) ? leagues : [];
       } catch (error) {
-        console.error('Error in tennisLeagues resolver:', error);
+        logError('Error in tennisLeagues resolver:' + error);
         return [];
       }
     },
@@ -432,7 +434,7 @@ const tennisResolvers = {
 
         return result.teamMatch;
       } catch (error) {
-        console.error('Error creating team match with events:', error);
+        logError('Error creating team match with events:' + error);
         throw new GraphQLError(
           `Failed to create team match: ${error instanceof Error ? error.message : 'Unknown error'}`,
           {
@@ -545,7 +547,7 @@ const tennisResolvers = {
               where: { id: teamMatch.homeTeamEventId },
             });
 
-            console.log(`Deleted home team event ${teamMatch.homeTeamEventId} for match ${id}`);
+            logInfo(`Deleted home team event ${teamMatch.homeTeamEventId} for match ${id}`);
           }
 
           // Delete away team event if it exists
@@ -560,13 +562,13 @@ const tennisResolvers = {
               where: { id: teamMatch.awayTeamEventId },
             });
 
-            console.log(`Deleted away team event ${teamMatch.awayTeamEventId} for match ${id}`);
+            logInfo(`Deleted away team event ${teamMatch.awayTeamEventId} for match ${id}`);
           }
 
           // Delete the team match itself
           await tx.teamLeagueTeamMatch.delete({ where: { id } });
 
-          console.log(
+          logInfo(
             `Deleted team match ${id}: ${teamMatch.homeTeam.Group.name} vs ${teamMatch.awayTeam.Group.name}`
           );
 
@@ -579,7 +581,7 @@ const tennisResolvers = {
 
         return true;
       } catch (error) {
-        console.error('Error deleting team match:', error);
+        logError('Error deleting team match:' + error);
 
         // Provide specific error messages for common issues
         if (error instanceof GraphQLError) {

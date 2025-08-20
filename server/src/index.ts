@@ -182,7 +182,7 @@ async function startServer() {
       const nodemailer = require('nodemailer');
 
       // Create transporter
-      const transporter = nodemailer.createTransport({
+      const transporter = nodemailer.createTransporter({
         service: 'gmail',
         auth: {
           user: process.env.EMAIL_USER,
@@ -245,32 +245,38 @@ async function startServer() {
   // Email verification endpoint
   app.get('/verify-email', (req: Request, res: Response) => {
     (async () => {
-      const { token } = req.query;
-      console.log('Email verification attempt:', {
-        token: token ? 'present' : 'missing',
-        frontendUrl: FRONTEND_URL,
-        userAgent: req.headers['user-agent'],
-        referer: req.headers.referer,
-      });
+      logInfo(
+        'Email verification attempt:' +
+          JSON.stringify({
+            token: req.query.token ? 'present' : 'missing',
+            frontendUrl: FRONTEND_URL,
+            userAgent: req.headers['user-agent'],
+            referer: req.headers.referer,
+          })
+      );
 
-      if (!token || typeof token !== 'string') {
-        console.log('Redirecting to error: invalid token');
+      if (!req.query.token || typeof req.query.token !== 'string') {
+        logInfo('Redirecting to error: invalid token');
         return res.redirect(`/email-verification?error=invalid_token`);
       }
 
-      console.log('Calling handleEmailVerification with token:', token.substring(0, 20) + '...');
-      const result = await handleEmailVerification(token);
-      console.log('Email verification result:', result);
+      logInfo(
+        'Calling handleEmailVerification with token:' +
+          (req.query.token as string).substring(0, 20) +
+          '...'
+      );
+      const result = await handleEmailVerification(req.query.token as string);
+      logInfo('Email verification result:' + JSON.stringify(result));
 
       if (result.success) {
-        console.log('Redirecting to success');
+        logInfo('Redirecting to success');
         return res.redirect(`/email-verification?status=success`);
       } else {
-        console.log('Redirecting to error:', result.message);
+        logInfo('Redirecting to error:' + result.message);
         return res.redirect(`/email-verification?error=${encodeURIComponent(result.message)}`);
       }
     })().catch((err: any) => {
-      console.error('Email verification error:', err);
+      logError('Email verification error:' + err);
       res.redirect(
         `/email-verification?error=${encodeURIComponent(err.message || 'Verification failed')}`
       );
@@ -327,7 +333,7 @@ async function startServer() {
       });
       await sendPasswordResetEmail(email, token);
     } else {
-      console.log(`[ForgotPassword] No user found for email: ${email}`);
+      logInfo(`[ForgotPassword] No user found for email: ${email}`);
     }
     // Always respond with success to prevent email enumeration
     res.json({
@@ -477,7 +483,7 @@ async function startServer() {
   const serveSPA = (req: Request, res: Response) => {
     const indexPath = path.join(staticPath, 'index.html');
     if (!fs.existsSync(indexPath)) {
-      console.error('❌ Index file not found at:', indexPath);
+      logError('❌ Index file not found at:' + indexPath);
       return res.status(500).send('Internal Server Error');
     }
     res.sendFile(indexPath);
@@ -487,14 +493,14 @@ async function startServer() {
   // Start server
   const PORT = process.env.PORT || 4010;
   httpServer.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📊 GraphQL endpoint: http://localhost:${PORT}/graphql`);
-    console.log(`🌐 Frontend URL: ${FRONTEND_URL}`);
+    logInfo(`🚀 Server running on port ${PORT}`);
+    logInfo(`📊 GraphQL endpoint: http://localhost:${PORT}/graphql`);
+    logInfo(`🌐 Frontend URL: ${FRONTEND_URL}`);
   });
 }
 
 // Start the server
 startServer().catch(error => {
-  console.error('❌ Server failed to start:', error);
+  logError('❌ Server failed to start:' + error);
   process.exit(1);
 });

@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
+import { logError, logInfo } from '../utils/logger';
 
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -38,39 +39,41 @@ export async function sendVerificationEmail(email: string, token: string): Promi
 
 export async function verifyEmailToken(token: string): Promise<string | null> {
   try {
-    console.log('Verifying email token:', token.substring(0, 20) + '...');
+    logInfo('Verifying email token: ' + token.substring(0, 20) + '...');
     const payload = jwt.verify(token, JWT_SECRET) as { email: string };
-    console.log('Token verified successfully for email:', payload.email);
+    logInfo('Token verified successfully for email: ' + payload.email);
     return payload.email;
   } catch (err) {
-    console.error('Token verification failed:', err);
+    logError('Token verification failed:', err as Error);
     return null;
   }
 }
 
 export async function markEmailAsVerified(email: string): Promise<void> {
-  console.log('Marking email as verified:', email);
+  logInfo('Marking email as verified: ' + email);
   const result = await prisma.user.update({
     where: { email },
     data: { emailVerified: true },
   });
-  console.log('Email marked as verified successfully:', result.email);
+  logInfo('Email marked as verified successfully: ' + result.email);
 }
 
-export async function handleEmailVerification(token: string): Promise<{ success: boolean; message: string }> {
-  console.log('Starting email verification process...');
+export async function handleEmailVerification(
+  token: string
+): Promise<{ success: boolean; message: string }> {
+  logInfo('Starting email verification process...');
   const email = await verifyEmailToken(token);
   if (!email) {
-    console.log('Email verification failed: invalid token');
+    logInfo('Email verification failed: invalid token');
     return { success: false, message: 'Invalid or expired verification token.' };
   }
 
   try {
     await markEmailAsVerified(email);
-    console.log('Email verification completed successfully');
+    logInfo('Email verification completed successfully');
     return { success: true, message: 'Email verified successfully! You can now log in.' };
   } catch (err) {
-    console.error('Email verification failed:', err);
+    logError('Email verification failed:', err as Error);
     return { success: false, message: 'Failed to verify email. Please try again.' };
   }
 }
@@ -95,11 +98,14 @@ export async function sendPasswordResetEmail(email: string, token: string): Prom
     `,
   };
 
-  console.log('[PasswordResetEmail] Attempting to send email:', {
-    from: mailOptions.from,
-    to: mailOptions.to,
-    subject: mailOptions.subject
-  });
+  logInfo(
+    '[PasswordResetEmail] Attempting to send email:' +
+      JSON.stringify({
+        from: mailOptions.from,
+        to: mailOptions.to,
+        subject: mailOptions.subject,
+      })
+  );
 
   await transporter.sendMail(mailOptions);
 }
