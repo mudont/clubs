@@ -61,9 +61,10 @@ export async function signup(req: Request, res: Response) {
     const token = generateVerificationToken(email);
     await sendVerificationEmail(email, token);
 
-    return res
-      .status(201)
-      .json({ message: 'Signup successful. Please check your email to verify your account.' });
+    return res.status(201).json({
+      message: 'Signup successful. Please check your email to verify your account.',
+      user: { id: user.id, email: user.email, username: user.username },
+    });
   } catch (err) {
     logError('Signup error:', err as Error);
     return res.status(500).json({ error: 'Signup failed.' });

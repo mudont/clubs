@@ -77,7 +77,7 @@ export class ExpensesService {
     }
 
     // Create expense and splits in a transaction
-    const expense = await prisma.$transaction(async (tx) => {
+    const expense = await prisma.$transaction(async tx => {
       const expense = await tx.expense.create({
         data: {
           groupId: input.groupId,
@@ -90,7 +90,7 @@ export class ExpensesService {
           receiptUrl: input.receiptUrl,
           splitType: input.splitType,
           splits: {
-            create: input.splits.map((split) => ({
+            create: input.splits.map(split => ({
               userId: split.userId,
               amount: new Decimal(split.amount || 0),
               percentage: split.percentage ? new Decimal(split.percentage) : null,
@@ -243,7 +243,7 @@ export class ExpensesService {
     if (input.receiptUrl !== undefined) updateData.receiptUrl = input.receiptUrl;
     if (input.splitType !== undefined) updateData.splitType = input.splitType;
 
-    return prisma.$transaction(async (tx) => {
+    return prisma.$transaction(async tx => {
       // Update expense
       const updatedExpense = await tx.expense.update({
         where: { id },
@@ -282,7 +282,7 @@ export class ExpensesService {
 
         // Create new splits
         await tx.expenseSplit.createMany({
-          data: input.splits.map((split) => ({
+          data: input.splits.map(split => ({
             expenseId: id,
             userId: split.userId,
             amount: new Decimal(split.amount || 0),
@@ -476,7 +476,7 @@ export class ExpensesService {
 
       // Subtract what user owes
       const userDebts = debts.get(userId) || new Map();
-      for (const [toUser, amount] of userDebts) {
+      for (const [, amount] of userDebts) {
         net -= amount;
       }
 
@@ -607,7 +607,12 @@ export class ExpensesService {
   /**
    * Mark a settlement as paid
    */
-  async markSettlementPaid(id: string, paymentMethod: PaymentMethod, notes?: string, userId?: string) {
+  async markSettlementPaid(
+    id: string,
+    paymentMethod: PaymentMethod,
+    notes?: string,
+    userId?: string
+  ) {
     const settlement = await prisma.settlement.findUnique({
       where: { id },
     });

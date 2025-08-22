@@ -1,5 +1,5 @@
-import { Strategy as GitHubStrategy, Profile as GitHubProfile } from 'passport-github2';
 import { PrismaClient } from '@prisma/client';
+import { Profile as GitHubProfile, Strategy as GitHubStrategy } from 'passport-github2';
 import type { VerifyCallback } from 'passport-oauth2';
 import { logError, logInfo } from '../utils/logger';
 
@@ -36,7 +36,7 @@ export const githubStrategy = new GitHubStrategy(
       }
 
       // Check if user exists with this GitHub account
-      let authAccount = await prisma.authAccount.findUnique({
+      const authAccount = await prisma.authAccount.findUnique({
         where: {
           provider_providerUserId: {
             provider: 'github',

@@ -291,9 +291,9 @@ const tennisResolvers = {
       if (validatedInput.name !== undefined) updateData.name = validatedInput.name;
       if (validatedInput.description !== undefined)
         updateData.description = validatedInput.description;
-      if (validatedInput.startDate !== undefined)
+      if (validatedInput.startDate !== undefined && validatedInput.startDate !== null)
         updateData.startDate = new Date(validatedInput.startDate);
-      if (validatedInput.endDate !== undefined)
+      if (validatedInput.endDate !== undefined && validatedInput.endDate !== null)
         updateData.endDate = new Date(validatedInput.endDate);
       if (validatedInput.isActive !== undefined) updateData.isActive = validatedInput.isActive;
 
@@ -543,7 +543,7 @@ const tennisResolvers = {
 
       try {
         // Use a transaction to ensure atomicity
-        const result = await context.prisma.$transaction(async tx => {
+        await context.prisma.$transaction(async tx => {
           // Get the team match with event references
           const teamMatch = await tx.teamLeagueTeamMatch.findUnique({
             where: { id },
@@ -1150,7 +1150,7 @@ const baseResolvers = {
     },
 
     publicGroups: async (_: any, args: { query?: string }, context: Context) => {
-      const user = requireAuth(context);
+      requireAuth(context);
       const where: any = { isPublic: true };
       if (args.query) {
         where.OR = [
@@ -1782,14 +1782,13 @@ const baseResolvers = {
         });
       }
 
-      const blockedUser = await context.prisma.blockedUser.create({
+      await context.prisma.blockedUser.create({
         data: {
           userId: input.userId,
           groupId: input.groupId,
           blockedById: context.user!.id,
           reason: input.reason,
         },
-        include: { user: true, blockedBy: true, group: true },
       });
 
       return true;
@@ -2202,7 +2201,7 @@ const baseResolvers = {
         include: { user: true, blockedBy: true },
       });
     },
-    rsvps: async (parent: any, _: unknown, context: Context) => {
+    rsvps: async (parent: unknown, _: unknown, context: Context) => {
       return await context.prisma.rSVP.findMany({
         where: { event: { groupId: parent.id } },
         include: { user: true },
