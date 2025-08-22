@@ -1,5 +1,5 @@
 import winston from 'winston';
-import { config, isProduction } from '../config';
+import { isProduction } from '../config';
 
 // Define custom log levels
 const logLevels = {
@@ -108,11 +108,7 @@ export const logHttp = (message: string, meta?: any) => {
 };
 
 // Performance logging utility
-export const logPerformance = (
-  operation: string,
-  duration: number,
-  meta?: any
-) => {
+export const logPerformance = (operation: string, duration: number, meta?: any) => {
   logger.info(`Performance: ${operation}`, {
     duration: `${duration.toFixed(2)}ms`,
     ...meta,
@@ -138,7 +134,7 @@ export const logSecurityEvent = (event: string, meta?: any) => {
 // Request logging middleware
 export const logRequest = (req: any, res: any, userId?: string) => {
   const start = Date.now();
-  
+
   res.on('finish', () => {
     const duration = Date.now() - start;
     logHttp(`${req.method} ${req.originalUrl}`, {
@@ -153,4 +149,4 @@ export const logRequest = (req: any, res: any, userId?: string) => {
   });
 };
 
-export default logger; 
+export default logger;

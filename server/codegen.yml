@@ -1,0 +1,34 @@
+schema: ./src/schema.ts
+generates:
+  ./src/__generated__/types.ts:
+    plugins:
+      - add:
+          content: '/* eslint-disable */'
+      - typescript
+      - typescript-resolvers
+    config:
+      useIndexSignature: true
+      contextType: '../types/context#Context'
+      scalars:
+        DateTime: string
+      enumsAsTypes: true
+      avoidOptionals:
+        field: true
+        inputValue: false
+        object: false
+        defaultValue: false
+
+  ./src/__generated__/validation.ts:
+    plugins:
+      - add:
+          content: '/* eslint-disable */'
+      - graphql-codegen-typescript-validation-schema
+    config:
+      schema: zod
+      importFrom: zod
+      enumsAsTypes: true
+      scalars:
+        DateTime: string
+      validationSchemaExportType: const
+      withObjectType: false
+      skipTypename: true

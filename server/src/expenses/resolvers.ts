@@ -1,12 +1,8 @@
 import { GraphQLError } from 'graphql';
+import { Context } from '../types/context';
 import { ExpensesService } from './services';
 
 const expensesService = new ExpensesService();
-
-interface Context {
-  prisma: any;
-  user?: any;
-}
 
 function requireAuth(context: Context) {
   if (!context.user) {
@@ -18,7 +14,11 @@ function requireAuth(context: Context) {
 export const expensesResolvers = {
   Query: {
     // Expense queries
-    groupExpenses: async (_: any, { groupId, limit }: { groupId: string; limit?: number }, context: Context) => {
+    groupExpenses: async (
+      _: any,
+      { groupId, limit }: { groupId: string; limit?: number },
+      context: Context
+    ) => {
       const user = requireAuth(context);
 
       // Check if user is member of the group
@@ -32,7 +32,9 @@ export const expensesResolvers = {
       });
 
       if (!membership) {
-        throw new GraphQLError('Not authorized to view expenses for this group', { extensions: { code: 'FORBIDDEN' } });
+        throw new GraphQLError('Not authorized to view expenses for this group', {
+          extensions: { code: 'FORBIDDEN' },
+        });
       }
 
       return expensesService.getGroupExpenses(groupId, limit);
@@ -57,7 +59,9 @@ export const expensesResolvers = {
       });
 
       if (!membership) {
-        throw new GraphQLError('Not authorized to view this expense', { extensions: { code: 'FORBIDDEN' } });
+        throw new GraphQLError('Not authorized to view this expense', {
+          extensions: { code: 'FORBIDDEN' },
+        });
       }
 
       return expense;
@@ -66,11 +70,11 @@ export const expensesResolvers = {
     userExpenses: async (_: any, { userId }: { userId: string }, context: Context) => {
       const currentUser = requireAuth(context);
 
-      // Users can only view their own expenses or if they're admin
+      // Users can only view their own expenses
       if (currentUser.id !== userId) {
-        if (!currentUser.isAdmin) {
-          throw new GraphQLError('Not authorized to view other users\' expenses', { extensions: { code: 'FORBIDDEN' } });
-        }
+        throw new GraphQLError("Not authorized to view other users' expenses", {
+          extensions: { code: 'FORBIDDEN' },
+        });
       }
 
       return context.prisma.expense.findMany({
@@ -117,7 +121,9 @@ export const expensesResolvers = {
       });
 
       if (!membership) {
-        throw new GraphQLError('Not authorized to view settlements for this group', { extensions: { code: 'FORBIDDEN' } });
+        throw new GraphQLError('Not authorized to view settlements for this group', {
+          extensions: { code: 'FORBIDDEN' },
+        });
       }
 
       return expensesService.getGroupSettlements(groupId);
@@ -126,19 +132,16 @@ export const expensesResolvers = {
     userSettlements: async (_: any, { userId }: { userId: string }, context: Context) => {
       const currentUser = requireAuth(context);
 
-      // Users can only view their own settlements or if they're admin
+      // Users can only view their own settlements
       if (currentUser.id !== userId) {
-        if (!currentUser.isAdmin) {
-          throw new GraphQLError('Not authorized to view other users\' settlements', { extensions: { code: 'FORBIDDEN' } });
-        }
+        throw new GraphQLError("Not authorized to view other users' settlements", {
+          extensions: { code: 'FORBIDDEN' },
+        });
       }
 
       return context.prisma.settlement.findMany({
         where: {
-          OR: [
-            { fromUserId: userId },
-            { toUserId: userId },
-          ],
+          OR: [{ fromUserId: userId }, { toUserId: userId }],
         },
         include: {
           fromUser: {
@@ -178,13 +181,19 @@ export const expensesResolvers = {
       });
 
       if (!membership) {
-        throw new GraphQLError('Not authorized to view debt summary for this group', { extensions: { code: 'FORBIDDEN' } });
+        throw new GraphQLError('Not authorized to view debt summary for this group', {
+          extensions: { code: 'FORBIDDEN' },
+        });
       }
 
       return expensesService.getGroupDebtSummary(groupId);
     },
 
-    userDebtSummary: async (_: any, { userId, groupId }: { userId: string; groupId: string }, context: Context) => {
+    userDebtSummary: async (
+      _: any,
+      { userId, groupId }: { userId: string; groupId: string },
+      context: Context
+    ) => {
       const currentUser = requireAuth(context);
 
       // Check if user is member of the group
@@ -198,14 +207,16 @@ export const expensesResolvers = {
       });
 
       if (!membership) {
-        throw new GraphQLError('Not authorized to view debt summary for this group', { extensions: { code: 'FORBIDDEN' } });
+        throw new GraphQLError('Not authorized to view debt summary for this group', {
+          extensions: { code: 'FORBIDDEN' },
+        });
       }
 
-      // Users can only view their own debt summary or if they're admin
+      // Users can only view their own debt summary
       if (currentUser.id !== userId) {
-        if (!currentUser.isAdmin) {
-          throw new GraphQLError('Not authorized to view other users\' debt summary', { extensions: { code: 'FORBIDDEN' } });
-        }
+        throw new GraphQLError("Not authorized to view other users' debt summary", {
+          extensions: { code: 'FORBIDDEN' },
+        });
       }
 
       const debtSummary = await expensesService.getGroupDebtSummary(groupId);
@@ -226,7 +237,9 @@ export const expensesResolvers = {
       });
 
       if (!membership) {
-        throw new GraphQLError('Not authorized to view optimal settlements for this group', { extensions: { code: 'FORBIDDEN' } });
+        throw new GraphQLError('Not authorized to view optimal settlements for this group', {
+          extensions: { code: 'FORBIDDEN' },
+        });
       }
 
       return expensesService.generateOptimalSettlements(groupId);
@@ -247,7 +260,9 @@ export const expensesResolvers = {
       });
 
       if (!membership) {
-        throw new GraphQLError('Not authorized to view settings for this group', { extensions: { code: 'FORBIDDEN' } });
+        throw new GraphQLError('Not authorized to view settings for this group', {
+          extensions: { code: 'FORBIDDEN' },
+        });
       }
 
       return expensesService.getGroupSettings(groupId);
@@ -277,7 +292,11 @@ export const expensesResolvers = {
       return expensesService.createSettlement(input, user.id);
     },
 
-    updateSettlement: async (_: any, { id, input }: { id: string; input: any }, context: Context) => {
+    updateSettlement: async (
+      _: any,
+      { id, input }: { id: string; input: any },
+      context: Context
+    ) => {
       const user = requireAuth(context);
 
       const settlement = await context.prisma.settlement.findUnique({
@@ -299,7 +318,9 @@ export const expensesResolvers = {
       });
 
       if (!membership) {
-        throw new GraphQLError('Not authorized to update this settlement', { extensions: { code: 'FORBIDDEN' } });
+        throw new GraphQLError('Not authorized to update this settlement', {
+          extensions: { code: 'FORBIDDEN' },
+        });
       }
 
       return context.prisma.settlement.update({
@@ -327,7 +348,11 @@ export const expensesResolvers = {
       });
     },
 
-    markSettlementPaid: async (_: any, { id, input }: { id: string; input: any }, context: Context) => {
+    markSettlementPaid: async (
+      _: any,
+      { id, input }: { id: string; input: any },
+      context: Context
+    ) => {
       const user = requireAuth(context);
       return expensesService.markSettlementPaid(id, input.paymentMethod, input.notes, user.id);
     },
@@ -354,7 +379,9 @@ export const expensesResolvers = {
       });
 
       if (!membership || (!membership.isAdmin && settlement.fromUserId !== user.id)) {
-        throw new GraphQLError('Not authorized to delete this settlement', { extensions: { code: 'FORBIDDEN' } });
+        throw new GraphQLError('Not authorized to delete this settlement', {
+          extensions: { code: 'FORBIDDEN' },
+        });
       }
 
       await context.prisma.settlement.delete({
@@ -365,7 +392,11 @@ export const expensesResolvers = {
     },
 
     // Settings mutations
-    updateGroupSettings: async (_: any, { groupId, input }: { groupId: string; input: any }, context: Context) => {
+    updateGroupSettings: async (
+      _: any,
+      { groupId, input }: { groupId: string; input: any },
+      context: Context
+    ) => {
       const user = requireAuth(context);
 
       // Check if user is admin of the group
@@ -379,14 +410,20 @@ export const expensesResolvers = {
       });
 
       if (!membership || !membership.isAdmin) {
-        throw new GraphQLError('Only group admins can update group settings', { extensions: { code: 'FORBIDDEN' } });
+        throw new GraphQLError('Only group admins can update group settings', {
+          extensions: { code: 'FORBIDDEN' },
+        });
       }
 
       return expensesService.updateGroupSettings(groupId, input);
     },
 
     // Utility mutations
-    generateOptimalSettlements: async (_: any, { groupId }: { groupId: string }, context: Context) => {
+    generateOptimalSettlements: async (
+      _: any,
+      { groupId }: { groupId: string },
+      context: Context
+    ) => {
       const user = requireAuth(context);
 
       // Check if user is admin of the group
@@ -400,7 +437,9 @@ export const expensesResolvers = {
       });
 
       if (!membership || !membership.isAdmin) {
-        throw new GraphQLError('Only group admins can generate optimal settlements', { extensions: { code: 'FORBIDDEN' } });
+        throw new GraphQLError('Only group admins can generate optimal settlements', {
+          extensions: { code: 'FORBIDDEN' },
+        });
       }
 
       return expensesService.generateOptimalSettlements(groupId);
@@ -420,7 +459,9 @@ export const expensesResolvers = {
       });
 
       if (!membership || !membership.isAdmin) {
-        throw new GraphQLError('Only group admins can bulk create settlements', { extensions: { code: 'FORBIDDEN' } });
+        throw new GraphQLError('Only group admins can bulk create settlements', {
+          extensions: { code: 'FORBIDDEN' },
+        });
       }
 
       const settlements = [];

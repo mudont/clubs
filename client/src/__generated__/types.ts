@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { gql } from '@apollo/client';
 import * as Apollo from '@apollo/client';
 export type Maybe<T> = T | null;
@@ -19,19 +20,19 @@ export type Scalars = {
 };
 
 export type AuthPayload = {
-  __typename?: 'AuthPayload';
+  __typename: 'AuthPayload';
   token: Scalars['String']['output'];
   user: User;
 };
 
 export type BlockUserInput = {
   groupId: Scalars['ID']['input'];
-  reason: InputMaybe<Scalars['String']['input']>;
+  reason?: InputMaybe<Scalars['String']['input']>;
   userId: Scalars['ID']['input'];
 };
 
 export type BlockedUser = {
-  __typename?: 'BlockedUser';
+  __typename: 'BlockedUser';
   blockedAt: Scalars['DateTime']['output'];
   blockedBy: User;
   group: Group;
@@ -51,7 +52,7 @@ export type ChangePasswordInput = {
 };
 
 export type ChangePasswordResponse = {
-  __typename?: 'ChangePasswordResponse';
+  __typename: 'ChangePasswordResponse';
   message: Scalars['String']['output'];
   success: Scalars['Boolean']['output'];
 };
@@ -70,28 +71,28 @@ export type CreateExpenseInput = {
   description: Scalars['String']['input'];
   groupId: Scalars['ID']['input'];
   paidBy: Scalars['ID']['input'];
-  receiptUrl: InputMaybe<Scalars['String']['input']>;
+  receiptUrl?: InputMaybe<Scalars['String']['input']>;
   splitType: SplitType;
   splits: Array<ExpenseSplitInput>;
 };
 
 export type CreateGroupInput = {
-  description: InputMaybe<Scalars['String']['input']>;
-  isPublic: InputMaybe<Scalars['Boolean']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  isPublic?: InputMaybe<Scalars['Boolean']['input']>;
   name: Scalars['String']['input'];
 };
 
 export type CreateIndividualDoublesMatchInput = {
   matchDate: Scalars['DateTime']['input'];
   order: Scalars['Int']['input'];
-  resultType: InputMaybe<ResultType>;
+  resultType?: InputMaybe<ResultType>;
   score: Scalars['String']['input'];
   team1Player1Id: Scalars['String']['input'];
   team1Player2Id: Scalars['String']['input'];
   team2Player1Id: Scalars['String']['input'];
   team2Player2Id: Scalars['String']['input'];
   teamMatchId: Scalars['String']['input'];
-  winner: InputMaybe<Winner>;
+  winner?: InputMaybe<Winner>;
 };
 
 export type CreateIndividualSinglesMatchInput = {
@@ -99,15 +100,15 @@ export type CreateIndividualSinglesMatchInput = {
   order: Scalars['Int']['input'];
   player1Id: Scalars['String']['input'];
   player2Id: Scalars['String']['input'];
-  resultType: InputMaybe<ResultType>;
+  resultType?: InputMaybe<ResultType>;
   score: Scalars['String']['input'];
   teamMatchId: Scalars['String']['input'];
-  winner: InputMaybe<Winner>;
+  winner?: InputMaybe<Winner>;
 };
 
 export type CreateRsvpInput = {
   eventId: Scalars['ID']['input'];
-  note: InputMaybe<Scalars['String']['input']>;
+  note?: InputMaybe<Scalars['String']['input']>;
   status: RsvpStatus;
 };
 
@@ -116,14 +117,14 @@ export type CreateSettlementInput = {
   currency: Scalars['String']['input'];
   fromUserId: Scalars['ID']['input'];
   groupId: Scalars['ID']['input'];
-  notes: InputMaybe<Scalars['String']['input']>;
-  paymentMethod: InputMaybe<PaymentMethod>;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  paymentMethod?: InputMaybe<PaymentMethod>;
   toUserId: Scalars['ID']['input'];
 };
 
 export type CreateTeamLeaguePointSystemInput = {
-  drawPoints: InputMaybe<Scalars['Int']['input']>;
-  lossPoints: InputMaybe<Scalars['Int']['input']>;
+  drawPoints?: InputMaybe<Scalars['Int']['input']>;
+  lossPoints?: InputMaybe<Scalars['Int']['input']>;
   matchType: MatchType;
   order: Scalars['Int']['input'];
   winPoints: Scalars['Int']['input'];
@@ -136,9 +137,9 @@ export type CreateTeamMatchInput = {
 };
 
 export type CreateTennisLeagueInput = {
-  description: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
   endDate: Scalars['DateTime']['input'];
-  isActive: InputMaybe<Scalars['Boolean']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
   name: Scalars['String']['input'];
   startDate: Scalars['DateTime']['input'];
 };
@@ -149,14 +150,14 @@ export type CreateTennisTeamInput = {
 };
 
 export type DebtDetail = {
-  __typename?: 'DebtDetail';
+  __typename: 'DebtDetail';
   amount: Scalars['Float']['output'];
   currency: Scalars['String']['output'];
   toUser: User;
 };
 
 export type DebtSummary = {
-  __typename?: 'DebtSummary';
+  __typename: 'DebtSummary';
   debts: Array<DebtDetail>;
   netAmount: Scalars['Float']['output'];
   totalOwed: Scalars['Float']['output'];
@@ -165,7 +166,7 @@ export type DebtSummary = {
 };
 
 export type Event = {
-  __typename?: 'Event';
+  __typename: 'Event';
   createdBy: User;
   date: Scalars['DateTime']['output'];
   description: Scalars['String']['output'];
@@ -175,7 +176,7 @@ export type Event = {
 };
 
 export type Expense = {
-  __typename?: 'Expense';
+  __typename: 'Expense';
   amount: Scalars['Float']['output'];
   category: Scalars['String']['output'];
   createdAt: Scalars['DateTime']['output'];
@@ -193,7 +194,7 @@ export type Expense = {
 };
 
 export type ExpenseSplit = {
-  __typename?: 'ExpenseSplit';
+  __typename: 'ExpenseSplit';
   amount: Scalars['Float']['output'];
   createdAt: Scalars['DateTime']['output'];
   expense: Expense;
@@ -204,14 +205,14 @@ export type ExpenseSplit = {
 };
 
 export type ExpenseSplitInput = {
-  amount: InputMaybe<Scalars['Float']['input']>;
-  percentage: InputMaybe<Scalars['Float']['input']>;
-  shares: InputMaybe<Scalars['Int']['input']>;
+  amount?: InputMaybe<Scalars['Float']['input']>;
+  percentage?: InputMaybe<Scalars['Float']['input']>;
+  shares?: InputMaybe<Scalars['Int']['input']>;
   userId: Scalars['ID']['input'];
 };
 
 export type Group = {
-  __typename?: 'Group';
+  __typename: 'Group';
   blockedUsers: Array<BlockedUser>;
   createdAt: Scalars['DateTime']['output'];
   description: Maybe<Scalars['String']['output']>;
@@ -227,7 +228,7 @@ export type Group = {
 };
 
 export type GroupSettings = {
-  __typename?: 'GroupSettings';
+  __typename: 'GroupSettings';
   allowExpenses: Scalars['Boolean']['output'];
   autoSettle: Scalars['Boolean']['output'];
   createdAt: Scalars['DateTime']['output'];
@@ -243,13 +244,13 @@ export type LineupInput = {
   slots: Array<LineupSlotInput>;
   teamId: Scalars['String']['input'];
   teamMatchId: Scalars['String']['input'];
-  visibility: InputMaybe<LineupVisibility>;
+  visibility?: InputMaybe<LineupVisibility>;
 };
 
 export type LineupSlotInput = {
   order: Scalars['Int']['input'];
   player1Id: Scalars['String']['input'];
-  player2Id: InputMaybe<Scalars['String']['input']>;
+  player2Id?: InputMaybe<Scalars['String']['input']>;
   type: LineupSlotType;
 };
 
@@ -268,7 +269,7 @@ export type LoginInput = {
 };
 
 export type MarkSettlementPaidInput = {
-  notes: InputMaybe<Scalars['String']['input']>;
+  notes?: InputMaybe<Scalars['String']['input']>;
   paymentMethod: PaymentMethod;
 };
 
@@ -277,7 +278,7 @@ export type MatchType =
   | 'SINGLES';
 
 export type Membership = {
-  __typename?: 'Membership';
+  __typename: 'Membership';
   group: Group;
   id: Scalars['ID']['output'];
   isAdmin: Scalars['Boolean']['output'];
@@ -288,7 +289,7 @@ export type Membership = {
 };
 
 export type Message = {
-  __typename?: 'Message';
+  __typename: 'Message';
   content: Scalars['String']['output'];
   createdAt: Scalars['DateTime']['output'];
   group: Group;
@@ -297,7 +298,7 @@ export type Message = {
 };
 
 export type Mutation = {
-  __typename?: 'Mutation';
+  __typename: 'Mutation';
   addMember: Membership;
   addMemberByEmail: Membership;
   addMemberByUsername: Membership;
@@ -630,7 +631,7 @@ export type MutationUpdateProfileArgs = {
 
 export type MutationUpdateRsvpArgs = {
   id: Scalars['ID']['input'];
-  note: InputMaybe<Scalars['String']['input']>;
+  note?: InputMaybe<Scalars['String']['input']>;
   status: RsvpStatus;
 };
 
@@ -673,7 +674,7 @@ export type PaymentMethod =
   | 'VENMO';
 
 export type Query = {
-  __typename?: 'Query';
+  __typename: 'Query';
   event: Maybe<Event>;
   events: Array<Event>;
   expense: Maybe<Expense>;
@@ -763,7 +764,7 @@ export type QueryOptimalSettlementsArgs = {
 
 
 export type QueryPublicGroupsArgs = {
-  query: InputMaybe<Scalars['String']['input']>;
+  query?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -808,7 +809,7 @@ export type QueryUserSettlementsArgs = {
 };
 
 export type Rsvp = {
-  __typename?: 'RSVP';
+  __typename: 'RSVP';
   createdAt: Scalars['DateTime']['output'];
   event: Event;
   id: Scalars['ID']['output'];
@@ -835,7 +836,7 @@ export type SendMessageInput = {
 };
 
 export type Settlement = {
-  __typename?: 'Settlement';
+  __typename: 'Settlement';
   amount: Scalars['Float']['output'];
   createdAt: Scalars['DateTime']['output'];
   currency: Scalars['String']['output'];
@@ -857,8 +858,8 @@ export type SettlementStatus =
 
 export type SignupInput = {
   email: Scalars['String']['input'];
-  firstName: InputMaybe<Scalars['String']['input']>;
-  lastName: InputMaybe<Scalars['String']['input']>;
+  firstName?: InputMaybe<Scalars['String']['input']>;
+  lastName?: InputMaybe<Scalars['String']['input']>;
   password: Scalars['String']['input'];
   username: Scalars['String']['input'];
 };
@@ -870,7 +871,7 @@ export type SplitType =
   | 'SHARES';
 
 export type Subscription = {
-  __typename?: 'Subscription';
+  __typename: 'Subscription';
   eventCreated: Event;
   memberJoined: Membership;
   messageAdded: Message;
@@ -898,7 +899,7 @@ export type SubscriptionRsvpUpdatedArgs = {
 };
 
 export type TeamLeague = {
-  __typename?: 'TeamLeague';
+  __typename: 'TeamLeague';
   createdAt: Scalars['DateTime']['output'];
   description: Maybe<Scalars['String']['output']>;
   endDate: Scalars['DateTime']['output'];
@@ -913,7 +914,7 @@ export type TeamLeague = {
 };
 
 export type TeamLeagueIndividualDoublesMatch = {
-  __typename?: 'TeamLeagueIndividualDoublesMatch';
+  __typename: 'TeamLeagueIndividualDoublesMatch';
   createdAt: Scalars['DateTime']['output'];
   id: Scalars['ID']['output'];
   matchDate: Scalars['DateTime']['output'];
@@ -934,7 +935,7 @@ export type TeamLeagueIndividualDoublesMatch = {
 };
 
 export type TeamLeagueIndividualSinglesMatch = {
-  __typename?: 'TeamLeagueIndividualSinglesMatch';
+  __typename: 'TeamLeagueIndividualSinglesMatch';
   createdAt: Scalars['DateTime']['output'];
   id: Scalars['ID']['output'];
   matchDate: Scalars['DateTime']['output'];
@@ -951,7 +952,7 @@ export type TeamLeagueIndividualSinglesMatch = {
 };
 
 export type TeamLeaguePointSystem = {
-  __typename?: 'TeamLeaguePointSystem';
+  __typename: 'TeamLeaguePointSystem';
   defaultDrawPoints: Scalars['Int']['output'];
   defaultLossPoints: Scalars['Int']['output'];
   defaultWinPoints: Scalars['Int']['output'];
@@ -965,7 +966,7 @@ export type TeamLeaguePointSystem = {
 };
 
 export type TeamLeagueStandingsRow = {
-  __typename?: 'TeamLeagueStandingsRow';
+  __typename: 'TeamLeagueStandingsRow';
   draws: Scalars['Int']['output'];
   gamesLost: Scalars['Int']['output'];
   gamesWon: Scalars['Int']['output'];
@@ -978,7 +979,7 @@ export type TeamLeagueStandingsRow = {
 };
 
 export type TeamLeagueTeam = {
-  __typename?: 'TeamLeagueTeam';
+  __typename: 'TeamLeagueTeam';
   captain: User;
   captainId: Scalars['String']['output'];
   group: Group;
@@ -987,7 +988,7 @@ export type TeamLeagueTeam = {
 };
 
 export type TeamLeagueTeamMatch = {
-  __typename?: 'TeamLeagueTeamMatch';
+  __typename: 'TeamLeagueTeamMatch';
   associatedEvents: Array<Event>;
   awayTeam: TeamLeagueTeam;
   awayTeamEvent: Maybe<Event>;
@@ -1004,7 +1005,7 @@ export type TeamLeagueTeamMatch = {
 };
 
 export type TeamMatchLineup = {
-  __typename?: 'TeamMatchLineup';
+  __typename: 'TeamMatchLineup';
   createdAt: Scalars['DateTime']['output'];
   id: Scalars['ID']['output'];
   publishedAt: Maybe<Scalars['DateTime']['output']>;
@@ -1016,7 +1017,7 @@ export type TeamMatchLineup = {
 };
 
 export type TeamMatchLineupSlot = {
-  __typename?: 'TeamMatchLineupSlot';
+  __typename: 'TeamMatchLineupSlot';
   createdAt: Scalars['DateTime']['output'];
   id: Scalars['ID']['output'];
   order: Scalars['Int']['output'];
@@ -1028,109 +1029,109 @@ export type TeamMatchLineupSlot = {
 };
 
 export type UpdateExpenseInput = {
-  amount: InputMaybe<Scalars['Float']['input']>;
-  category: InputMaybe<Scalars['String']['input']>;
-  currency: InputMaybe<Scalars['String']['input']>;
-  date: InputMaybe<Scalars['DateTime']['input']>;
-  description: InputMaybe<Scalars['String']['input']>;
-  receiptUrl: InputMaybe<Scalars['String']['input']>;
-  splitType: InputMaybe<SplitType>;
-  splits: InputMaybe<Array<ExpenseSplitInput>>;
+  amount?: InputMaybe<Scalars['Float']['input']>;
+  category?: InputMaybe<Scalars['String']['input']>;
+  currency?: InputMaybe<Scalars['String']['input']>;
+  date?: InputMaybe<Scalars['DateTime']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  receiptUrl?: InputMaybe<Scalars['String']['input']>;
+  splitType?: InputMaybe<SplitType>;
+  splits?: InputMaybe<Array<ExpenseSplitInput>>;
 };
 
 export type UpdateGroupInput = {
-  description: InputMaybe<Scalars['String']['input']>;
-  isPublic: InputMaybe<Scalars['Boolean']['input']>;
-  name: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  isPublic?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateGroupSettingsInput = {
-  allowExpenses: InputMaybe<Scalars['Boolean']['input']>;
-  autoSettle: InputMaybe<Scalars['Boolean']['input']>;
-  defaultCurrency: InputMaybe<Scalars['String']['input']>;
-  expenseLimit: InputMaybe<Scalars['Float']['input']>;
-  requireApproval: InputMaybe<Scalars['Boolean']['input']>;
+  allowExpenses?: InputMaybe<Scalars['Boolean']['input']>;
+  autoSettle?: InputMaybe<Scalars['Boolean']['input']>;
+  defaultCurrency?: InputMaybe<Scalars['String']['input']>;
+  expenseLimit?: InputMaybe<Scalars['Float']['input']>;
+  requireApproval?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type UpdateIndividualDoublesMatchInput = {
-  matchDate: InputMaybe<Scalars['DateTime']['input']>;
-  order: InputMaybe<Scalars['Int']['input']>;
-  resultType: InputMaybe<ResultType>;
-  score: InputMaybe<Scalars['String']['input']>;
-  team1Player1Id: InputMaybe<Scalars['String']['input']>;
-  team1Player2Id: InputMaybe<Scalars['String']['input']>;
-  team2Player1Id: InputMaybe<Scalars['String']['input']>;
-  team2Player2Id: InputMaybe<Scalars['String']['input']>;
-  teamMatchId: InputMaybe<Scalars['String']['input']>;
-  winner: InputMaybe<Winner>;
+  matchDate?: InputMaybe<Scalars['DateTime']['input']>;
+  order?: InputMaybe<Scalars['Int']['input']>;
+  resultType?: InputMaybe<ResultType>;
+  score?: InputMaybe<Scalars['String']['input']>;
+  team1Player1Id?: InputMaybe<Scalars['String']['input']>;
+  team1Player2Id?: InputMaybe<Scalars['String']['input']>;
+  team2Player1Id?: InputMaybe<Scalars['String']['input']>;
+  team2Player2Id?: InputMaybe<Scalars['String']['input']>;
+  teamMatchId?: InputMaybe<Scalars['String']['input']>;
+  winner?: InputMaybe<Winner>;
 };
 
 export type UpdateIndividualSinglesMatchInput = {
-  matchDate: InputMaybe<Scalars['DateTime']['input']>;
-  order: InputMaybe<Scalars['Int']['input']>;
-  player1Id: InputMaybe<Scalars['String']['input']>;
-  player2Id: InputMaybe<Scalars['String']['input']>;
-  resultType: InputMaybe<ResultType>;
-  score: InputMaybe<Scalars['String']['input']>;
-  teamMatchId: InputMaybe<Scalars['String']['input']>;
-  winner: InputMaybe<Winner>;
+  matchDate?: InputMaybe<Scalars['DateTime']['input']>;
+  order?: InputMaybe<Scalars['Int']['input']>;
+  player1Id?: InputMaybe<Scalars['String']['input']>;
+  player2Id?: InputMaybe<Scalars['String']['input']>;
+  resultType?: InputMaybe<ResultType>;
+  score?: InputMaybe<Scalars['String']['input']>;
+  teamMatchId?: InputMaybe<Scalars['String']['input']>;
+  winner?: InputMaybe<Winner>;
 };
 
 export type UpdatePointSystemInput = {
-  defaultDrawPoints: InputMaybe<Scalars['Int']['input']>;
-  defaultLossPoints: InputMaybe<Scalars['Int']['input']>;
-  defaultWinPoints: InputMaybe<Scalars['Int']['input']>;
-  drawPoints: InputMaybe<Scalars['Int']['input']>;
-  lossPoints: InputMaybe<Scalars['Int']['input']>;
-  winPoints: InputMaybe<Scalars['Int']['input']>;
+  defaultDrawPoints?: InputMaybe<Scalars['Int']['input']>;
+  defaultLossPoints?: InputMaybe<Scalars['Int']['input']>;
+  defaultWinPoints?: InputMaybe<Scalars['Int']['input']>;
+  drawPoints?: InputMaybe<Scalars['Int']['input']>;
+  lossPoints?: InputMaybe<Scalars['Int']['input']>;
+  winPoints?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type UpdateSettlementInput = {
-  amount: InputMaybe<Scalars['Float']['input']>;
-  currency: InputMaybe<Scalars['String']['input']>;
-  notes: InputMaybe<Scalars['String']['input']>;
-  paymentMethod: InputMaybe<PaymentMethod>;
-  status: InputMaybe<SettlementStatus>;
+  amount?: InputMaybe<Scalars['Float']['input']>;
+  currency?: InputMaybe<Scalars['String']['input']>;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  paymentMethod?: InputMaybe<PaymentMethod>;
+  status?: InputMaybe<SettlementStatus>;
 };
 
 export type UpdateTeamLeaguePointSystemInput = {
-  drawPoints: InputMaybe<Scalars['Int']['input']>;
-  lossPoints: InputMaybe<Scalars['Int']['input']>;
-  matchType: InputMaybe<MatchType>;
-  order: InputMaybe<Scalars['Int']['input']>;
-  winPoints: InputMaybe<Scalars['Int']['input']>;
+  drawPoints?: InputMaybe<Scalars['Int']['input']>;
+  lossPoints?: InputMaybe<Scalars['Int']['input']>;
+  matchType?: InputMaybe<MatchType>;
+  order?: InputMaybe<Scalars['Int']['input']>;
+  winPoints?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type UpdateTeamMatchInput = {
-  awayTeamId: InputMaybe<Scalars['String']['input']>;
-  homeTeamId: InputMaybe<Scalars['String']['input']>;
-  matchDate: InputMaybe<Scalars['DateTime']['input']>;
+  awayTeamId?: InputMaybe<Scalars['String']['input']>;
+  homeTeamId?: InputMaybe<Scalars['String']['input']>;
+  matchDate?: InputMaybe<Scalars['DateTime']['input']>;
 };
 
 export type UpdateTennisLeagueInput = {
-  description: InputMaybe<Scalars['String']['input']>;
-  endDate: InputMaybe<Scalars['DateTime']['input']>;
-  isActive: InputMaybe<Scalars['Boolean']['input']>;
-  name: InputMaybe<Scalars['String']['input']>;
-  startDate: InputMaybe<Scalars['DateTime']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  endDate?: InputMaybe<Scalars['DateTime']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  startDate?: InputMaybe<Scalars['DateTime']['input']>;
 };
 
 export type UpdateTennisTeamInput = {
-  captainId: InputMaybe<Scalars['String']['input']>;
-  groupId: InputMaybe<Scalars['String']['input']>;
+  captainId?: InputMaybe<Scalars['String']['input']>;
+  groupId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateUserInput = {
-  bio: InputMaybe<Scalars['String']['input']>;
-  firstName: InputMaybe<Scalars['String']['input']>;
-  lastName: InputMaybe<Scalars['String']['input']>;
-  phone: InputMaybe<Scalars['String']['input']>;
-  photoUrl: InputMaybe<Scalars['String']['input']>;
-  username: InputMaybe<Scalars['String']['input']>;
+  bio?: InputMaybe<Scalars['String']['input']>;
+  firstName?: InputMaybe<Scalars['String']['input']>;
+  lastName?: InputMaybe<Scalars['String']['input']>;
+  phone?: InputMaybe<Scalars['String']['input']>;
+  photoUrl?: InputMaybe<Scalars['String']['input']>;
+  username?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type User = {
-  __typename?: 'User';
+  __typename: 'User';
   avatar: Maybe<Scalars['String']['output']>;
   bio: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
@@ -1151,37 +1152,37 @@ export type Winner =
   | 'AWAY'
   | 'HOME';
 
-export type TeamLeagueFragmentFragment = { __typename?: 'TeamLeague', id: string, name: string, description: string | null, startDate: string, endDate: string, isActive: boolean, createdAt: string, updatedAt: string, pointSystems: Array<{ __typename?: 'TeamLeaguePointSystem', id: string, matchType: MatchType, order: number, winPoints: number, lossPoints: number, drawPoints: number, defaultWinPoints: number, defaultLossPoints: number, defaultDrawPoints: number }>, teams: Array<{ __typename?: 'TeamLeagueTeam', id: string, captainId: string, group: { __typename?: 'Group', id: string, name: string, description: string | null, members: Array<{ __typename?: 'Membership', user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }, captain: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null } }>, teamMatches: Array<{ __typename?: 'TeamLeagueTeamMatch', id: string, homeTeamId: string, awayTeamId: string, matchDate: string, createdAt: string, homeTeam: { __typename?: 'TeamLeagueTeam', id: string, group: { __typename?: 'Group', id: string, name: string, members: Array<{ __typename?: 'Membership', user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, awayTeam: { __typename?: 'TeamLeagueTeam', id: string, group: { __typename?: 'Group', id: string, name: string, members: Array<{ __typename?: 'Membership', user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, individualSinglesMatches: Array<{ __typename?: 'TeamLeagueIndividualSinglesMatch', id: string, player1Id: string, player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }>, individualDoublesMatches: Array<{ __typename?: 'TeamLeagueIndividualDoublesMatch', id: string, team1Player1Id: string, team1Player2Id: string, team2Player1Id: string, team2Player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, team1Player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team1Player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }> };
+export type TeamLeagueFragmentFragment = { __typename: 'TeamLeague', id: string, name: string, description: string | null, startDate: string, endDate: string, isActive: boolean, createdAt: string, updatedAt: string, pointSystems: Array<{ __typename: 'TeamLeaguePointSystem', id: string, matchType: MatchType, order: number, winPoints: number, lossPoints: number, drawPoints: number, defaultWinPoints: number, defaultLossPoints: number, defaultDrawPoints: number }>, teams: Array<{ __typename: 'TeamLeagueTeam', id: string, captainId: string, group: { __typename: 'Group', id: string, name: string, description: string | null, members: Array<{ __typename: 'Membership', user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }, captain: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null } }>, teamMatches: Array<{ __typename: 'TeamLeagueTeamMatch', id: string, homeTeamId: string, awayTeamId: string, matchDate: string, createdAt: string, homeTeam: { __typename: 'TeamLeagueTeam', id: string, group: { __typename: 'Group', id: string, name: string, members: Array<{ __typename: 'Membership', user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, awayTeam: { __typename: 'TeamLeagueTeam', id: string, group: { __typename: 'Group', id: string, name: string, members: Array<{ __typename: 'Membership', user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, individualSinglesMatches: Array<{ __typename: 'TeamLeagueIndividualSinglesMatch', id: string, player1Id: string, player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }>, individualDoublesMatches: Array<{ __typename: 'TeamLeagueIndividualDoublesMatch', id: string, team1Player1Id: string, team1Player2Id: string, team2Player1Id: string, team2Player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, team1Player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team1Player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }> };
 
-export type TeamFragmentFragment = { __typename?: 'TeamLeagueTeam', id: string, captainId: string, group: { __typename?: 'Group', id: string, name: string, description: string | null, members: Array<{ __typename?: 'Membership', user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }, captain: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null } };
+export type TeamFragmentFragment = { __typename: 'TeamLeagueTeam', id: string, captainId: string, group: { __typename: 'Group', id: string, name: string, description: string | null, members: Array<{ __typename: 'Membership', user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }, captain: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null } };
 
-export type MatchFragmentFragment = { __typename?: 'TeamLeagueTeamMatch', id: string, homeTeamId: string, awayTeamId: string, matchDate: string, createdAt: string, homeTeam: { __typename?: 'TeamLeagueTeam', id: string, group: { __typename?: 'Group', id: string, name: string, members: Array<{ __typename?: 'Membership', user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, awayTeam: { __typename?: 'TeamLeagueTeam', id: string, group: { __typename?: 'Group', id: string, name: string, members: Array<{ __typename?: 'Membership', user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, individualSinglesMatches: Array<{ __typename?: 'TeamLeagueIndividualSinglesMatch', id: string, player1Id: string, player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }>, individualDoublesMatches: Array<{ __typename?: 'TeamLeagueIndividualDoublesMatch', id: string, team1Player1Id: string, team1Player2Id: string, team2Player1Id: string, team2Player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, team1Player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team1Player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> };
+export type MatchFragmentFragment = { __typename: 'TeamLeagueTeamMatch', id: string, homeTeamId: string, awayTeamId: string, matchDate: string, createdAt: string, homeTeam: { __typename: 'TeamLeagueTeam', id: string, group: { __typename: 'Group', id: string, name: string, members: Array<{ __typename: 'Membership', user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, awayTeam: { __typename: 'TeamLeagueTeam', id: string, group: { __typename: 'Group', id: string, name: string, members: Array<{ __typename: 'Membership', user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, individualSinglesMatches: Array<{ __typename: 'TeamLeagueIndividualSinglesMatch', id: string, player1Id: string, player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }>, individualDoublesMatches: Array<{ __typename: 'TeamLeagueIndividualDoublesMatch', id: string, team1Player1Id: string, team1Player2Id: string, team2Player1Id: string, team2Player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, team1Player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team1Player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> };
 
 export type GetTennisLeaguesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetTennisLeaguesQuery = { __typename?: 'Query', tennisLeagues: Array<{ __typename?: 'TeamLeague', id: string, name: string, description: string | null, startDate: string, endDate: string, isActive: boolean, createdAt: string, teams: Array<{ __typename?: 'TeamLeagueTeam', id: string, group: { __typename?: 'Group', id: string, name: string } }> }> };
+export type GetTennisLeaguesQuery = { __typename: 'Query', tennisLeagues: Array<{ __typename: 'TeamLeague', id: string, name: string, description: string | null, startDate: string, endDate: string, isActive: boolean, createdAt: string, teams: Array<{ __typename: 'TeamLeagueTeam', id: string, group: { __typename: 'Group', id: string, name: string } }> }> };
 
 export type GetTennisLeagueQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetTennisLeagueQuery = { __typename?: 'Query', tennisLeague: { __typename?: 'TeamLeague', id: string, name: string, description: string | null, startDate: string, endDate: string, isActive: boolean, createdAt: string, updatedAt: string, pointSystems: Array<{ __typename?: 'TeamLeaguePointSystem', id: string, matchType: MatchType, order: number, winPoints: number, lossPoints: number, drawPoints: number, defaultWinPoints: number, defaultLossPoints: number, defaultDrawPoints: number }>, teams: Array<{ __typename?: 'TeamLeagueTeam', id: string, captainId: string, group: { __typename?: 'Group', id: string, name: string, description: string | null, members: Array<{ __typename?: 'Membership', user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }, captain: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null } }>, teamMatches: Array<{ __typename?: 'TeamLeagueTeamMatch', id: string, homeTeamId: string, awayTeamId: string, matchDate: string, createdAt: string, homeTeam: { __typename?: 'TeamLeagueTeam', id: string, group: { __typename?: 'Group', id: string, name: string, members: Array<{ __typename?: 'Membership', user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, awayTeam: { __typename?: 'TeamLeagueTeam', id: string, group: { __typename?: 'Group', id: string, name: string, members: Array<{ __typename?: 'Membership', user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, individualSinglesMatches: Array<{ __typename?: 'TeamLeagueIndividualSinglesMatch', id: string, player1Id: string, player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }>, individualDoublesMatches: Array<{ __typename?: 'TeamLeagueIndividualDoublesMatch', id: string, team1Player1Id: string, team1Player2Id: string, team2Player1Id: string, team2Player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, team1Player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team1Player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }> } | null };
+export type GetTennisLeagueQuery = { __typename: 'Query', tennisLeague: { __typename: 'TeamLeague', id: string, name: string, description: string | null, startDate: string, endDate: string, isActive: boolean, createdAt: string, updatedAt: string, pointSystems: Array<{ __typename: 'TeamLeaguePointSystem', id: string, matchType: MatchType, order: number, winPoints: number, lossPoints: number, drawPoints: number, defaultWinPoints: number, defaultLossPoints: number, defaultDrawPoints: number }>, teams: Array<{ __typename: 'TeamLeagueTeam', id: string, captainId: string, group: { __typename: 'Group', id: string, name: string, description: string | null, members: Array<{ __typename: 'Membership', user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }, captain: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null } }>, teamMatches: Array<{ __typename: 'TeamLeagueTeamMatch', id: string, homeTeamId: string, awayTeamId: string, matchDate: string, createdAt: string, homeTeam: { __typename: 'TeamLeagueTeam', id: string, group: { __typename: 'Group', id: string, name: string, members: Array<{ __typename: 'Membership', user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, awayTeam: { __typename: 'TeamLeagueTeam', id: string, group: { __typename: 'Group', id: string, name: string, members: Array<{ __typename: 'Membership', user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, individualSinglesMatches: Array<{ __typename: 'TeamLeagueIndividualSinglesMatch', id: string, player1Id: string, player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }>, individualDoublesMatches: Array<{ __typename: 'TeamLeagueIndividualDoublesMatch', id: string, team1Player1Id: string, team1Player2Id: string, team2Player1Id: string, team2Player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, team1Player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team1Player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }> } | null };
 
 export type GetTennisLeagueStandingsQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetTennisLeagueStandingsQuery = { __typename?: 'Query', tennisLeagueStandings: Array<{ __typename?: 'TeamLeagueStandingsRow', teamId: string, teamName: string, matchesPlayed: number, wins: number, losses: number, draws: number, points: number, gamesWon: number, gamesLost: number }> };
+export type GetTennisLeagueStandingsQuery = { __typename: 'Query', tennisLeagueStandings: Array<{ __typename: 'TeamLeagueStandingsRow', teamId: string, teamName: string, matchesPlayed: number, wins: number, losses: number, draws: number, points: number, gamesWon: number, gamesLost: number }> };
 
 export type GetLeaguePointSystemsQueryVariables = Exact<{
   leagueId: Scalars['ID']['input'];
 }>;
 
 
-export type GetLeaguePointSystemsQuery = { __typename?: 'Query', tennisLeague: { __typename?: 'TeamLeague', id: string, pointSystems: Array<{ __typename?: 'TeamLeaguePointSystem', id: string, matchType: MatchType, order: number, winPoints: number, lossPoints: number, drawPoints: number, defaultWinPoints: number, defaultLossPoints: number, defaultDrawPoints: number }> } | null };
+export type GetLeaguePointSystemsQuery = { __typename: 'Query', tennisLeague: { __typename: 'TeamLeague', id: string, pointSystems: Array<{ __typename: 'TeamLeaguePointSystem', id: string, matchType: MatchType, order: number, winPoints: number, lossPoints: number, drawPoints: number, defaultWinPoints: number, defaultLossPoints: number, defaultDrawPoints: number }> } | null };
 
 export type GetLineupQueryVariables = Exact<{
   teamMatchId: Scalars['ID']['input'];
@@ -1189,42 +1190,42 @@ export type GetLineupQueryVariables = Exact<{
 }>;
 
 
-export type GetLineupQuery = { __typename?: 'Query', lineup: { __typename?: 'TeamMatchLineup', id: string, teamMatchId: string, teamId: string, visibility: LineupVisibility, publishedAt: string | null, createdAt: string, updatedAt: string, slots: Array<{ __typename?: 'TeamMatchLineupSlot', id: string, order: number, type: LineupSlotType, player1Id: string, player2Id: string | null, player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } | null }> } | null };
+export type GetLineupQuery = { __typename: 'Query', lineup: { __typename: 'TeamMatchLineup', id: string, teamMatchId: string, teamId: string, visibility: LineupVisibility, publishedAt: string | null, createdAt: string, updatedAt: string, slots: Array<{ __typename: 'TeamMatchLineupSlot', id: string, order: number, type: LineupSlotType, player1Id: string, player2Id: string | null, player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } | null }> } | null };
 
 export type GetTeamMatchQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetTeamMatchQuery = { __typename?: 'Query', teamMatch: { __typename?: 'TeamLeagueTeamMatch', id: string, teamLeagueId: string, homeTeamId: string, awayTeamId: string, matchDate: string, homeTeam: { __typename?: 'TeamLeagueTeam', id: string, group: { __typename?: 'Group', id: string, memberships: Array<{ __typename?: 'Membership', user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, awayTeam: { __typename?: 'TeamLeagueTeam', id: string, group: { __typename?: 'Group', id: string, memberships: Array<{ __typename?: 'Membership', user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } } } | null };
+export type GetTeamMatchQuery = { __typename: 'Query', teamMatch: { __typename: 'TeamLeagueTeamMatch', id: string, teamLeagueId: string, homeTeamId: string, awayTeamId: string, matchDate: string, homeTeam: { __typename: 'TeamLeagueTeam', id: string, group: { __typename: 'Group', id: string, memberships: Array<{ __typename: 'Membership', user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, awayTeam: { __typename: 'TeamLeagueTeam', id: string, group: { __typename: 'Group', id: string, memberships: Array<{ __typename: 'Membership', user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } } } | null };
 
 export type GetTeamMatchEventRsvpsQueryVariables = Exact<{
   teamMatchId: Scalars['ID']['input'];
 }>;
 
 
-export type GetTeamMatchEventRsvpsQuery = { __typename?: 'Query', teamMatch: { __typename?: 'TeamLeagueTeamMatch', id: string, matchDate: string, associatedEvents: Array<{ __typename?: 'Event', id: string, date: string, group: { __typename?: 'Group', id: string }, rsvps: Array<{ __typename?: 'RSVP', id: string, status: RsvpStatus, user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }> } | null };
+export type GetTeamMatchEventRsvpsQuery = { __typename: 'Query', teamMatch: { __typename: 'TeamLeagueTeamMatch', id: string, matchDate: string, associatedEvents: Array<{ __typename: 'Event', id: string, date: string, group: { __typename: 'Group', id: string }, rsvps: Array<{ __typename: 'RSVP', id: string, status: RsvpStatus, user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }> } | null };
 
 export type UserSearchQueryVariables = Exact<{
   query: Scalars['String']['input'];
 }>;
 
 
-export type UserSearchQuery = { __typename?: 'Query', userSearch: Array<{ __typename?: 'User', id: string, username: string, email: string, firstName: string | null, lastName: string | null }> };
+export type UserSearchQuery = { __typename: 'Query', userSearch: Array<{ __typename: 'User', id: string, username: string, email: string, firstName: string | null, lastName: string | null }> };
 
 export type GroupSearchQueryVariables = Exact<{
   query: Scalars['String']['input'];
 }>;
 
 
-export type GroupSearchQuery = { __typename?: 'Query', publicGroups: Array<{ __typename?: 'Group', id: string, name: string, description: string | null }> };
+export type GroupSearchQuery = { __typename: 'Query', publicGroups: Array<{ __typename: 'Group', id: string, name: string, description: string | null }> };
 
 export type CreateTennisLeagueMutationVariables = Exact<{
   input: CreateTennisLeagueInput;
 }>;
 
 
-export type CreateTennisLeagueMutation = { __typename?: 'Mutation', createTennisLeague: { __typename?: 'TeamLeague', id: string, name: string, description: string | null, startDate: string, endDate: string, isActive: boolean, createdAt: string, updatedAt: string, pointSystems: Array<{ __typename?: 'TeamLeaguePointSystem', id: string, matchType: MatchType, order: number, winPoints: number, lossPoints: number, drawPoints: number, defaultWinPoints: number, defaultLossPoints: number, defaultDrawPoints: number }>, teams: Array<{ __typename?: 'TeamLeagueTeam', id: string, captainId: string, group: { __typename?: 'Group', id: string, name: string, description: string | null, members: Array<{ __typename?: 'Membership', user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }, captain: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null } }>, teamMatches: Array<{ __typename?: 'TeamLeagueTeamMatch', id: string, homeTeamId: string, awayTeamId: string, matchDate: string, createdAt: string, homeTeam: { __typename?: 'TeamLeagueTeam', id: string, group: { __typename?: 'Group', id: string, name: string, members: Array<{ __typename?: 'Membership', user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, awayTeam: { __typename?: 'TeamLeagueTeam', id: string, group: { __typename?: 'Group', id: string, name: string, members: Array<{ __typename?: 'Membership', user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, individualSinglesMatches: Array<{ __typename?: 'TeamLeagueIndividualSinglesMatch', id: string, player1Id: string, player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }>, individualDoublesMatches: Array<{ __typename?: 'TeamLeagueIndividualDoublesMatch', id: string, team1Player1Id: string, team1Player2Id: string, team2Player1Id: string, team2Player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, team1Player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team1Player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }> } };
+export type CreateTennisLeagueMutation = { __typename: 'Mutation', createTennisLeague: { __typename: 'TeamLeague', id: string, name: string, description: string | null, startDate: string, endDate: string, isActive: boolean, createdAt: string, updatedAt: string, pointSystems: Array<{ __typename: 'TeamLeaguePointSystem', id: string, matchType: MatchType, order: number, winPoints: number, lossPoints: number, drawPoints: number, defaultWinPoints: number, defaultLossPoints: number, defaultDrawPoints: number }>, teams: Array<{ __typename: 'TeamLeagueTeam', id: string, captainId: string, group: { __typename: 'Group', id: string, name: string, description: string | null, members: Array<{ __typename: 'Membership', user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }, captain: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null } }>, teamMatches: Array<{ __typename: 'TeamLeagueTeamMatch', id: string, homeTeamId: string, awayTeamId: string, matchDate: string, createdAt: string, homeTeam: { __typename: 'TeamLeagueTeam', id: string, group: { __typename: 'Group', id: string, name: string, members: Array<{ __typename: 'Membership', user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, awayTeam: { __typename: 'TeamLeagueTeam', id: string, group: { __typename: 'Group', id: string, name: string, members: Array<{ __typename: 'Membership', user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, individualSinglesMatches: Array<{ __typename: 'TeamLeagueIndividualSinglesMatch', id: string, player1Id: string, player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }>, individualDoublesMatches: Array<{ __typename: 'TeamLeagueIndividualDoublesMatch', id: string, team1Player1Id: string, team1Player2Id: string, team2Player1Id: string, team2Player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, team1Player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team1Player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }> } };
 
 export type UpdateTennisLeagueMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1232,14 +1233,14 @@ export type UpdateTennisLeagueMutationVariables = Exact<{
 }>;
 
 
-export type UpdateTennisLeagueMutation = { __typename?: 'Mutation', updateTennisLeague: { __typename?: 'TeamLeague', id: string, name: string, description: string | null, startDate: string, endDate: string, isActive: boolean, createdAt: string, updatedAt: string, pointSystems: Array<{ __typename?: 'TeamLeaguePointSystem', id: string, matchType: MatchType, order: number, winPoints: number, lossPoints: number, drawPoints: number, defaultWinPoints: number, defaultLossPoints: number, defaultDrawPoints: number }>, teams: Array<{ __typename?: 'TeamLeagueTeam', id: string, captainId: string, group: { __typename?: 'Group', id: string, name: string, description: string | null, members: Array<{ __typename?: 'Membership', user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }, captain: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null } }>, teamMatches: Array<{ __typename?: 'TeamLeagueTeamMatch', id: string, homeTeamId: string, awayTeamId: string, matchDate: string, createdAt: string, homeTeam: { __typename?: 'TeamLeagueTeam', id: string, group: { __typename?: 'Group', id: string, name: string, members: Array<{ __typename?: 'Membership', user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, awayTeam: { __typename?: 'TeamLeagueTeam', id: string, group: { __typename?: 'Group', id: string, name: string, members: Array<{ __typename?: 'Membership', user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, individualSinglesMatches: Array<{ __typename?: 'TeamLeagueIndividualSinglesMatch', id: string, player1Id: string, player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }>, individualDoublesMatches: Array<{ __typename?: 'TeamLeagueIndividualDoublesMatch', id: string, team1Player1Id: string, team1Player2Id: string, team2Player1Id: string, team2Player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, team1Player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team1Player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }> } };
+export type UpdateTennisLeagueMutation = { __typename: 'Mutation', updateTennisLeague: { __typename: 'TeamLeague', id: string, name: string, description: string | null, startDate: string, endDate: string, isActive: boolean, createdAt: string, updatedAt: string, pointSystems: Array<{ __typename: 'TeamLeaguePointSystem', id: string, matchType: MatchType, order: number, winPoints: number, lossPoints: number, drawPoints: number, defaultWinPoints: number, defaultLossPoints: number, defaultDrawPoints: number }>, teams: Array<{ __typename: 'TeamLeagueTeam', id: string, captainId: string, group: { __typename: 'Group', id: string, name: string, description: string | null, members: Array<{ __typename: 'Membership', user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }, captain: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null } }>, teamMatches: Array<{ __typename: 'TeamLeagueTeamMatch', id: string, homeTeamId: string, awayTeamId: string, matchDate: string, createdAt: string, homeTeam: { __typename: 'TeamLeagueTeam', id: string, group: { __typename: 'Group', id: string, name: string, members: Array<{ __typename: 'Membership', user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, awayTeam: { __typename: 'TeamLeagueTeam', id: string, group: { __typename: 'Group', id: string, name: string, members: Array<{ __typename: 'Membership', user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, individualSinglesMatches: Array<{ __typename: 'TeamLeagueIndividualSinglesMatch', id: string, player1Id: string, player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }>, individualDoublesMatches: Array<{ __typename: 'TeamLeagueIndividualDoublesMatch', id: string, team1Player1Id: string, team1Player2Id: string, team2Player1Id: string, team2Player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, team1Player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team1Player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }> } };
 
 export type DeleteTennisLeagueMutationVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type DeleteTennisLeagueMutation = { __typename?: 'Mutation', deleteTennisLeague: boolean };
+export type DeleteTennisLeagueMutation = { __typename: 'Mutation', deleteTennisLeague: boolean };
 
 export type CreateTennisTeamMutationVariables = Exact<{
   leagueId: Scalars['ID']['input'];
@@ -1247,7 +1248,7 @@ export type CreateTennisTeamMutationVariables = Exact<{
 }>;
 
 
-export type CreateTennisTeamMutation = { __typename?: 'Mutation', createTennisTeam: { __typename?: 'TeamLeagueTeam', id: string, captainId: string, group: { __typename?: 'Group', id: string, name: string, description: string | null, members: Array<{ __typename?: 'Membership', user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }, captain: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null } } };
+export type CreateTennisTeamMutation = { __typename: 'Mutation', createTennisTeam: { __typename: 'TeamLeagueTeam', id: string, captainId: string, group: { __typename: 'Group', id: string, name: string, description: string | null, members: Array<{ __typename: 'Membership', user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }, captain: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null } } };
 
 export type UpdateTennisTeamMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1255,14 +1256,14 @@ export type UpdateTennisTeamMutationVariables = Exact<{
 }>;
 
 
-export type UpdateTennisTeamMutation = { __typename?: 'Mutation', updateTennisTeam: { __typename?: 'TeamLeagueTeam', id: string, captainId: string, group: { __typename?: 'Group', id: string, name: string, description: string | null, members: Array<{ __typename?: 'Membership', user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }, captain: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null } } };
+export type UpdateTennisTeamMutation = { __typename: 'Mutation', updateTennisTeam: { __typename: 'TeamLeagueTeam', id: string, captainId: string, group: { __typename: 'Group', id: string, name: string, description: string | null, members: Array<{ __typename: 'Membership', user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> }, captain: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null } } };
 
 export type DeleteTennisTeamMutationVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type DeleteTennisTeamMutation = { __typename?: 'Mutation', deleteTennisTeam: boolean };
+export type DeleteTennisTeamMutation = { __typename: 'Mutation', deleteTennisTeam: boolean };
 
 export type CreateTeamMatchMutationVariables = Exact<{
   leagueId: Scalars['ID']['input'];
@@ -1270,7 +1271,7 @@ export type CreateTeamMatchMutationVariables = Exact<{
 }>;
 
 
-export type CreateTeamMatchMutation = { __typename?: 'Mutation', createTeamMatch: { __typename?: 'TeamLeagueTeamMatch', id: string, homeTeamId: string, awayTeamId: string, matchDate: string, createdAt: string, homeTeam: { __typename?: 'TeamLeagueTeam', id: string, group: { __typename?: 'Group', id: string, name: string, members: Array<{ __typename?: 'Membership', user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, awayTeam: { __typename?: 'TeamLeagueTeam', id: string, group: { __typename?: 'Group', id: string, name: string, members: Array<{ __typename?: 'Membership', user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, individualSinglesMatches: Array<{ __typename?: 'TeamLeagueIndividualSinglesMatch', id: string, player1Id: string, player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }>, individualDoublesMatches: Array<{ __typename?: 'TeamLeagueIndividualDoublesMatch', id: string, team1Player1Id: string, team1Player2Id: string, team2Player1Id: string, team2Player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, team1Player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team1Player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } };
+export type CreateTeamMatchMutation = { __typename: 'Mutation', createTeamMatch: { __typename: 'TeamLeagueTeamMatch', id: string, homeTeamId: string, awayTeamId: string, matchDate: string, createdAt: string, homeTeam: { __typename: 'TeamLeagueTeam', id: string, group: { __typename: 'Group', id: string, name: string, members: Array<{ __typename: 'Membership', user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, awayTeam: { __typename: 'TeamLeagueTeam', id: string, group: { __typename: 'Group', id: string, name: string, members: Array<{ __typename: 'Membership', user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, individualSinglesMatches: Array<{ __typename: 'TeamLeagueIndividualSinglesMatch', id: string, player1Id: string, player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }>, individualDoublesMatches: Array<{ __typename: 'TeamLeagueIndividualDoublesMatch', id: string, team1Player1Id: string, team1Player2Id: string, team2Player1Id: string, team2Player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, team1Player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team1Player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } };
 
 export type UpdateTeamMatchMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1278,14 +1279,14 @@ export type UpdateTeamMatchMutationVariables = Exact<{
 }>;
 
 
-export type UpdateTeamMatchMutation = { __typename?: 'Mutation', updateTeamMatch: { __typename?: 'TeamLeagueTeamMatch', id: string, homeTeamId: string, awayTeamId: string, matchDate: string, createdAt: string, homeTeam: { __typename?: 'TeamLeagueTeam', id: string, group: { __typename?: 'Group', id: string, name: string, members: Array<{ __typename?: 'Membership', user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, awayTeam: { __typename?: 'TeamLeagueTeam', id: string, group: { __typename?: 'Group', id: string, name: string, members: Array<{ __typename?: 'Membership', user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, individualSinglesMatches: Array<{ __typename?: 'TeamLeagueIndividualSinglesMatch', id: string, player1Id: string, player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }>, individualDoublesMatches: Array<{ __typename?: 'TeamLeagueIndividualDoublesMatch', id: string, team1Player1Id: string, team1Player2Id: string, team2Player1Id: string, team2Player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, team1Player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team1Player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } };
+export type UpdateTeamMatchMutation = { __typename: 'Mutation', updateTeamMatch: { __typename: 'TeamLeagueTeamMatch', id: string, homeTeamId: string, awayTeamId: string, matchDate: string, createdAt: string, homeTeam: { __typename: 'TeamLeagueTeam', id: string, group: { __typename: 'Group', id: string, name: string, members: Array<{ __typename: 'Membership', user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, awayTeam: { __typename: 'TeamLeagueTeam', id: string, group: { __typename: 'Group', id: string, name: string, members: Array<{ __typename: 'Membership', user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } }, individualSinglesMatches: Array<{ __typename: 'TeamLeagueIndividualSinglesMatch', id: string, player1Id: string, player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }>, individualDoublesMatches: Array<{ __typename: 'TeamLeagueIndividualDoublesMatch', id: string, team1Player1Id: string, team1Player2Id: string, team2Player1Id: string, team2Player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, resultType: ResultType | null, team1Player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team1Player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, team2Player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } }> } };
 
 export type DeleteTeamMatchMutationVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type DeleteTeamMatchMutation = { __typename?: 'Mutation', deleteTeamMatch: boolean };
+export type DeleteTeamMatchMutation = { __typename: 'Mutation', deleteTeamMatch: boolean };
 
 export type CreateIndividualSinglesMatchMutationVariables = Exact<{
   leagueId: Scalars['ID']['input'];
@@ -1293,7 +1294,7 @@ export type CreateIndividualSinglesMatchMutationVariables = Exact<{
 }>;
 
 
-export type CreateIndividualSinglesMatchMutation = { __typename?: 'Mutation', createIndividualSinglesMatch: { __typename?: 'TeamLeagueIndividualSinglesMatch', id: string, player1Id: string, player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null } } };
+export type CreateIndividualSinglesMatchMutation = { __typename: 'Mutation', createIndividualSinglesMatch: { __typename: 'TeamLeagueIndividualSinglesMatch', id: string, player1Id: string, player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null } } };
 
 export type UpdateIndividualSinglesMatchMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1301,14 +1302,14 @@ export type UpdateIndividualSinglesMatchMutationVariables = Exact<{
 }>;
 
 
-export type UpdateIndividualSinglesMatchMutation = { __typename?: 'Mutation', updateIndividualSinglesMatch: { __typename?: 'TeamLeagueIndividualSinglesMatch', id: string, player1Id: string, player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null } } };
+export type UpdateIndividualSinglesMatchMutation = { __typename: 'Mutation', updateIndividualSinglesMatch: { __typename: 'TeamLeagueIndividualSinglesMatch', id: string, player1Id: string, player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null } } };
 
 export type DeleteIndividualSinglesMatchMutationVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type DeleteIndividualSinglesMatchMutation = { __typename?: 'Mutation', deleteIndividualSinglesMatch: boolean };
+export type DeleteIndividualSinglesMatchMutation = { __typename: 'Mutation', deleteIndividualSinglesMatch: boolean };
 
 export type CreateIndividualDoublesMatchMutationVariables = Exact<{
   leagueId: Scalars['ID']['input'];
@@ -1316,7 +1317,7 @@ export type CreateIndividualDoublesMatchMutationVariables = Exact<{
 }>;
 
 
-export type CreateIndividualDoublesMatchMutation = { __typename?: 'Mutation', createIndividualDoublesMatch: { __typename?: 'TeamLeagueIndividualDoublesMatch', id: string, team1Player1Id: string, team1Player2Id: string, team2Player1Id: string, team2Player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, team1Player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, team1Player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, team2Player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, team2Player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null } } };
+export type CreateIndividualDoublesMatchMutation = { __typename: 'Mutation', createIndividualDoublesMatch: { __typename: 'TeamLeagueIndividualDoublesMatch', id: string, team1Player1Id: string, team1Player2Id: string, team2Player1Id: string, team2Player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, team1Player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, team1Player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, team2Player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, team2Player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null } } };
 
 export type UpdateIndividualDoublesMatchMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1324,14 +1325,14 @@ export type UpdateIndividualDoublesMatchMutationVariables = Exact<{
 }>;
 
 
-export type UpdateIndividualDoublesMatchMutation = { __typename?: 'Mutation', updateIndividualDoublesMatch: { __typename?: 'TeamLeagueIndividualDoublesMatch', id: string, team1Player1Id: string, team1Player2Id: string, team2Player1Id: string, team2Player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, team1Player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, team1Player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, team2Player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, team2Player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null } } };
+export type UpdateIndividualDoublesMatchMutation = { __typename: 'Mutation', updateIndividualDoublesMatch: { __typename: 'TeamLeagueIndividualDoublesMatch', id: string, team1Player1Id: string, team1Player2Id: string, team2Player1Id: string, team2Player2Id: string, matchDate: string, createdAt: string, teamMatchId: string, order: number, score: string, winner: Winner | null, team1Player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, team1Player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, team2Player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, team2Player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null } } };
 
 export type DeleteIndividualDoublesMatchMutationVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type DeleteIndividualDoublesMatchMutation = { __typename?: 'Mutation', deleteIndividualDoublesMatch: boolean };
+export type DeleteIndividualDoublesMatchMutation = { __typename: 'Mutation', deleteIndividualDoublesMatch: boolean };
 
 export type CreateLeaguePointSystemMutationVariables = Exact<{
   leagueId: Scalars['ID']['input'];
@@ -1339,7 +1340,7 @@ export type CreateLeaguePointSystemMutationVariables = Exact<{
 }>;
 
 
-export type CreateLeaguePointSystemMutation = { __typename?: 'Mutation', createTeamLeaguePointSystem: { __typename?: 'TeamLeaguePointSystem', id: string, matchType: MatchType, order: number, winPoints: number, lossPoints: number, drawPoints: number, defaultWinPoints: number, defaultLossPoints: number, defaultDrawPoints: number } };
+export type CreateLeaguePointSystemMutation = { __typename: 'Mutation', createTeamLeaguePointSystem: { __typename: 'TeamLeaguePointSystem', id: string, matchType: MatchType, order: number, winPoints: number, lossPoints: number, drawPoints: number, defaultWinPoints: number, defaultLossPoints: number, defaultDrawPoints: number } };
 
 export type UpdateLeaguePointSystemMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1347,14 +1348,14 @@ export type UpdateLeaguePointSystemMutationVariables = Exact<{
 }>;
 
 
-export type UpdateLeaguePointSystemMutation = { __typename?: 'Mutation', updateTeamLeaguePointSystem: { __typename?: 'TeamLeaguePointSystem', id: string, matchType: MatchType, order: number, winPoints: number, lossPoints: number, drawPoints: number, defaultWinPoints: number, defaultLossPoints: number, defaultDrawPoints: number } };
+export type UpdateLeaguePointSystemMutation = { __typename: 'Mutation', updateTeamLeaguePointSystem: { __typename: 'TeamLeaguePointSystem', id: string, matchType: MatchType, order: number, winPoints: number, lossPoints: number, drawPoints: number, defaultWinPoints: number, defaultLossPoints: number, defaultDrawPoints: number } };
 
 export type DeleteLeaguePointSystemMutationVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type DeleteLeaguePointSystemMutation = { __typename?: 'Mutation', deleteTeamLeaguePointSystem: boolean };
+export type DeleteLeaguePointSystemMutation = { __typename: 'Mutation', deleteTeamLeaguePointSystem: boolean };
 
 export type UpdatePointSystemMutationVariables = Exact<{
   leagueId: Scalars['ID']['input'];
@@ -1362,14 +1363,14 @@ export type UpdatePointSystemMutationVariables = Exact<{
 }>;
 
 
-export type UpdatePointSystemMutation = { __typename?: 'Mutation', updatePointSystem: { __typename?: 'TeamLeaguePointSystem', id: string, winPoints: number, lossPoints: number, drawPoints: number, defaultWinPoints: number, defaultLossPoints: number, defaultDrawPoints: number } };
+export type UpdatePointSystemMutation = { __typename: 'Mutation', updatePointSystem: { __typename: 'TeamLeaguePointSystem', id: string, winPoints: number, lossPoints: number, drawPoints: number, defaultWinPoints: number, defaultLossPoints: number, defaultDrawPoints: number } };
 
 export type CreateOrUpdateLineupMutationVariables = Exact<{
   input: LineupInput;
 }>;
 
 
-export type CreateOrUpdateLineupMutation = { __typename?: 'Mutation', createOrUpdateLineup: { __typename?: 'TeamMatchLineup', id: string, teamMatchId: string, teamId: string, visibility: LineupVisibility, publishedAt: string | null, createdAt: string, updatedAt: string, slots: Array<{ __typename?: 'TeamMatchLineupSlot', id: string, order: number, type: LineupSlotType, player1Id: string, player2Id: string | null, player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } | null }> } };
+export type CreateOrUpdateLineupMutation = { __typename: 'Mutation', createOrUpdateLineup: { __typename: 'TeamMatchLineup', id: string, teamMatchId: string, teamId: string, visibility: LineupVisibility, publishedAt: string | null, createdAt: string, updatedAt: string, slots: Array<{ __typename: 'TeamMatchLineupSlot', id: string, order: number, type: LineupSlotType, player1Id: string, player2Id: string | null, player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } | null }> } };
 
 export type PublishLineupMutationVariables = Exact<{
   lineupId: Scalars['ID']['input'];
@@ -1377,44 +1378,44 @@ export type PublishLineupMutationVariables = Exact<{
 }>;
 
 
-export type PublishLineupMutation = { __typename?: 'Mutation', publishLineup: { __typename?: 'TeamMatchLineup', id: string, teamMatchId: string, teamId: string, visibility: LineupVisibility, publishedAt: string | null, createdAt: string, updatedAt: string, slots: Array<{ __typename?: 'TeamMatchLineupSlot', id: string, order: number, type: LineupSlotType, player1Id: string, player2Id: string | null, player1: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, player2: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } | null }> } };
+export type PublishLineupMutation = { __typename: 'Mutation', publishLineup: { __typename: 'TeamMatchLineup', id: string, teamMatchId: string, teamId: string, visibility: LineupVisibility, publishedAt: string | null, createdAt: string, updatedAt: string, slots: Array<{ __typename: 'TeamMatchLineupSlot', id: string, order: number, type: LineupSlotType, player1Id: string, player2Id: string | null, player1: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string }, player2: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null, email: string } | null }> } };
 
 export type GetEventsQueryVariables = Exact<{
   groupId: Scalars['ID']['input'];
 }>;
 
 
-export type GetEventsQuery = { __typename?: 'Query', events: Array<{ __typename?: 'Event', id: string, date: string, description: string, createdBy: { __typename?: 'User', id: string, username: string }, rsvps: Array<{ __typename?: 'RSVP', id: string, status: RsvpStatus, note: string | null, createdAt: string, user: { __typename?: 'User', id: string, username: string, email: string } }> }> };
+export type GetEventsQuery = { __typename: 'Query', events: Array<{ __typename: 'Event', id: string, date: string, description: string, createdBy: { __typename: 'User', id: string, username: string }, rsvps: Array<{ __typename: 'RSVP', id: string, status: RsvpStatus, note: string | null, createdAt: string, user: { __typename: 'User', id: string, username: string, email: string } }> }> };
 
 export type CreateEventMutationVariables = Exact<{
   input: CreateEventInput;
 }>;
 
 
-export type CreateEventMutation = { __typename?: 'Mutation', createEvent: { __typename?: 'Event', id: string, date: string, description: string, createdBy: { __typename?: 'User', id: string, username: string } } };
+export type CreateEventMutation = { __typename: 'Mutation', createEvent: { __typename: 'Event', id: string, date: string, description: string, createdBy: { __typename: 'User', id: string, username: string } } };
 
 export type CreateRsvpMutationVariables = Exact<{
   input: CreateRsvpInput;
 }>;
 
 
-export type CreateRsvpMutation = { __typename?: 'Mutation', createRSVP: { __typename?: 'RSVP', id: string, status: RsvpStatus, note: string | null, createdAt: string, event: { __typename?: 'Event', id: string } } };
+export type CreateRsvpMutation = { __typename: 'Mutation', createRSVP: { __typename: 'RSVP', id: string, status: RsvpStatus, note: string | null, createdAt: string, event: { __typename: 'Event', id: string } } };
 
 export type UpdateRsvpMutationVariables = Exact<{
   id: Scalars['ID']['input'];
   status: RsvpStatus;
-  note: InputMaybe<Scalars['String']['input']>;
+  note?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
-export type UpdateRsvpMutation = { __typename?: 'Mutation', updateRSVP: { __typename?: 'RSVP', id: string, status: RsvpStatus, note: string | null, createdAt: string, event: { __typename?: 'Event', id: string } } };
+export type UpdateRsvpMutation = { __typename: 'Mutation', updateRSVP: { __typename: 'RSVP', id: string, status: RsvpStatus, note: string | null, createdAt: string, event: { __typename: 'Event', id: string } } };
 
 export type DeleteEventMutationVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type DeleteEventMutation = { __typename?: 'Mutation', deleteEvent: boolean };
+export type DeleteEventMutation = { __typename: 'Mutation', deleteEvent: boolean };
 
 export type UpdateEventMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1422,55 +1423,55 @@ export type UpdateEventMutationVariables = Exact<{
 }>;
 
 
-export type UpdateEventMutation = { __typename?: 'Mutation', updateEvent: { __typename?: 'Event', id: string, date: string, description: string, createdBy: { __typename?: 'User', id: string, username: string } } };
+export type UpdateEventMutation = { __typename: 'Mutation', updateEvent: { __typename: 'Event', id: string, date: string, description: string, createdBy: { __typename: 'User', id: string, username: string } } };
 
 export type GetUserPendingEventsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetUserPendingEventsQuery = { __typename?: 'Query', userPendingEvents: Array<{ __typename?: 'Event', id: string, date: string, description: string, group: { __typename?: 'Group', id: string, name: string }, createdBy: { __typename?: 'User', id: string, username: string }, rsvps: Array<{ __typename?: 'RSVP', id: string, status: RsvpStatus, note: string | null, user: { __typename?: 'User', id: string, username: string } }> }> };
+export type GetUserPendingEventsQuery = { __typename: 'Query', userPendingEvents: Array<{ __typename: 'Event', id: string, date: string, description: string, group: { __typename: 'Group', id: string, name: string }, createdBy: { __typename: 'User', id: string, username: string }, rsvps: Array<{ __typename: 'RSVP', id: string, status: RsvpStatus, note: string | null, user: { __typename: 'User', id: string, username: string } }> }> };
 
 export type GetGroupExpensesQueryVariables = Exact<{
   groupId: Scalars['ID']['input'];
-  limit: InputMaybe<Scalars['Int']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
 }>;
 
 
-export type GetGroupExpensesQuery = { __typename?: 'Query', groupExpenses: Array<{ __typename?: 'Expense', id: string, description: string, amount: number, currency: string, category: string, date: string, receiptUrl: string | null, splitType: SplitType, createdAt: string, updatedAt: string, paidBy: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename?: 'Group', id: string, name: string }, splits: Array<{ __typename?: 'ExpenseSplit', id: string, amount: number, percentage: number | null, shares: number | null, createdAt: string, user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null } }> }> };
+export type GetGroupExpensesQuery = { __typename: 'Query', groupExpenses: Array<{ __typename: 'Expense', id: string, description: string, amount: number, currency: string, category: string, date: string, receiptUrl: string | null, splitType: SplitType, createdAt: string, updatedAt: string, paidBy: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename: 'Group', id: string, name: string }, splits: Array<{ __typename: 'ExpenseSplit', id: string, amount: number, percentage: number | null, shares: number | null, createdAt: string, user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null } }> }> };
 
 export type GetExpenseQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetExpenseQuery = { __typename?: 'Query', expense: { __typename?: 'Expense', id: string, description: string, amount: number, currency: string, category: string, date: string, receiptUrl: string | null, splitType: SplitType, createdAt: string, updatedAt: string, paidBy: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename?: 'Group', id: string, name: string }, splits: Array<{ __typename?: 'ExpenseSplit', id: string, amount: number, percentage: number | null, shares: number | null, createdAt: string, user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null } }> } | null };
+export type GetExpenseQuery = { __typename: 'Query', expense: { __typename: 'Expense', id: string, description: string, amount: number, currency: string, category: string, date: string, receiptUrl: string | null, splitType: SplitType, createdAt: string, updatedAt: string, paidBy: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename: 'Group', id: string, name: string }, splits: Array<{ __typename: 'ExpenseSplit', id: string, amount: number, percentage: number | null, shares: number | null, createdAt: string, user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null } }> } | null };
 
 export type GetUserExpensesQueryVariables = Exact<{
   userId: Scalars['ID']['input'];
 }>;
 
 
-export type GetUserExpensesQuery = { __typename?: 'Query', userExpenses: Array<{ __typename?: 'Expense', id: string, description: string, amount: number, currency: string, category: string, date: string, receiptUrl: string | null, splitType: SplitType, createdAt: string, updatedAt: string, paidBy: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename?: 'Group', id: string, name: string }, splits: Array<{ __typename?: 'ExpenseSplit', id: string, amount: number, percentage: number | null, shares: number | null, createdAt: string, user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null } }> }> };
+export type GetUserExpensesQuery = { __typename: 'Query', userExpenses: Array<{ __typename: 'Expense', id: string, description: string, amount: number, currency: string, category: string, date: string, receiptUrl: string | null, splitType: SplitType, createdAt: string, updatedAt: string, paidBy: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename: 'Group', id: string, name: string }, splits: Array<{ __typename: 'ExpenseSplit', id: string, amount: number, percentage: number | null, shares: number | null, createdAt: string, user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null } }> }> };
 
 export type GetGroupSettlementsQueryVariables = Exact<{
   groupId: Scalars['ID']['input'];
 }>;
 
 
-export type GetGroupSettlementsQuery = { __typename?: 'Query', groupSettlements: Array<{ __typename?: 'Settlement', id: string, amount: number, currency: string, status: SettlementStatus, paymentMethod: PaymentMethod | null, notes: string | null, paidAt: string | null, createdAt: string, updatedAt: string, fromUser: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, toUser: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename?: 'Group', id: string, name: string } }> };
+export type GetGroupSettlementsQuery = { __typename: 'Query', groupSettlements: Array<{ __typename: 'Settlement', id: string, amount: number, currency: string, status: SettlementStatus, paymentMethod: PaymentMethod | null, notes: string | null, paidAt: string | null, createdAt: string, updatedAt: string, fromUser: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, toUser: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename: 'Group', id: string, name: string } }> };
 
 export type GetUserSettlementsQueryVariables = Exact<{
   userId: Scalars['ID']['input'];
 }>;
 
 
-export type GetUserSettlementsQuery = { __typename?: 'Query', userSettlements: Array<{ __typename?: 'Settlement', id: string, amount: number, currency: string, status: SettlementStatus, paymentMethod: PaymentMethod | null, notes: string | null, paidAt: string | null, createdAt: string, updatedAt: string, fromUser: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, toUser: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename?: 'Group', id: string, name: string } }> };
+export type GetUserSettlementsQuery = { __typename: 'Query', userSettlements: Array<{ __typename: 'Settlement', id: string, amount: number, currency: string, status: SettlementStatus, paymentMethod: PaymentMethod | null, notes: string | null, paidAt: string | null, createdAt: string, updatedAt: string, fromUser: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, toUser: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename: 'Group', id: string, name: string } }> };
 
 export type GetGroupDebtSummaryQueryVariables = Exact<{
   groupId: Scalars['ID']['input'];
 }>;
 
 
-export type GetGroupDebtSummaryQuery = { __typename?: 'Query', groupDebtSummary: Array<{ __typename?: 'DebtSummary', totalOwed: number, totalOwedTo: number, netAmount: number, user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, debts: Array<{ __typename?: 'DebtDetail', amount: number, currency: string, toUser: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null } }> }> };
+export type GetGroupDebtSummaryQuery = { __typename: 'Query', groupDebtSummary: Array<{ __typename: 'DebtSummary', totalOwed: number, totalOwedTo: number, netAmount: number, user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, debts: Array<{ __typename: 'DebtDetail', amount: number, currency: string, toUser: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null } }> }> };
 
 export type GetUserDebtSummaryQueryVariables = Exact<{
   userId: Scalars['ID']['input'];
@@ -1478,28 +1479,28 @@ export type GetUserDebtSummaryQueryVariables = Exact<{
 }>;
 
 
-export type GetUserDebtSummaryQuery = { __typename?: 'Query', userDebtSummary: { __typename?: 'DebtSummary', totalOwed: number, totalOwedTo: number, netAmount: number, user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, debts: Array<{ __typename?: 'DebtDetail', amount: number, currency: string, toUser: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null } }> } | null };
+export type GetUserDebtSummaryQuery = { __typename: 'Query', userDebtSummary: { __typename: 'DebtSummary', totalOwed: number, totalOwedTo: number, netAmount: number, user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, debts: Array<{ __typename: 'DebtDetail', amount: number, currency: string, toUser: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null } }> } | null };
 
 export type GetOptimalSettlementsQueryVariables = Exact<{
   groupId: Scalars['ID']['input'];
 }>;
 
 
-export type GetOptimalSettlementsQuery = { __typename?: 'Query', optimalSettlements: Array<{ __typename?: 'Settlement', id: string, amount: number, currency: string, status: SettlementStatus, paymentMethod: PaymentMethod | null, notes: string | null, paidAt: string | null, createdAt: string, updatedAt: string, fromUser: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, toUser: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename?: 'Group', id: string, name: string } }> };
+export type GetOptimalSettlementsQuery = { __typename: 'Query', optimalSettlements: Array<{ __typename: 'Settlement', id: string, amount: number, currency: string, status: SettlementStatus, paymentMethod: PaymentMethod | null, notes: string | null, paidAt: string | null, createdAt: string, updatedAt: string, fromUser: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, toUser: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename: 'Group', id: string, name: string } }> };
 
 export type GetGroupSettingsQueryVariables = Exact<{
   groupId: Scalars['ID']['input'];
 }>;
 
 
-export type GetGroupSettingsQuery = { __typename?: 'Query', groupSettings: { __typename?: 'GroupSettings', id: string, defaultCurrency: string, allowExpenses: boolean, expenseLimit: number | null, requireApproval: boolean, autoSettle: boolean, createdAt: string, updatedAt: string, group: { __typename?: 'Group', id: string, name: string } } | null };
+export type GetGroupSettingsQuery = { __typename: 'Query', groupSettings: { __typename: 'GroupSettings', id: string, defaultCurrency: string, allowExpenses: boolean, expenseLimit: number | null, requireApproval: boolean, autoSettle: boolean, createdAt: string, updatedAt: string, group: { __typename: 'Group', id: string, name: string } } | null };
 
 export type CreateExpenseMutationVariables = Exact<{
   input: CreateExpenseInput;
 }>;
 
 
-export type CreateExpenseMutation = { __typename?: 'Mutation', createExpense: { __typename?: 'Expense', id: string, description: string, amount: number, currency: string, category: string, date: string, receiptUrl: string | null, splitType: SplitType, createdAt: string, updatedAt: string, paidBy: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename?: 'Group', id: string, name: string }, splits: Array<{ __typename?: 'ExpenseSplit', id: string, amount: number, percentage: number | null, shares: number | null, createdAt: string, user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null } }> } };
+export type CreateExpenseMutation = { __typename: 'Mutation', createExpense: { __typename: 'Expense', id: string, description: string, amount: number, currency: string, category: string, date: string, receiptUrl: string | null, splitType: SplitType, createdAt: string, updatedAt: string, paidBy: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename: 'Group', id: string, name: string }, splits: Array<{ __typename: 'ExpenseSplit', id: string, amount: number, percentage: number | null, shares: number | null, createdAt: string, user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null } }> } };
 
 export type UpdateExpenseMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1507,21 +1508,21 @@ export type UpdateExpenseMutationVariables = Exact<{
 }>;
 
 
-export type UpdateExpenseMutation = { __typename?: 'Mutation', updateExpense: { __typename?: 'Expense', id: string, description: string, amount: number, currency: string, category: string, date: string, receiptUrl: string | null, splitType: SplitType, createdAt: string, updatedAt: string, paidBy: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename?: 'Group', id: string, name: string }, splits: Array<{ __typename?: 'ExpenseSplit', id: string, amount: number, percentage: number | null, shares: number | null, createdAt: string, user: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null } }> } };
+export type UpdateExpenseMutation = { __typename: 'Mutation', updateExpense: { __typename: 'Expense', id: string, description: string, amount: number, currency: string, category: string, date: string, receiptUrl: string | null, splitType: SplitType, createdAt: string, updatedAt: string, paidBy: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename: 'Group', id: string, name: string }, splits: Array<{ __typename: 'ExpenseSplit', id: string, amount: number, percentage: number | null, shares: number | null, createdAt: string, user: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null } }> } };
 
 export type DeleteExpenseMutationVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type DeleteExpenseMutation = { __typename?: 'Mutation', deleteExpense: boolean };
+export type DeleteExpenseMutation = { __typename: 'Mutation', deleteExpense: boolean };
 
 export type CreateSettlementMutationVariables = Exact<{
   input: CreateSettlementInput;
 }>;
 
 
-export type CreateSettlementMutation = { __typename?: 'Mutation', createSettlement: { __typename?: 'Settlement', id: string, amount: number, currency: string, status: SettlementStatus, paymentMethod: PaymentMethod | null, notes: string | null, paidAt: string | null, createdAt: string, updatedAt: string, fromUser: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, toUser: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename?: 'Group', id: string, name: string } } };
+export type CreateSettlementMutation = { __typename: 'Mutation', createSettlement: { __typename: 'Settlement', id: string, amount: number, currency: string, status: SettlementStatus, paymentMethod: PaymentMethod | null, notes: string | null, paidAt: string | null, createdAt: string, updatedAt: string, fromUser: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, toUser: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename: 'Group', id: string, name: string } } };
 
 export type UpdateSettlementMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1529,7 +1530,7 @@ export type UpdateSettlementMutationVariables = Exact<{
 }>;
 
 
-export type UpdateSettlementMutation = { __typename?: 'Mutation', updateSettlement: { __typename?: 'Settlement', id: string, amount: number, currency: string, status: SettlementStatus, paymentMethod: PaymentMethod | null, notes: string | null, paidAt: string | null, createdAt: string, updatedAt: string, fromUser: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, toUser: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename?: 'Group', id: string, name: string } } };
+export type UpdateSettlementMutation = { __typename: 'Mutation', updateSettlement: { __typename: 'Settlement', id: string, amount: number, currency: string, status: SettlementStatus, paymentMethod: PaymentMethod | null, notes: string | null, paidAt: string | null, createdAt: string, updatedAt: string, fromUser: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, toUser: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename: 'Group', id: string, name: string } } };
 
 export type MarkSettlementPaidMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1537,14 +1538,14 @@ export type MarkSettlementPaidMutationVariables = Exact<{
 }>;
 
 
-export type MarkSettlementPaidMutation = { __typename?: 'Mutation', markSettlementPaid: { __typename?: 'Settlement', id: string, amount: number, currency: string, status: SettlementStatus, paymentMethod: PaymentMethod | null, notes: string | null, paidAt: string | null, createdAt: string, updatedAt: string, fromUser: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, toUser: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename?: 'Group', id: string, name: string } } };
+export type MarkSettlementPaidMutation = { __typename: 'Mutation', markSettlementPaid: { __typename: 'Settlement', id: string, amount: number, currency: string, status: SettlementStatus, paymentMethod: PaymentMethod | null, notes: string | null, paidAt: string | null, createdAt: string, updatedAt: string, fromUser: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, toUser: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename: 'Group', id: string, name: string } } };
 
 export type DeleteSettlementMutationVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type DeleteSettlementMutation = { __typename?: 'Mutation', deleteSettlement: boolean };
+export type DeleteSettlementMutation = { __typename: 'Mutation', deleteSettlement: boolean };
 
 export type UpdateGroupSettingsMutationVariables = Exact<{
   groupId: Scalars['ID']['input'];
@@ -1552,28 +1553,28 @@ export type UpdateGroupSettingsMutationVariables = Exact<{
 }>;
 
 
-export type UpdateGroupSettingsMutation = { __typename?: 'Mutation', updateGroupSettings: { __typename?: 'GroupSettings', id: string, defaultCurrency: string, allowExpenses: boolean, expenseLimit: number | null, requireApproval: boolean, autoSettle: boolean, createdAt: string, updatedAt: string, group: { __typename?: 'Group', id: string, name: string } } };
+export type UpdateGroupSettingsMutation = { __typename: 'Mutation', updateGroupSettings: { __typename: 'GroupSettings', id: string, defaultCurrency: string, allowExpenses: boolean, expenseLimit: number | null, requireApproval: boolean, autoSettle: boolean, createdAt: string, updatedAt: string, group: { __typename: 'Group', id: string, name: string } } };
 
 export type GenerateOptimalSettlementsMutationVariables = Exact<{
   groupId: Scalars['ID']['input'];
 }>;
 
 
-export type GenerateOptimalSettlementsMutation = { __typename?: 'Mutation', generateOptimalSettlements: Array<{ __typename?: 'Settlement', id: string, amount: number, currency: string, status: SettlementStatus, paymentMethod: PaymentMethod | null, notes: string | null, paidAt: string | null, createdAt: string, updatedAt: string, fromUser: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, toUser: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename?: 'Group', id: string, name: string } }> };
+export type GenerateOptimalSettlementsMutation = { __typename: 'Mutation', generateOptimalSettlements: Array<{ __typename: 'Settlement', id: string, amount: number, currency: string, status: SettlementStatus, paymentMethod: PaymentMethod | null, notes: string | null, paidAt: string | null, createdAt: string, updatedAt: string, fromUser: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, toUser: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename: 'Group', id: string, name: string } }> };
 
 export type BulkCreateSettlementsMutationVariables = Exact<{
   input: BulkCreateSettlementsInput;
 }>;
 
 
-export type BulkCreateSettlementsMutation = { __typename?: 'Mutation', bulkCreateSettlements: Array<{ __typename?: 'Settlement', id: string, amount: number, currency: string, status: SettlementStatus, paymentMethod: PaymentMethod | null, notes: string | null, paidAt: string | null, createdAt: string, updatedAt: string, fromUser: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, toUser: { __typename?: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename?: 'Group', id: string, name: string } }> };
+export type BulkCreateSettlementsMutation = { __typename: 'Mutation', bulkCreateSettlements: Array<{ __typename: 'Settlement', id: string, amount: number, currency: string, status: SettlementStatus, paymentMethod: PaymentMethod | null, notes: string | null, paidAt: string | null, createdAt: string, updatedAt: string, fromUser: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, toUser: { __typename: 'User', id: string, username: string, firstName: string | null, lastName: string | null }, group: { __typename: 'Group', id: string, name: string } }> };
 
 export type GetGroupMembersQueryVariables = Exact<{
   groupId: Scalars['ID']['input'];
 }>;
 
 
-export type GetGroupMembersQuery = { __typename?: 'Query', group: { __typename?: 'Group', id: string, name: string, description: string | null, isPublic: boolean, memberships: Array<{ __typename?: 'Membership', id: string, isAdmin: boolean, memberId: number, joinedAt: string, user: { __typename?: 'User', id: string, username: string, email: string, firstName: string | null, lastName: string | null } }>, blockedUsers: Array<{ __typename?: 'BlockedUser', id: string, blockedAt: string, reason: string | null, user: { __typename?: 'User', id: string, username: string, email: string }, blockedBy: { __typename?: 'User', id: string, username: string } }> } | null };
+export type GetGroupMembersQuery = { __typename: 'Query', group: { __typename: 'Group', id: string, name: string, description: string | null, isPublic: boolean, memberships: Array<{ __typename: 'Membership', id: string, isAdmin: boolean, memberId: number, joinedAt: string, user: { __typename: 'User', id: string, username: string, email: string, firstName: string | null, lastName: string | null } }>, blockedUsers: Array<{ __typename: 'BlockedUser', id: string, blockedAt: string, reason: string | null, user: { __typename: 'User', id: string, username: string, email: string }, blockedBy: { __typename: 'User', id: string, username: string } }> } | null };
 
 export type MakeAdminMutationVariables = Exact<{
   groupId: Scalars['ID']['input'];
@@ -1581,7 +1582,7 @@ export type MakeAdminMutationVariables = Exact<{
 }>;
 
 
-export type MakeAdminMutation = { __typename?: 'Mutation', makeAdmin: { __typename?: 'Membership', id: string, isAdmin: boolean, user: { __typename?: 'User', id: string, username: string, email: string } } };
+export type MakeAdminMutation = { __typename: 'Mutation', makeAdmin: { __typename: 'Membership', id: string, isAdmin: boolean, user: { __typename: 'User', id: string, username: string, email: string } } };
 
 export type RemoveAdminMutationVariables = Exact<{
   groupId: Scalars['ID']['input'];
@@ -1589,7 +1590,7 @@ export type RemoveAdminMutationVariables = Exact<{
 }>;
 
 
-export type RemoveAdminMutation = { __typename?: 'Mutation', removeAdmin: { __typename?: 'Membership', id: string, isAdmin: boolean, user: { __typename?: 'User', id: string, username: string, email: string } } };
+export type RemoveAdminMutation = { __typename: 'Mutation', removeAdmin: { __typename: 'Membership', id: string, isAdmin: boolean, user: { __typename: 'User', id: string, username: string, email: string } } };
 
 export type RemoveMemberMutationVariables = Exact<{
   groupId: Scalars['ID']['input'];
@@ -1597,14 +1598,14 @@ export type RemoveMemberMutationVariables = Exact<{
 }>;
 
 
-export type RemoveMemberMutation = { __typename?: 'Mutation', removeMember: boolean };
+export type RemoveMemberMutation = { __typename: 'Mutation', removeMember: boolean };
 
 export type BlockUserMutationVariables = Exact<{
   input: BlockUserInput;
 }>;
 
 
-export type BlockUserMutation = { __typename?: 'Mutation', blockUser: boolean };
+export type BlockUserMutation = { __typename: 'Mutation', blockUser: boolean };
 
 export type UnblockUserMutationVariables = Exact<{
   groupId: Scalars['ID']['input'];
@@ -1612,7 +1613,7 @@ export type UnblockUserMutationVariables = Exact<{
 }>;
 
 
-export type UnblockUserMutation = { __typename?: 'Mutation', unblockUser: boolean };
+export type UnblockUserMutation = { __typename: 'Mutation', unblockUser: boolean };
 
 export type UpdateGroupMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1620,7 +1621,7 @@ export type UpdateGroupMutationVariables = Exact<{
 }>;
 
 
-export type UpdateGroupMutation = { __typename?: 'Mutation', updateGroup: { __typename?: 'Group', id: string, name: string, description: string | null, isPublic: boolean } };
+export type UpdateGroupMutation = { __typename: 'Mutation', updateGroup: { __typename: 'Group', id: string, name: string, description: string | null, isPublic: boolean } };
 
 export type AddMemberByUsernameMutationVariables = Exact<{
   groupId: Scalars['ID']['input'];
@@ -1628,7 +1629,7 @@ export type AddMemberByUsernameMutationVariables = Exact<{
 }>;
 
 
-export type AddMemberByUsernameMutation = { __typename?: 'Mutation', addMemberByUsername: { __typename?: 'Membership', id: string, role: string, user: { __typename?: 'User', id: string, username: string, email: string, firstName: string | null, lastName: string | null } } };
+export type AddMemberByUsernameMutation = { __typename: 'Mutation', addMemberByUsername: { __typename: 'Membership', id: string, role: string, user: { __typename: 'User', id: string, username: string, email: string, firstName: string | null, lastName: string | null } } };
 
 export type AddMemberByEmailMutationVariables = Exact<{
   groupId: Scalars['ID']['input'];
@@ -1636,109 +1637,109 @@ export type AddMemberByEmailMutationVariables = Exact<{
 }>;
 
 
-export type AddMemberByEmailMutation = { __typename?: 'Mutation', addMemberByEmail: { __typename?: 'Membership', id: string, user: { __typename?: 'User', id: string, username: string, email: string, firstName: string | null, lastName: string | null } } };
+export type AddMemberByEmailMutation = { __typename: 'Mutation', addMemberByEmail: { __typename: 'Membership', id: string, user: { __typename: 'User', id: string, username: string, email: string, firstName: string | null, lastName: string | null } } };
 
 export type DeleteGroupMutationVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type DeleteGroupMutation = { __typename?: 'Mutation', deleteGroup: boolean };
+export type DeleteGroupMutation = { __typename: 'Mutation', deleteGroup: boolean };
 
 export type GetMyGroupsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetMyGroupsQuery = { __typename?: 'Query', myGroups: Array<{ __typename?: 'Group', id: string, name: string, description: string | null, isPublic: boolean, createdAt: string, memberships: Array<{ __typename?: 'Membership', id: string, isAdmin: boolean, memberId: number, user: { __typename?: 'User', id: string, username: string, email: string } }> }> };
+export type GetMyGroupsQuery = { __typename: 'Query', myGroups: Array<{ __typename: 'Group', id: string, name: string, description: string | null, isPublic: boolean, createdAt: string, memberships: Array<{ __typename: 'Membership', id: string, isAdmin: boolean, memberId: number, user: { __typename: 'User', id: string, username: string, email: string } }> }> };
 
 export type GetPublicGroupsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetPublicGroupsQuery = { __typename?: 'Query', publicGroups: Array<{ __typename?: 'Group', id: string, name: string, description: string | null, isPublic: boolean, createdAt: string, memberships: Array<{ __typename?: 'Membership', id: string, isAdmin: boolean, memberId: number, user: { __typename?: 'User', id: string, username: string, email: string } }> }> };
+export type GetPublicGroupsQuery = { __typename: 'Query', publicGroups: Array<{ __typename: 'Group', id: string, name: string, description: string | null, isPublic: boolean, createdAt: string, memberships: Array<{ __typename: 'Membership', id: string, isAdmin: boolean, memberId: number, user: { __typename: 'User', id: string, username: string, email: string } }> }> };
 
 export type CreateGroupMutationVariables = Exact<{
   input: CreateGroupInput;
 }>;
 
 
-export type CreateGroupMutation = { __typename?: 'Mutation', createGroup: { __typename?: 'Group', id: string, name: string, description: string | null, isPublic: boolean, createdAt: string } };
+export type CreateGroupMutation = { __typename: 'Mutation', createGroup: { __typename: 'Group', id: string, name: string, description: string | null, isPublic: boolean, createdAt: string } };
 
 export type JoinGroupMutationVariables = Exact<{
   groupId: Scalars['ID']['input'];
 }>;
 
 
-export type JoinGroupMutation = { __typename?: 'Mutation', joinGroup: { __typename?: 'Group', id: string, name: string, description: string | null, isPublic: boolean, createdAt: string } };
+export type JoinGroupMutation = { __typename: 'Mutation', joinGroup: { __typename: 'Group', id: string, name: string, description: string | null, isPublic: boolean, createdAt: string } };
 
 export type LeaveGroupMutationVariables = Exact<{
   groupId: Scalars['ID']['input'];
 }>;
 
 
-export type LeaveGroupMutation = { __typename?: 'Mutation', leaveGroup: boolean };
+export type LeaveGroupMutation = { __typename: 'Mutation', leaveGroup: boolean };
 
 export type GetGroupQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetGroupQuery = { __typename?: 'Query', group: { __typename?: 'Group', id: string, name: string, description: string | null, createdAt: string, memberships: Array<{ __typename?: 'Membership', id: string, isAdmin: boolean, memberId: number, user: { __typename?: 'User', id: string, username: string, email: string } }> } | null };
+export type GetGroupQuery = { __typename: 'Query', group: { __typename: 'Group', id: string, name: string, description: string | null, createdAt: string, memberships: Array<{ __typename: 'Membership', id: string, isAdmin: boolean, memberId: number, user: { __typename: 'User', id: string, username: string, email: string } }> } | null };
 
 export type GetMessagesQueryVariables = Exact<{
   groupId: Scalars['ID']['input'];
 }>;
 
 
-export type GetMessagesQuery = { __typename?: 'Query', messages: Array<{ __typename?: 'Message', id: string, content: string, createdAt: string, user: { __typename?: 'User', id: string, username: string, email: string } }> };
+export type GetMessagesQuery = { __typename: 'Query', messages: Array<{ __typename: 'Message', id: string, content: string, createdAt: string, user: { __typename: 'User', id: string, username: string, email: string } }> };
 
 export type SendMessageMutationVariables = Exact<{
   input: SendMessageInput;
 }>;
 
 
-export type SendMessageMutation = { __typename?: 'Mutation', sendMessage: { __typename?: 'Message', id: string, content: string, createdAt: string, user: { __typename?: 'User', id: string, username: string, email: string } } };
+export type SendMessageMutation = { __typename: 'Mutation', sendMessage: { __typename: 'Message', id: string, content: string, createdAt: string, user: { __typename: 'User', id: string, username: string, email: string } } };
 
 export type OnMessageAddedSubscriptionVariables = Exact<{
   groupId: Scalars['ID']['input'];
 }>;
 
 
-export type OnMessageAddedSubscription = { __typename?: 'Subscription', messageAdded: { __typename?: 'Message', id: string, content: string, createdAt: string, user: { __typename?: 'User', id: string, username: string, email: string } } };
+export type OnMessageAddedSubscription = { __typename: 'Subscription', messageAdded: { __typename: 'Message', id: string, content: string, createdAt: string, user: { __typename: 'User', id: string, username: string, email: string } } };
 
 export type GetUserTennisLeaguesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetUserTennisLeaguesQuery = { __typename?: 'Query', userTennisLeagues: Array<{ __typename?: 'TeamLeague', id: string, name: string, description: string | null, isActive: boolean }> };
+export type GetUserTennisLeaguesQuery = { __typename: 'Query', userTennisLeagues: Array<{ __typename: 'TeamLeague', id: string, name: string, description: string | null, isActive: boolean }> };
 
 export type GetUserProfileQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetUserProfileQuery = { __typename?: 'Query', me: { __typename?: 'User', id: string, username: string, email: string, firstName: string | null, lastName: string | null, bio: string | null, avatar: string | null, createdAt: string, emailVerified: boolean } | null };
+export type GetUserProfileQuery = { __typename: 'Query', me: { __typename: 'User', id: string, username: string, email: string, firstName: string | null, lastName: string | null, bio: string | null, avatar: string | null, createdAt: string, emailVerified: boolean } | null };
 
 export type UpdateProfileMutationVariables = Exact<{
   input: UpdateUserInput;
 }>;
 
 
-export type UpdateProfileMutation = { __typename?: 'Mutation', updateProfile: { __typename?: 'User', id: string, username: string, email: string, firstName: string | null, lastName: string | null, bio: string | null, avatar: string | null } };
+export type UpdateProfileMutation = { __typename: 'Mutation', updateProfile: { __typename: 'User', id: string, username: string, email: string, firstName: string | null, lastName: string | null, bio: string | null, avatar: string | null } };
 
 export type ChangePasswordMutationVariables = Exact<{
   input: ChangePasswordInput;
 }>;
 
 
-export type ChangePasswordMutation = { __typename?: 'Mutation', changePassword: { __typename?: 'ChangePasswordResponse', success: boolean, message: string } };
+export type ChangePasswordMutation = { __typename: 'Mutation', changePassword: { __typename: 'ChangePasswordResponse', success: boolean, message: string } };
 
 export type DeleteUserMutationVariables = Exact<{
   userId: Scalars['ID']['input'];
 }>;
 
 
-export type DeleteUserMutation = { __typename?: 'Mutation', deleteUser: boolean };
+export type DeleteUserMutation = { __typename: 'Mutation', deleteUser: boolean };
 
 export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type MeQuery = { __typename?: 'Query', me: { __typename?: 'User', id: string, username: string, email: string, emailVerified: boolean, phone: string | null, photoUrl: string | null, firstName: string | null, lastName: string | null } | null };
+export type MeQuery = { __typename: 'Query', me: { __typename: 'User', id: string, username: string, email: string, emailVerified: boolean, phone: string | null, photoUrl: string | null, firstName: string | null, lastName: string | null } | null };
 
 export const TeamLeagueFragmentFragmentDoc = gql`
     fragment TeamLeagueFragment on TeamLeague {

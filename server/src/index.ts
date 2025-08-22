@@ -37,6 +37,7 @@ import {
 import { pubsub } from './pubsub';
 import { resolvers } from './resolvers';
 import { mergedTypeDefs } from './schema';
+import { Context } from './types/context';
 import { logError, logInfo, logRequest } from './utils/logger';
 
 const prisma = new PrismaClient();
@@ -160,7 +161,7 @@ async function startServer() {
           prisma,
           user,
           pubsub,
-        };
+        } as Context;
       },
     })
   );
