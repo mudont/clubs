@@ -2201,7 +2201,7 @@ const baseResolvers = {
         include: { user: true, blockedBy: true },
       });
     },
-    rsvps: async (parent: {id: string}, _: unknown, context: Context) => {
+    rsvps: async (parent: { id: string }, _: unknown, context: Context) => {
       return await context.prisma.rSVP.findMany({
         where: { event: { groupId: parent.id } },
         include: { user: true },
