@@ -7,6 +7,7 @@ import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
 
 import { RootState } from '../../store';
+import authReducer from '../../store/authSlice';
 import { TestUser, createTestUser } from './mock-factories';
 
 // Re-export types and factories from mock-factories
@@ -72,7 +73,6 @@ export const renderWithProviders = (
   }: CustomRenderOptions = {}
 ): RenderResult & {
   store: ReturnType<typeof createTestStore>;
-  user: ReturnType<typeof userEvent.setup>;
 } => {
   const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <MemoryRouter initialEntries={initialEntries}>
@@ -87,7 +87,6 @@ export const renderWithProviders = (
   const renderResult = render(ui, { wrapper: Wrapper, ...renderOptions });
   return {
     store,
-    user: userEvent.setup(),
     ...renderResult,
   };
 };
@@ -108,14 +107,14 @@ export const renderWithAuth = (
 export const renderWithRouter = (
   ui: ReactElement,
   { initialEntries = ['/'] }: { initialEntries?: string[] } = {}
-): RenderResult & { user: ReturnType<typeof userEvent.setup> } => {
+): RenderResult & { user: typeof userEvent } => {
   const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <MemoryRouter initialEntries={initialEntries}>{children}</MemoryRouter>
   );
 
   const renderResult = render(ui, { wrapper: Wrapper });
   return {
-    user: userEvent.setup(),
+    user: userEvent,
     ...renderResult,
   };
 };
@@ -124,7 +123,7 @@ export const renderWithRouter = (
 export const renderWithApollo = (
   ui: ReactElement,
   { mocks = [], addTypename = false }: { mocks?: MockedResponse[]; addTypename?: boolean } = {}
-): RenderResult & { user: ReturnType<typeof userEvent.setup> } => {
+): RenderResult & { user: typeof userEvent } => {
   const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <MockedProvider mocks={mocks} addTypename={addTypename}>
       {children}
@@ -133,7 +132,7 @@ export const renderWithApollo = (
 
   const renderResult = render(ui, { wrapper: Wrapper });
   return {
-    user: userEvent.setup(),
+    user: userEvent,
     ...renderResult,
   };
 };

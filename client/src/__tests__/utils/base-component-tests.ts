@@ -40,15 +40,15 @@ export abstract class BaseComponentTestSuite<TProps = Record<string, unknown>>
   abstract displayName: string;
 
   protected renderResult?: RenderResult & {
-    user: ReturnType<typeof userEvent.setup>;
     store: any;
   };
+  protected userInstance?: ReturnType<typeof userEvent.setup>;
 
   protected get user() {
-    if (!this.renderResult) {
-      throw new Error('Component not rendered. Call render() first.');
+    if (!this.userInstance) {
+      this.userInstance = userEvent.setup();
     }
-    return this.renderResult.user;
+    return this.userInstance;
   }
 
   protected get container() {

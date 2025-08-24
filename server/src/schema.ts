@@ -557,3 +557,6 @@ export const typeDefs = gql`
 
 // Merge the expenses schema with the main schema
 export const mergedTypeDefs = [typeDefs, expensesTypeDefs];
+
+// Export for GraphQL codegen
+export default mergedTypeDefs;

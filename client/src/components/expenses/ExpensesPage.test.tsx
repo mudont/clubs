@@ -1,5 +1,6 @@
 import { MockedProvider } from '@apollo/client/testing';
 import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 
 import { expectAccessible } from '../../__tests__/utils/accessibility-helpers';
@@ -294,7 +295,7 @@ class ExpensesPageTestSuite extends BaseComponentTestSuite {
         await this.helpers.async.waitForDataLoad();
 
         // Check for main content area
-        const main = screen.getByRole('main') || screen.getByClassName('expenses-content');
+        const main = screen.getByRole('main') || document.querySelector('.expenses-content');
         expect(main).toBeInTheDocument();
       });
 
@@ -303,7 +304,7 @@ class ExpensesPageTestSuite extends BaseComponentTestSuite {
         await this.helpers.async.waitForDataLoad();
 
         // Check that expense information is accessible
-        const expenseItems = screen.getAllByClassName('expense-item');
+        const expenseItems = document.querySelectorAll('.expense-item');
         expenseItems.forEach(item => {
           expect(item).toBeInTheDocument();
           // Each expense should have accessible content
@@ -472,8 +473,9 @@ describe('ExpensesPage - Data Display', () => {
 
 describe('ExpensesPage - Form Integration', () => {
   it('hides form after successful expense creation', async () => {
+    const user = userEvent.setup();
     const mocks = createMocks();
-    const result = renderWithProviders(
+    renderWithProviders(
       <MemoryRouter>
         <MockedProvider mocks={mocks} addTypename={false}>
           <ExpensesPage />
@@ -487,14 +489,14 @@ describe('ExpensesPage - Form Integration', () => {
 
     // Show form
     const addButton = screen.getByRole('button', { name: /add new expense/i });
-    await result.user.click(addButton);
+    await user.click(addButton);
 
     expect(screen.getByText(/add new expense/i)).toBeInTheDocument();
 
     // Simulate successful form submission by calling the onSuccess callback
     // This would normally be triggered by the ExpenseForm component
     const cancelButton = screen.getByRole('button', { name: /cancel/i });
-    await result.user.click(cancelButton);
+    await user.click(cancelButton);
 
     // Form should be hidden
     expect(screen.queryByRole('button', { name: /cancel/i })).not.toBeInTheDocument();

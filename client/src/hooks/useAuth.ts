@@ -31,11 +31,12 @@ export interface UseAuthReturn {
  */
 export const useAuth = (): UseAuthReturn => {
   const dispatch = useDispatch();
-  const { user, isLoading } = useSelector((state: RootState) => state.auth);
+  const { user, loading } = useSelector((state: RootState) => state.auth);
 
   const login = useCallback(
-    (userData: AuthUser) => {
-      dispatch(setAuth({ user: userData }));
+    (userData: AuthUser, token?: string) => {
+      const authToken = token || localStorage.getItem('authToken') || '';
+      dispatch(setAuth({ user: userData, token: authToken }));
     },
     [dispatch]
   );
@@ -47,7 +48,8 @@ export const useAuth = (): UseAuthReturn => {
   const updateUser = useCallback(
     (updates: Partial<AuthUser>) => {
       if (user) {
-        dispatch(setAuth({ user: { ...user, ...updates } }));
+        const token = localStorage.getItem('authToken') || '';
+        dispatch(setAuth({ user: { ...user, ...updates }, token }));
       }
     },
     [dispatch, user]
@@ -73,7 +75,7 @@ export const useAuth = (): UseAuthReturn => {
   return {
     user,
     isAuthenticated: !!user,
-    isLoading,
+    isLoading: loading,
     login,
     logout: handleLogout,
     updateUser,

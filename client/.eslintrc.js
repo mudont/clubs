@@ -11,7 +11,7 @@ module.exports = {
   rules: {
     // TypeScript specific rules (using react-app's built-in @typescript-eslint rules)
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/no-explicit-any': ['warn', { "fixToUnknown": false }],
 
     // React specific rules
     'react/react-in-jsx-scope': 'off', // Not needed in React 17+

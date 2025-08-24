@@ -1,0 +1,53 @@
+scalar DateTime
+
+type User {
+  id: ID!
+  username: String!
+  email: String!
+  emailVerified: Boolean!
+  phone: String
+  photoUrl: String
+  firstName: String
+  lastName: String
+  bio: String
+  avatar: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  memberships: [Membership!]!
+  messages: [Message!]!
+}
+
+type Group {
+  id: ID!
+  name: String!
+  description: String
+  isPublic: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  memberships: [Membership!]!
+  events: [Event!]!
+  messages: [Message!]!
+  members: [Membership!]!
+  blockedUsers: [BlockedUser!]!
+  rsvps: [RSVP!]!
+}
+
+type Membership {
+  id: ID!
+  user: User!
+  group: Group!
+  isAdmin: Boolean!
+  memberId: Int!
+  joinedAt: DateTime!
+  role: String!
+}
+
+type Query {
+  health: String!
+  me: User
+  groups: [Group!]!
+}
+
+type Mutation {
+  login(username: String!, password: String!): String!
+}

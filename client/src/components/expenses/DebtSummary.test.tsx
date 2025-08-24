@@ -451,7 +451,7 @@ describe('DebtSummary - Visual Design', () => {
 
   it('uses proper card layout and spacing', async () => {
     const mocks = createMocks();
-    renderWithProviders(
+    const { container } = renderWithProviders(
       <MockedProvider mocks={mocks} addTypename={false}>
         <DebtSummary groupId="group-1" />
       </MockedProvider>
@@ -468,11 +468,11 @@ describe('DebtSummary - Visual Design', () => {
     expect(mainContainer).toBeInTheDocument();
 
     // Check grid layout for summary stats
-    const statsGrid = this.container.querySelector('.grid.grid-cols-1.md\\:grid-cols-3');
+    const statsGrid = container.querySelector('.grid.grid-cols-1.md\\:grid-cols-3');
     expect(statsGrid).toBeInTheDocument();
 
     // Check individual user cards
-    const userCards = this.container.querySelectorAll('.border.border-gray-200.rounded-lg.p-4');
+    const userCards = container.querySelectorAll('.border.border-gray-200.rounded-lg.p-4');
     expect(userCards.length).toBe(3);
   });
 });

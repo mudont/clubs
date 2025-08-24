@@ -1,5 +1,7 @@
 import { Group, Membership, PrismaClient, User } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import { PubSub } from 'graphql-subscriptions';
+
 import { generateToken } from '../../auth/jwt';
 import { Context } from '../../types/context';
 
@@ -61,8 +63,7 @@ export const createTestContext = async (user?: User): Promise<Context> => {
   return {
     user: user || null,
     prisma,
-    req: {} as any,
-    res: {} as any,
+    pubsub: new PubSub(),
   };
 };
 

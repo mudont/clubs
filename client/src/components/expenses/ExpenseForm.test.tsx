@@ -145,12 +145,14 @@ const createMocks = (isEdit = false) => [
 ];
 
 // Test suite implementation
-class ExpenseFormTestSuite extends FormComponentTestSuite<{
+interface ExpenseFormTestProps {
   groupId: string;
   expense?: any;
-  onSuccess?: () => void;
-  onCancel?: () => void;
-}> {
+  onSuccess?: any;
+  onCancel?: any;
+}
+
+class ExpenseFormTestSuite extends FormComponentTestSuite<ExpenseFormTestProps> {
   component = ExpenseForm;
   defaultProps = {
     groupId: 'group-1',
@@ -233,7 +235,7 @@ class ExpenseFormTestSuite extends FormComponentTestSuite<{
 
       it('updates existing expense successfully', async () => {
         const onSuccess = jest.fn();
-        this.render({ expense: mockExpense, onSuccess });
+        this.render({ expense: mockExpense, onSuccess } as any);
         await this.helpers.async.waitForDataLoad();
 
         // Update form fields
@@ -264,21 +266,18 @@ class ExpenseFormTestSuite extends FormComponentTestSuite<{
           },
         ];
 
-        const result = renderWithProviders(
-          <ExpenseForm groupId="group-1" onSuccess={jest.fn()} />,
-          {
-            mocks: errorMocks,
-          }
-        );
+        renderWithProviders(<ExpenseForm groupId="group-1" onSuccess={jest.fn()} />, {
+          mocks: errorMocks,
+        });
 
         await waitFor(() => {
           expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
         });
 
         // Fill and submit form
-        await result.user.type(screen.getByLabelText(/description/i), 'Test Expense');
-        await result.user.type(screen.getByLabelText(/amount/i), '100');
-        await result.user.click(screen.getByRole('button', { name: /add expense/i }));
+        await this.user.type(screen.getByLabelText(/description/i), 'Test Expense');
+        await this.user.type(screen.getByLabelText(/amount/i), '100');
+        await this.user.click(screen.getByRole('button', { name: /add expense/i }));
 
         // Check for error message
         await waitFor(() => {
@@ -470,7 +469,7 @@ class ExpenseFormTestSuite extends FormComponentTestSuite<{
 
   protected render(props?: Partial<typeof this.defaultProps>, options?: any) {
     const finalProps = { ...this.defaultProps, ...props };
-    const mocks = options?.mocks || createMocks(!!finalProps.expense);
+    const mocks = options?.mocks || createMocks(!!(finalProps as any).expense);
 
     this.renderResult = renderWithProviders(
       <MockedProvider mocks={mocks} addTypename={false}>
@@ -526,7 +525,7 @@ describe('ExpenseForm - Specific Behaviors', () => {
 
   it('handles different split types correctly', async () => {
     const mocks = createMocks();
-    const result = renderWithProviders(
+    renderWithProviders(
       <MockedProvider mocks={mocks} addTypename={false}>
         <ExpenseForm groupId="group-1" />
       </MockedProvider>
@@ -538,7 +537,7 @@ describe('ExpenseForm - Specific Behaviors', () => {
 
     // Test shares split
     const splitTypeSelect = screen.getByLabelText(/split type/i);
-    await result.user.selectOptions(splitTypeSelect, 'SHARES');
+    await user.selectOptions(splitTypeSelect, 'SHARES');
 
     // Check that shares inputs appear
     await waitFor(() => {
