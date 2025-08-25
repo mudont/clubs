@@ -219,8 +219,10 @@ class ExpensesPageTestSuite extends BaseComponentTestSuite {
           </MemoryRouter>
         );
 
-        // Should show loading state
-        expect(screen.getByText(/loading expenses/i)).toBeInTheDocument();
+        // Wait for ME_QUERY to load first, then check for expenses loading
+        await waitFor(() => {
+          expect(screen.getByText(/loading expenses/i)).toBeInTheDocument();
+        });
       });
 
       it('hides loading state after data loads', async () => {
@@ -259,7 +261,7 @@ class ExpensesPageTestSuite extends BaseComponentTestSuite {
 
         // Should handle error gracefully (component should still render)
         await waitFor(() => {
-          expect(screen.getByText(/expenses/i)).toBeInTheDocument();
+          expect(screen.getByRole('heading', { name: /expenses/i })).toBeInTheDocument();
         });
       });
     });
@@ -362,12 +364,12 @@ describe('ExpensesPage - Data Display', () => {
       </MemoryRouter>
     );
 
+    // Wait for data to load and expenses to be displayed
     await waitFor(() => {
-      expect(screen.queryByText(/loading expenses/i)).not.toBeInTheDocument();
+      expect(screen.getByText('Dinner at restaurant')).toBeInTheDocument();
     });
 
     // Check that all expenses are displayed
-    expect(screen.getByText('Dinner at restaurant')).toBeInTheDocument();
     expect(screen.getByText('Movie tickets')).toBeInTheDocument();
     expect(screen.getByText('Gas for road trip')).toBeInTheDocument();
 
@@ -392,8 +394,9 @@ describe('ExpensesPage - Data Display', () => {
       </MemoryRouter>
     );
 
+    // Wait for group breakdown section to appear
     await waitFor(() => {
-      expect(screen.queryByText(/loading expenses/i)).not.toBeInTheDocument();
+      expect(screen.getByText('Expenses by Group')).toBeInTheDocument();
     });
 
     // Check group breakdown
@@ -418,12 +421,12 @@ describe('ExpensesPage - Data Display', () => {
       </MemoryRouter>
     );
 
+    // Wait for empty state to appear
     await waitFor(() => {
-      expect(screen.queryByText(/loading expenses/i)).not.toBeInTheDocument();
+      expect(screen.getByText(/no expenses yet/i)).toBeInTheDocument();
     });
 
     // Check empty state
-    expect(screen.getByText(/no expenses yet/i)).toBeInTheDocument();
     expect(screen.getByText(/start tracking shared expenses/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /add your first expense/i })).toBeInTheDocument();
 
@@ -442,8 +445,9 @@ describe('ExpensesPage - Data Display', () => {
       </MemoryRouter>
     );
 
+    // Wait for expense data to load
     await waitFor(() => {
-      expect(screen.queryByText(/loading expenses/i)).not.toBeInTheDocument();
+      expect(screen.getByText('Dinner at restaurant')).toBeInTheDocument();
     });
 
     // Check paid by information
@@ -461,19 +465,28 @@ describe('ExpensesPage - Data Display', () => {
       </MemoryRouter>
     );
 
+    // Wait for expense data to load
     await waitFor(() => {
-      expect(screen.queryByText(/loading expenses/i)).not.toBeInTheDocument();
+      expect(screen.getByText('Dinner at restaurant')).toBeInTheDocument();
     });
 
     // Check that dates are formatted (exact format may vary by locale)
-    const dateElements = screen.getAllByText(/1\/\d+\/2024/); // MM/DD/YYYY format
-    expect(dateElements.length).toBeGreaterThan(0);
+    // Look for any date-like patterns since toLocaleDateString() varies by locale
+    const datePattern = /\d{1,2}\/\d{1,2}\/\d{4}/; // MM/DD/YYYY or M/D/YYYY format
+    const allText =
+      screen.getByText('Dinner at restaurant').closest('.expense-item')?.textContent || '';
+    expect(datePattern.test(allText)).toBe(true);
   });
 });
 
 describe('ExpensesPage - Form Integration', () => {
+  let user: ReturnType<typeof userEvent.setup>;
+
+  beforeEach(() => {
+    user = userEvent.setup();
+  });
+
   it('hides form after successful expense creation', async () => {
-    const user = userEvent.setup();
     const mocks = createMocks();
     renderWithProviders(
       <MemoryRouter>
@@ -483,8 +496,9 @@ describe('ExpensesPage - Form Integration', () => {
       </MemoryRouter>
     );
 
+    // Wait for data to load
     await waitFor(() => {
-      expect(screen.queryByText(/loading expenses/i)).not.toBeInTheDocument();
+      expect(screen.getByText('Dinner at restaurant')).toBeInTheDocument();
     });
 
     // Show form
@@ -505,4 +519,7 @@ describe('ExpensesPage - Form Integration', () => {
 
 // Run the test suite
 const expensesPageTestSuite = new ExpensesPageTestSuite();
+
+// Cleanup is handled automatically by the base test suite
+
 expensesPageTestSuite.runAllTests();

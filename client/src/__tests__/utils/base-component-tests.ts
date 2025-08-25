@@ -51,6 +51,11 @@ export abstract class BaseComponentTestSuite<TProps = Record<string, unknown>>
     return this.userInstance;
   }
 
+  protected cleanup() {
+    this.userInstance = undefined;
+    this.renderResult = undefined;
+  }
+
   protected get container() {
     if (!this.renderResult) {
       throw new Error('Component not rendered. Call render() first.');
